@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-cn">
+<head>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Dubbo," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="1. 启动 ZooKeeperMac 下启动单机版 ZooKeeper： zookeeper-server-start /usr/local/etc/kafka/zookeeper.properties">
+<meta name="keywords" content="Dubbo">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring Boot + Dubbo 试用">
+<meta property="og:url" content="http://yoursite.com/2018/01/02/Spring Boot + Dubbo 试用/index.html">
+<meta property="og:site_name" content="天歌のBlog">
+<meta property="og:description" content="1. 启动 ZooKeeperMac 下启动单机版 ZooKeeper： zookeeper-server-start /usr/local/etc/kafka/zookeeper.properties">
+<meta property="og:locale" content="zh-cn">
+<meta property="og:updated_time" content="2018-01-05T08:25:19.880Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spring Boot + Dubbo 试用">
+<meta name="twitter:description" content="1. 启动 ZooKeeperMac 下启动单机版 ZooKeeper： zookeeper-server-start /usr/local/etc/kafka/zookeeper.properties">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/01/02/Spring Boot + Dubbo 试用/"/>
+
+
+
+
+
+  <title>Spring Boot + Dubbo 试用 | 天歌のBlog</title><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-cn">
+
+  
+  
+    
+  
+
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">天歌のBlog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/01/02/Spring Boot + Dubbo 试用/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Yongqiang Xiang">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天歌のBlog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Spring Boot + Dubbo 试用</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-01-02T21:04:44+08:00">
+                2018-01-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/RPC/" itemprop="url" rel="index">
+                    <span itemprop="name">RPC</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="1-启动-ZooKeeper"><a href="#1-启动-ZooKeeper" class="headerlink" title="1. 启动 ZooKeeper"></a>1. 启动 ZooKeeper</h2><p>Mac 下启动单机版 ZooKeeper：</p>
+<p><code>zookeeper-server-start /usr/local/etc/kafka/zookeeper.properties</code></p>
+<a id="more"></a>
+<h2 id="2-dubbo-api"><a href="#2-dubbo-api" class="headerlink" title="2. dubbo-api"></a>2. dubbo-api</h2><p>创建服务接口定义项目。该项目中只定义了一个服务接口 <code>iservice.IUserService</code>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">IUserService</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">hello</span><span class="params">(String s)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>正常情况下应该将这个项目发布成 jar 包供提供方和消费者调用，不过这里为了简便起见，会在 Intellij 中直接让服务提供方和消费者依赖 dubbo-api 项目。</p>
+<h2 id="2-dubbo-provider"><a href="#2-dubbo-provider" class="headerlink" title="2. dubbo-provider"></a>2. dubbo-provider</h2><p>创建服务提供方项目 dubbo-provider，基于 Spring Boot，并设置依赖 dubbo-api。</p>
+<ol>
+<li><p>服务提供方启动类 <code>DubboProviderApplication</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@SpringBootApplication</span></span><br><span class="line"><span class="meta">@ImportResource</span>(<span class="string">"classpath:dubbo-provider.xml"</span>)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DubboProviderApplication</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">		SpringApplication.run(DubboProviderApplication.class, args);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里 import 了 dubbo 项目的配置 xml。</p>
+</li>
+<li><p>定义服务实现 <code>serviceimpl.UserServiceImpl</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UserServiceImpl</span> <span class="keyword">implements</span> <span class="title">IUserService</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">hello</span><span class="params">(String s)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">"hello "</span> + s + <span class="string">"!"</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在 <code>application-properties</code> 里设置服务的 HTTP 端口 <code>server.port=8888</code>。</p>
+</li>
+<li><p>在 classpath 下创建配置文件 <code>dubbo-provider.xml</code>：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span><br><span class="line"><span class="tag">&lt;<span class="name">beans</span> <span class="attr">xmlns</span>=<span class="string">"http://www.springframework.org/schema/beans"</span></span></span><br><span class="line"><span class="tag">       <span class="attr">xmlns:xsi</span>=<span class="string">"http://www.w3.org/2001/XMLSchema-instance"</span></span></span><br><span class="line"><span class="tag">       <span class="attr">xmlns:dubbo</span>=<span class="string">"http://code.alibabatech.com/schema/dubbo"</span></span></span><br><span class="line"><span class="tag">       <span class="attr">xsi:schemaLocation</span>=<span class="string">"http://www.springframework.org/schema/beans</span></span></span><br><span class="line"><span class="tag"><span class="string">       http://www.springframework.org/schema/beans/spring-beans.xsd</span></span></span><br><span class="line"><span class="tag"><span class="string">       http://code.alibabatech.com/schema/dubbo</span></span></span><br><span class="line"><span class="tag"><span class="string">       http://code.alibabatech.com/schema/dubbo/dubbo.xsd"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dubbo:application</span> <span class="attr">name</span>=<span class="string">"dubbo-provider"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dubbo:registry</span> <span class="attr">address</span>=<span class="string">"zookeeper://localhost:2181"</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dubbo:provider</span> <span class="attr">cluster</span>=<span class="string">"failfast"</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dubbo:protocol</span> <span class="attr">name</span>=<span class="string">"dubbo"</span> <span class="attr">port</span>=<span class="string">"12345"</span> /&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"userServiceImpl"</span> <span class="attr">class</span>=<span class="string">"xyq.serviceimpl.UserServiceImpl"</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dubbo:service</span> <span class="attr">interface</span>=<span class="string">"iservice.IUserService"</span> <span class="attr">ref</span>=<span class="string">"userServiceImpl"</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">beans</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>这个 xml 中定义了：</p>
+<ul>
+<li>服务提供方的名称：dubbo-provider</li>
+<li>注册中心的协议及地址：运行在本地 2181 端口上的 ZooKeeper</li>
+<li>dubbo 服务运行的端口：12345</li>
+<li>暴露的服务接口及其实现：<code>IUserService</code> 和 <code>UserServiceImpl</code></li>
+</ul>
+</li>
+<li><p>启动项目。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line">2017-12-28 21:39:54.739  INFO 13377 --- [           main] xyq.DubboProviderApplication             : Starting DubboProviderApplication on bogon with PID 13377 (/Users/xyq/workspace/myproject/dubbo-provider/target/classes started by xyq in /Users/xyq/workspace)</span><br><span class="line">2017-12-28 21:39:54.743  INFO 13377 --- [           main] xyq.DubboProviderApplication             : No active profile set, falling back to default profiles: default</span><br><span class="line">2017-12-28 21:39:54.854  INFO 13377 --- [           main] ationConfigEmbeddedWebApplicationContext : Refreshing org.springframework.boot.context.embedded.AnnotationConfigEmbeddedWebApplicationContext@2d127a61: startup date [Thu Dec 28 21:39:54 CST 2017]; root of context hierarchy</span><br><span class="line">2017-12-28 21:39:55.323  INFO 13377 --- [           main] o.s.b.f.xml.XmlBeanDefinitionReader      : Loading XML bean definitions from class path resource [dubbo-provider.xml]</span><br><span class="line">2017-12-28 21:39:55.530  INFO 13377 --- [           main] c.a.dubbo.common.logger.LoggerFactory    : using logger: com.alibaba.dubbo.common.logger.log4j.Log4jLoggerAdapter</span><br><span class="line">2017-12-28 21:39:56.281  INFO 13377 --- [           main] s.b.c.e.t.TomcatEmbeddedServletContainer : Tomcat initialized with port(s): 8888 (http)</span><br><span class="line">2017-12-28 21:39:56.295  INFO 13377 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]</span><br><span class="line">2017-12-28 21:39:56.296  INFO 13377 --- [           main] org.apache.catalina.core.StandardEngine  : Starting Servlet Engine: Apache Tomcat/8.5.23</span><br><span class="line">2017-12-28 21:39:56.402  INFO 13377 --- [ost-startStop-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext</span><br><span class="line">2017-12-28 21:39:56.402  INFO 13377 --- [ost-startStop-1] o.s.web.context.ContextLoader            : Root WebApplicationContext: initialization completed in 1553 ms</span><br><span class="line">2017-12-28 21:39:56.549  INFO 13377 --- [ost-startStop-1] o.s.b.w.servlet.ServletRegistrationBean  : Mapping servlet: &apos;dispatcherServlet&apos; to [/]</span><br><span class="line">2017-12-28 21:39:56.553  INFO 13377 --- [ost-startStop-1] o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: &apos;characterEncodingFilter&apos; to: [/*]</span><br><span class="line">2017-12-28 21:39:56.554  INFO 13377 --- [ost-startStop-1] o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: &apos;hiddenHttpMethodFilter&apos; to: [/*]</span><br><span class="line">2017-12-28 21:39:56.554  INFO 13377 --- [ost-startStop-1] o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: &apos;httpPutFormContentFilter&apos; to: [/*]</span><br><span class="line">2017-12-28 21:39:56.554  INFO 13377 --- [ost-startStop-1] o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: &apos;requestContextFilter&apos; to: [/*]</span><br><span class="line">2017-12-28 21:39:57.045  INFO 13377 --- [           main] s.w.s.m.m.a.RequestMappingHandlerAdapter : Looking for @ControllerAdvice: org.springframework.boot.context.embedded.AnnotationConfigEmbeddedWebApplicationContext@2d127a61: startup date [Thu Dec 28 21:39:54 CST 2017]; root of context hierarchy</span><br><span class="line">2017-12-28 21:39:57.114  INFO 13377 --- [           main] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped &quot;&#123;[/error]&#125;&quot; onto public org.springframework.http.ResponseEntity&lt;java.util.Map&lt;java.lang.String, java.lang.Object&gt;&gt; org.springframework.boot.autoconfigure.web.BasicErrorController.error(javax.servlet.http.HttpServletRequest)</span><br><span class="line">2017-12-28 21:39:57.115  INFO 13377 --- [           main] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped &quot;&#123;[/error],produces=[text/html]&#125;&quot; onto public org.springframework.web.servlet.ModelAndView org.springframework.boot.autoconfigure.web.BasicErrorController.errorHtml(javax.servlet.http.HttpServletRequest,javax.servlet.http.HttpServletResponse)</span><br><span class="line">2017-12-28 21:39:57.159  INFO 13377 --- [           main] o.s.w.s.handler.SimpleUrlHandlerMapping  : Mapped URL path [/webjars/**] onto handler of type [class org.springframework.web.servlet.resource.ResourceHttpRequestHandler]</span><br><span class="line">2017-12-28 21:39:57.159  INFO 13377 --- [           main] o.s.w.s.handler.SimpleUrlHandlerMapping  : Mapped URL path [/**] onto handler of type [class org.springframework.web.servlet.resource.ResourceHttpRequestHandler]</span><br><span class="line">2017-12-28 21:39:57.189  INFO 13377 --- [           main] o.s.w.s.handler.SimpleUrlHandlerMapping  : Mapped URL path [/**/favicon.ico] onto handler of type [class org.springframework.web.servlet.resource.ResourceHttpRequestHandler]</span><br><span class="line">2017-12-28 21:39:57.318  INFO 13377 --- [           main] o.s.j.e.a.AnnotationMBeanExporter        : Registering beans for JMX exposure on startup</span><br><span class="line">2017-12-28 21:39:57.330  INFO 13377 --- [           main] com.alibaba.dubbo.config.AbstractConfig  :  [DUBBO] The service ready on spring started. service: iservice.IUserService, dubbo version: 2.5.8, current host: 127.0.0.1</span><br><span class="line">2017-12-28 21:39:57.417  INFO 13377 --- [           main] com.alibaba.dubbo.config.AbstractConfig  :  [DUBBO] Export dubbo service iservice.IUserService to local registry, dubbo version: 2.5.8, current host: 127.0.0.1</span><br><span class="line">2017-12-28 21:39:57.417  INFO 13377 --- [           main] com.alibaba.dubbo.config.AbstractConfig  :  [DUBBO] Export dubbo service iservice.IUserService to url dubbo://10.236.19.51:12345/iservice.IUserService?anyhost=true&amp;application=dubbo-provider&amp;bind.ip=10.236.19.51&amp;bind.port=12345&amp;default.cluster=failfast&amp;dubbo=2.5.8&amp;generic=false&amp;interface=iservice.IUserService&amp;methods=hello&amp;pid=13377&amp;side=provider&amp;timestamp=1514468397346, dubbo version: 2.5.8, current host: 127.0.0.1</span><br><span class="line">2017-12-28 21:39:57.417  INFO 13377 --- [           main] com.alibaba.dubbo.config.AbstractConfig  :  [DUBBO] Register dubbo service iservice.IUserService url dubbo://10.236.19.51:12345/iservice.IUserService?anyhost=true&amp;application=dubbo-provider&amp;bind.ip=10.236.19.51&amp;bind.port=12345&amp;default.cluster=failfast&amp;dubbo=2.5.8&amp;generic=false&amp;interface=iservice.IUserService&amp;methods=hello&amp;pid=13377&amp;side=provider&amp;timestamp=1514468397346 to registry registry://localhost:2181/com.alibaba.dubbo.registry.RegistryService?application=dubbo-provider&amp;dubbo=2.5.8&amp;pid=13377&amp;registry=zookeeper&amp;timestamp=1514468397338, dubbo version: 2.5.8, current host: 127.0.0.1</span><br><span class="line">2017-12-28 21:39:57.535  INFO 13377 --- [           main] c.a.d.remoting.transport.AbstractServer  :  [DUBBO] Start NettyServer bind /0.0.0.0:12345, export /10.236.19.51:12345, dubbo version: 2.5.8, current host: 127.0.0.1</span><br><span class="line">2017-12-28 21:39:57.555  INFO 13377 --- [           main] c.a.d.r.zookeeper.ZookeeperRegistry      :  [DUBBO] Load registry store file /Users/xyq/.dubbo/dubbo-registry-dubbo-provider-localhost:2181.cache, data: &#123;xyq.service.UserService=empty://10.236.19.51:12345/xyq.service.UserService?anyhost=true&amp;application=dubbo-provider&amp;category=configurators&amp;check=false&amp;default.cluster=failfast&amp;dubbo=2.5.8&amp;generic=false&amp;interface=xyq.service.UserService&amp;methods=hello&amp;pid=12958&amp;side=provider&amp;timestamp=1514467127634&#125;, dubbo version: 2.5.8, current host: 127.0.0.1</span><br><span class="line">2017-12-28 21:39:57.562  INFO 13377 --- [           main] c.a.d.common.concurrent.ExecutionList    :  [DUBBO] Executor for listenablefuture is null, will use default executor!, dubbo version: 2.5.8, current host: 127.0.0.1</span><br><span class="line">2017-12-28 21:39:57.571  INFO 13377 --- [-localhost:2181] org.I0Itec.zkclient.ZkEventThread        : Starting ZkClient event thread.</span><br><span class="line">2017-12-28 21:39:57.577  INFO 13377 --- [clientConnector] org.apache.zookeeper.ZooKeeper           : Client environment:zookeeper.version=3.3.3-1073969, built on 02/23/2011 22:27 GMT</span><br><span class="line">2017-12-28 21:39:57.577  INFO 13377 --- [clientConnector] org.apache.zookeeper.ZooKeeper           : Client environment:host.name=bogon</span><br><span class="line">2017-12-28 21:39:57.577  INFO 13377 --- [clientConnector] org.apache.zookeeper.ZooKeeper           : Client environment:java.version=1.8.0_91</span><br><span class="line">2017-12-28 21:39:57.577  INFO 13377 --- [clientConnector] org.apache.zookeeper.ZooKeeper           : Client environment:java.vendor=Oracle Corporation</span><br><span class="line">2017-12-28 21:39:57.577  INFO 13377 --- [clientConnector] org.apache.zookeeper.ZooKeeper           : Client environment:java.home=/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre</span><br><span class="line">2017-12-28 21:39:57.577  INFO 13377 --- [clientConnector] org.apache.zookeeper.ZooKeeper           : Client environment:java.class.path=/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/charsets.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/deploy.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/ext/cldrdata.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/ext/dnsns.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/ext/jaccess.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/ext/jfxrt.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/ext/localedata.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/ext/nashorn.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/ext/sunec.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/ext/sunjce_provider.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/ext/sunpkcs11.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/ext/zipfs.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/javaws.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/jce.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/jfr.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/jfxswt.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/jsse.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/management-agent.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/plugin.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/resources.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/rt.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/lib/ant-javafx.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/lib/dt.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/lib/javafx-mx.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/lib/jconsole.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/lib/packager.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/lib/sa-jdi.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/lib/tools.jar:/Users/xyq/workspace/myproject/dubbo-provider/target/classes:/Users/xyq/.m2/repository/org/springframework/boot/spring-boot-starter-web/1.5.9.RELEASE/spring-boot-starter-web-1.5.9.RELEASE.jar:/Users/xyq/.m2/repository/org/springframework/boot/spring-boot-starter/1.5.9.RELEASE/spring-boot-starter-1.5.9.RELEASE.jar:/Users/xyq/.m2/repository/org/springframework/boot/spring-boot/1.5.9.RELEASE/spring-boot-1.5.9.RELEASE.jar:/Users/xyq/.m2/repository/org/springframework/boot/spring-boot-autoconfigure/1.5.9.RELEASE/spring-boot-autoconfigure-1.5.9.RELEASE.jar:/Users/xyq/.m2/repository/org/springframework/boot/spring-boot-starter-logging/1.5.9.RELEASE/spring-boot-starter-logging-1.5.9.RELEASE.jar:/Users/xyq/.m2/repository/ch/qos/logback/logback-classic/1.1.11/logback-classic-1.1.11.jar:/Users/xyq/.m2/repository/ch/qos/logback/logback-core/1.1.11/logback-core-1.1.11.jar:/Users/xyq/.m2/repository/org/slf4j/jcl-over-slf4j/1.7.25/jcl-over-slf4j-1.7.25.jar:/Users/xyq/.m2/repository/org/slf4j/jul-to-slf4j/1.7.25/jul-to-slf4j-1.7.25.jar:/Users/xyq/.m2/repository/org/slf4j/log4j-over-slf4j/1.7.25/log4j-over-slf4j-1.7.25.jar:/Users/xyq/.m2/repository/org/yaml/snakeyaml/1.17/snakeyaml-1.17.jar:/Users/xyq/.m2/repository/org/springframework/boot/spring-boot-starter-tomcat/1.5.9.RELEASE/spring-boot-starter-tomcat-1.5.9.RELEASE.jar:/Users/xyq/.m2/repository/org/apache/tomcat/embed/tomcat-embed-core/8.5.23/tomcat-embed-core-8.5.23.jar:/Users/xyq/.m2/repository/org/apache/tomcat/tomcat-annotations-api/8.5.23/tomcat-annotations-api-8.5.23.jar:/Users/xyq/.m2/repository/org/apache/tomcat/embed/tomcat-embed-el/8.5.23/tomcat-embed-el-8.5.23.jar:/Users/xyq/.m2/repository/org/apache/tomcat/embed/tomcat-embed-websocket/8.5.23/tomcat-embed-websocket-8.5.23.jar:/Users/xyq/.m2/repository/org/hibernate/hibernate-validator/5.3.6.Final/hibernate-validator-5.3.6.Final.jar:/Users/xyq/.m2/repository/javax/validation/validation-api/1.1.0.Final/validation-api-1.1.0.Final.jar:/Users/xyq/.m2/repository/org/jboss/logging/jboss-logging/3.3.1.Final/jboss-logging-3.3.1.Final.jar:/Users/xyq/.m2/repository/com/fasterxml/classmate/1.3.4/classmate-1.3.4.jar:/Users/xyq/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.8.10/jackson-databind-2.8.10.jar:/Users/xyq/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.8.0/jackson-annotations-2.8.0.jar:/Users/xyq/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.8.10/jackson-core-2.8.10.jar:/Users/xyq/.m2/repository/org/springframework/spring-web/4.3.13.RELEASE/spring-web-4.3.13.RELEASE.jar:/Users/xyq/.m2/repository/org/springframework/spring-aop/4.3.13.RELEASE/spring-aop-4.3.13.RELEASE.jar:/Users/xyq/.m2/repository/org/springframework/spring-webmvc/4.3.13.RELEASE/spring-webmvc-4.3.13.RELEASE.jar:/Users/xyq/.m2/repository/org/springframework/spring-expression/4.3.13.RELEASE/spring-expression-4.3.13.RELEASE.jar:/Users/xyq/.m2/repository/org/slf4j/slf4j-api/1.7.25/slf4j-api-1.7.25.jar:/Users/xyq/.m2/repository/junit/junit/4.12/junit-4.12.jar:/Users/xyq/.m2/repository/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar:/Users/xyq/.m2/repository/org/springframework/spring-core/4.3.13.RELEASE/spring-core-4.3.13.RELEASE.jar:/Users/xyq/.m2/repository/com/alibaba/dubbo/2.5.8/dubbo-2.5.8.jar:/Users/xyq/.m2/repository/org/springframework/spring-context/4.3.13.RELEASE/spring-context-4.3.13.RELEASE.jar:/Users/xyq/.m2/repository/org/springframework/spring-beans/4.3.13.RELEASE/spring-beans-4.3.13.RELEASE.jar:/Users/xyq/.m2/repository/org/javassist/javassist/3.21.0-GA/javassist-3.21.0-GA.jar:/Users/xyq/.m2/repository/org/jboss/netty/netty/3.2.5.Final/netty-3.2.5.Final.jar:/Users/xyq/.m2/repository/com/github/sgroschupf/zkclient/0.1/zkclient-0.1.jar:/Users/xyq/.m2/repository/org/apache/zookeeper/zookeeper/3.3.3/zookeeper-3.3.3.jar:/Users/xyq/.m2/repository/jline/jline/0.9.94/jline-0.9.94.jar:/Users/xyq/.m2/repository/log4j/log4j/1.2.14/log4j-1.2.14.jar:/Users/xyq/workspace/myproject/dubbo-api/target/classes:/Applications/IntelliJ IDEA.app/Contents/lib/idea_rt.jar</span><br><span class="line">2017-12-28 21:39:57.577  INFO 13377 --- [clientConnector] org.apache.zookeeper.ZooKeeper           : Client environment:java.library.path=/Users/xyq/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:.</span><br><span class="line">2017-12-28 21:39:57.577  INFO 13377 --- [clientConnector] org.apache.zookeeper.ZooKeeper           : Client environment:java.io.tmpdir=/var/folders/yq/d0v9dm456zd_xzc1lhllw19m0000gn/T/</span><br><span class="line">2017-12-28 21:39:57.578  INFO 13377 --- [clientConnector] org.apache.zookeeper.ZooKeeper           : Client environment:java.compiler=&lt;NA&gt;</span><br><span class="line">2017-12-28 21:39:57.578  INFO 13377 --- [clientConnector] org.apache.zookeeper.ZooKeeper           : Client environment:os.name=Mac OS X</span><br><span class="line">2017-12-28 21:39:57.578  INFO 13377 --- [clientConnector] org.apache.zookeeper.ZooKeeper           : Client environment:os.arch=x86_64</span><br><span class="line">2017-12-28 21:39:57.578  INFO 13377 --- [clientConnector] org.apache.zookeeper.ZooKeeper           : Client environment:os.version=10.13.1</span><br><span class="line">2017-12-28 21:39:57.578  INFO 13377 --- [clientConnector] org.apache.zookeeper.ZooKeeper           : Client environment:user.name=xyq</span><br><span class="line">2017-12-28 21:39:57.578  INFO 13377 --- [clientConnector] org.apache.zookeeper.ZooKeeper           : Client environment:user.home=/Users/xyq</span><br><span class="line">2017-12-28 21:39:57.578  INFO 13377 --- [clientConnector] org.apache.zookeeper.ZooKeeper           : Client environment:user.dir=/Users/xyq/workspace</span><br><span class="line">2017-12-28 21:39:57.579  INFO 13377 --- [clientConnector] org.apache.zookeeper.ZooKeeper           : Initiating client connection, connectString=localhost:2181 sessionTimeout=30000 watcher=org.I0Itec.zkclient.ZkClient@247f74ac</span><br><span class="line">2017-12-28 21:39:57.589  INFO 13377 --- [or-SendThread()] org.apache.zookeeper.ClientCnxn          : Opening socket connection to server localhost/127.0.0.1:2181</span><br><span class="line">2017-12-28 21:39:57.600  INFO 13377 --- [localhost:2181)] org.apache.zookeeper.ClientCnxn          : Socket connection established to localhost/127.0.0.1:2181, initiating session</span><br><span class="line">2017-12-28 21:39:57.613  INFO 13377 --- [localhost:2181)] org.apache.zookeeper.ClientCnxn          : Session establishment complete on server localhost/127.0.0.1:2181, sessionid = 0x1609d33be850005, negotiated timeout = 30000</span><br><span class="line">2017-12-28 21:39:57.615  INFO 13377 --- [tor-EventThread] org.I0Itec.zkclient.ZkClient             : zookeeper state changed (SyncConnected)</span><br><span class="line">2017-12-28 21:39:57.618  INFO 13377 --- [           main] c.a.d.r.zookeeper.ZookeeperRegistry      :  [DUBBO] Register: dubbo://10.236.19.51:12345/iservice.IUserService?anyhost=true&amp;application=dubbo-provider&amp;default.cluster=failfast&amp;dubbo=2.5.8&amp;generic=false&amp;interface=iservice.IUserService&amp;methods=hello&amp;pid=13377&amp;side=provider&amp;timestamp=1514468397346, dubbo version: 2.5.8, current host: 127.0.0.1</span><br><span class="line">2017-12-28 21:39:57.639  INFO 13377 --- [           main] c.a.d.r.zookeeper.ZookeeperRegistry      :  [DUBBO] Subscribe: provider://10.236.19.51:12345/iservice.IUserService?anyhost=true&amp;application=dubbo-provider&amp;category=configurators&amp;check=false&amp;default.cluster=failfast&amp;dubbo=2.5.8&amp;generic=false&amp;interface=iservice.IUserService&amp;methods=hello&amp;pid=13377&amp;side=provider&amp;timestamp=1514468397346, dubbo version: 2.5.8, current host: 127.0.0.1</span><br><span class="line">2017-12-28 21:39:57.647  INFO 13377 --- [           main] c.a.d.r.zookeeper.ZookeeperRegistry      :  [DUBBO] Notify urls for subscribe url provider://10.236.19.51:12345/iservice.IUserService?anyhost=true&amp;application=dubbo-provider&amp;category=configurators&amp;check=false&amp;default.cluster=failfast&amp;dubbo=2.5.8&amp;generic=false&amp;interface=iservice.IUserService&amp;methods=hello&amp;pid=13377&amp;side=provider&amp;timestamp=1514468397346, urls: [empty://10.236.19.51:12345/iservice.IUserService?anyhost=true&amp;application=dubbo-provider&amp;category=configurators&amp;check=false&amp;default.cluster=failfast&amp;dubbo=2.5.8&amp;generic=false&amp;interface=iservice.IUserService&amp;methods=hello&amp;pid=13377&amp;side=provider&amp;timestamp=1514468397346], dubbo version: 2.5.8, current host: 127.0.0.1</span><br><span class="line">2017-12-28 21:39:57.707  INFO 13377 --- [           main] s.b.c.e.t.TomcatEmbeddedServletContainer : Tomcat started on port(s): 8888 (http)</span><br><span class="line">2017-12-28 21:39:57.712  INFO 13377 --- [           main] xyq.DubboProviderApplication             : Started DubboProviderApplication in 3.544 seconds (JVM running for 4.34)</span><br></pre></td></tr></table></figure>
+<p>可以看到服务提供方在 ZooKeeper 上注册成功了。</p>
+</li>
+</ol>
+<h2 id="3-dubbo-consumer"><a href="#3-dubbo-consumer" class="headerlink" title="3. dubbo-consumer"></a>3. dubbo-consumer</h2><p>创建服务提供方项目 dubbo-consumer，基于 Spring Boot，并设置依赖 dubbo-api。</p>
+<ol>
+<li><p>服务消费者启动类 <code>DubboConsumerApplication</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@SpringBootApplication</span></span><br><span class="line"><span class="meta">@ImportResource</span>(<span class="string">"classpath:dubbo-consumer.xml"</span>)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DubboConsumerApplication</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">		SpringApplication.run(DubboConsumerApplication.class, args);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>创建控制器 <code>UserController</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Controller</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UserController</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> IUserService userService;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@RequestMapping</span>(<span class="string">"/hello"</span>)</span><br><span class="line">    <span class="meta">@ResponseBody</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">sayHello</span><span class="params">(@RequestParam(<span class="string">"name"</span>)</span> String name) </span>&#123;</span><br><span class="line">        String welcome = userService.hello(name);</span><br><span class="line">        <span class="keyword">return</span> welcome;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在 <code>application-properties</code> 里设置服务的 HTTP 端口 <code>server.port=8889</code>。</p>
+</li>
+<li><p>在 classpath 下创建配置文件 <code>dubbo-consumer.xml</code>：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span><br><span class="line"><span class="tag">&lt;<span class="name">beans</span> <span class="attr">xmlns</span>=<span class="string">"http://www.springframework.org/schema/beans"</span></span></span><br><span class="line"><span class="tag">       <span class="attr">xmlns:xsi</span>=<span class="string">"http://www.w3.org/2001/XMLSchema-instance"</span></span></span><br><span class="line"><span class="tag">       <span class="attr">xmlns:dubbo</span>=<span class="string">"http://code.alibabatech.com/schema/dubbo"</span></span></span><br><span class="line"><span class="tag">       <span class="attr">xsi:schemaLocation</span>=<span class="string">"http://www.springframework.org/schema/beans</span></span></span><br><span class="line"><span class="tag"><span class="string">       http://www.springframework.org/schema/beans/spring-beans.xsd</span></span></span><br><span class="line"><span class="tag"><span class="string">       http://code.alibabatech.com/schema/dubbo</span></span></span><br><span class="line"><span class="tag"><span class="string">       http://code.alibabatech.com/schema/dubbo/dubbo.xsd"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dubbo:application</span> <span class="attr">name</span>=<span class="string">"dubbo-consumer"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dubbo:registry</span> <span class="attr">address</span>=<span class="string">"zookeeper://localhost:2181"</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dubbo:provider</span> <span class="attr">cluster</span>=<span class="string">"failfast"</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dubbo:protocol</span> <span class="attr">name</span>=<span class="string">"dubbo"</span> <span class="attr">port</span>=<span class="string">"12346"</span> /&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">&lt;!-- 引用服务配置 --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dubbo:reference</span> <span class="attr">id</span>=<span class="string">"userService"</span> <span class="attr">interface</span>=<span class="string">"iservice.IUserService"</span> <span class="attr">cluster</span>=<span class="string">"failfast"</span> <span class="attr">check</span>=<span class="string">"false"</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">beans</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>这个 xml 中定义了：</p>
+<ul>
+<li>服务消费者的名称：dubbo-consumer</li>
+<li>注册中心的协议及地址：运行在本地 2181 端口上的 ZooKeeper</li>
+<li>dubbo 服务运行的端口：12346</li>
+<li>需要注册的 spring bean：<code>userService</code>，并指定它对应了 dubbo 上发布的 <code>IUserService</code> 这个服务接口。</li>
+</ul>
+</li>
+<li><p>启动项目。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><span class="line">2017-12-28 21:42:43.113  INFO 13482 --- [           main] xyq.DubboConsumerApplication             : Starting DubboConsumerApplication on bogon with PID 13482 (/Users/xyq/workspace/myproject/dubbo-consumer/target/classes started by xyq in /Users/xyq/workspace)</span><br><span class="line">2017-12-28 21:42:43.115  INFO 13482 --- [           main] xyq.DubboConsumerApplication             : No active profile set, falling back to default profiles: default</span><br><span class="line">2017-12-28 21:42:43.177  INFO 13482 --- [           main] ationConfigEmbeddedWebApplicationContext : Refreshing org.springframework.boot.context.embedded.AnnotationConfigEmbeddedWebApplicationContext@2d127a61: startup date [Thu Dec 28 21:42:43 CST 2017]; root of context hierarchy</span><br><span class="line">2017-12-28 21:42:43.860  INFO 13482 --- [           main] o.s.b.f.xml.XmlBeanDefinitionReader      : Loading XML bean definitions from class path resource [dubbo-consumer.xml]</span><br><span class="line">2017-12-28 21:42:44.114  INFO 13482 --- [           main] c.a.dubbo.common.logger.LoggerFactory    : using logger: com.alibaba.dubbo.common.logger.log4j.Log4jLoggerAdapter</span><br><span class="line">2017-12-28 21:42:44.920  INFO 13482 --- [           main] trationDelegate$BeanPostProcessorChecker : Bean &apos;dubbo-consumer&apos; of type [com.alibaba.dubbo.config.ApplicationConfig] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying)</span><br><span class="line">2017-12-28 21:42:44.930  INFO 13482 --- [           main] trationDelegate$BeanPostProcessorChecker : Bean &apos;com.alibaba.dubbo.config.RegistryConfig&apos; of type [com.alibaba.dubbo.config.RegistryConfig] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying)</span><br><span class="line">2017-12-28 21:42:44.931  INFO 13482 --- [           main] trationDelegate$BeanPostProcessorChecker : Bean &apos;userService&apos; of type [com.alibaba.dubbo.config.spring.ReferenceBean] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying)</span><br><span class="line">2017-12-28 21:42:45.432  INFO 13482 --- [           main] s.b.c.e.t.TomcatEmbeddedServletContainer : Tomcat initialized with port(s): 8889 (http)</span><br><span class="line">2017-12-28 21:42:45.444  INFO 13482 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]</span><br><span class="line">2017-12-28 21:42:45.446  INFO 13482 --- [           main] org.apache.catalina.core.StandardEngine  : Starting Servlet Engine: Apache Tomcat/8.5.23</span><br><span class="line">2017-12-28 21:42:45.541  INFO 13482 --- [ost-startStop-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext</span><br><span class="line">2017-12-28 21:42:45.541  INFO 13482 --- [ost-startStop-1] o.s.web.context.ContextLoader            : Root WebApplicationContext: initialization completed in 2368 ms</span><br><span class="line">2017-12-28 21:42:45.658  INFO 13482 --- [ost-startStop-1] o.s.b.w.servlet.ServletRegistrationBean  : Mapping servlet: &apos;dispatcherServlet&apos; to [/]</span><br><span class="line">2017-12-28 21:42:45.661  INFO 13482 --- [ost-startStop-1] o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: &apos;characterEncodingFilter&apos; to: [/*]</span><br><span class="line">2017-12-28 21:42:45.662  INFO 13482 --- [ost-startStop-1] o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: &apos;hiddenHttpMethodFilter&apos; to: [/*]</span><br><span class="line">2017-12-28 21:42:45.662  INFO 13482 --- [ost-startStop-1] o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: &apos;httpPutFormContentFilter&apos; to: [/*]</span><br><span class="line">2017-12-28 21:42:45.662  INFO 13482 --- [ost-startStop-1] o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: &apos;requestContextFilter&apos; to: [/*]</span><br><span class="line">2017-12-28 21:42:45.774  INFO 13482 --- [           main] c.a.d.common.concurrent.ExecutionList    :  [DUBBO] Executor for listenablefuture is null, will use default executor!, dubbo version: 2.5.8, current host: 10.236.19.51</span><br><span class="line">2017-12-28 21:42:45.780  INFO 13482 --- [-localhost:2181] org.I0Itec.zkclient.ZkEventThread        : Starting ZkClient event thread.</span><br><span class="line">2017-12-28 21:42:45.785  INFO 13482 --- [clientConnector] org.apache.zookeeper.ZooKeeper           : Client environment:zookeeper.version=3.3.3-1073969, built on 02/23/2011 22:27 GMT</span><br><span class="line">2017-12-28 21:42:45.785  INFO 13482 --- [clientConnector] org.apache.zookeeper.ZooKeeper           : Client environment:host.name=bogon</span><br><span class="line">2017-12-28 21:42:45.785  INFO 13482 --- [clientConnector] org.apache.zookeeper.ZooKeeper           : Client environment:java.version=1.8.0_91</span><br><span class="line">2017-12-28 21:42:45.785  INFO 13482 --- [clientConnector] org.apache.zookeeper.ZooKeeper           : Client environment:java.vendor=Oracle Corporation</span><br><span class="line">2017-12-28 21:42:45.785  INFO 13482 --- [clientConnector] org.apache.zookeeper.ZooKeeper           : Client environment:java.home=/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre</span><br><span class="line">2017-12-28 21:42:45.785  INFO 13482 --- [clientConnector] org.apache.zookeeper.ZooKeeper           : Client environment:java.class.path=/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/charsets.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/deploy.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/ext/cldrdata.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/ext/dnsns.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/ext/jaccess.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/ext/jfxrt.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/ext/localedata.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/ext/nashorn.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/ext/sunec.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/ext/sunjce_provider.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/ext/sunpkcs11.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/ext/zipfs.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/javaws.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/jce.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/jfr.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/jfxswt.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/jsse.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/management-agent.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/plugin.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/resources.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre/lib/rt.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/lib/ant-javafx.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/lib/dt.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/lib/javafx-mx.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/lib/jconsole.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/lib/packager.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/lib/sa-jdi.jar:/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/lib/tools.jar:/Users/xyq/workspace/myproject/dubbo-consumer/target/classes:/Users/xyq/.m2/repository/org/springframework/boot/spring-boot-starter-web/1.5.9.RELEASE/spring-boot-starter-web-1.5.9.RELEASE.jar:/Users/xyq/.m2/repository/org/springframework/boot/spring-boot-starter/1.5.9.RELEASE/spring-boot-starter-1.5.9.RELEASE.jar:/Users/xyq/.m2/repository/org/springframework/boot/spring-boot/1.5.9.RELEASE/spring-boot-1.5.9.RELEASE.jar:/Users/xyq/.m2/repository/org/springframework/boot/spring-boot-autoconfigure/1.5.9.RELEASE/spring-boot-autoconfigure-1.5.9.RELEASE.jar:/Users/xyq/.m2/repository/org/springframework/boot/spring-boot-starter-logging/1.5.9.RELEASE/spring-boot-starter-logging-1.5.9.RELEASE.jar:/Users/xyq/.m2/repository/ch/qos/logback/logback-classic/1.1.11/logback-classic-1.1.11.jar:/Users/xyq/.m2/repository/ch/qos/logback/logback-core/1.1.11/logback-core-1.1.11.jar:/Users/xyq/.m2/repository/org/slf4j/jcl-over-slf4j/1.7.25/jcl-over-slf4j-1.7.25.jar:/Users/xyq/.m2/repository/org/slf4j/jul-to-slf4j/1.7.25/jul-to-slf4j-1.7.25.jar:/Users/xyq/.m2/repository/org/slf4j/log4j-over-slf4j/1.7.25/log4j-over-slf4j-1.7.25.jar:/Users/xyq/.m2/repository/org/yaml/snakeyaml/1.17/snakeyaml-1.17.jar:/Users/xyq/.m2/repository/org/springframework/boot/spring-boot-starter-tomcat/1.5.9.RELEASE/spring-boot-starter-tomcat-1.5.9.RELEASE.jar:/Users/xyq/.m2/repository/org/apache/tomcat/embed/tomcat-embed-core/8.5.23/tomcat-embed-core-8.5.23.jar:/Users/xyq/.m2/repository/org/apache/tomcat/tomcat-annotations-api/8.5.23/tomcat-annotations-api-8.5.23.jar:/Users/xyq/.m2/repository/org/apache/tomcat/embed/tomcat-embed-el/8.5.23/tomcat-embed-el-8.5.23.jar:/Users/xyq/.m2/repository/org/apache/tomcat/embed/tomcat-embed-websocket/8.5.23/tomcat-embed-websocket-8.5.23.jar:/Users/xyq/.m2/repository/org/hibernate/hibernate-validator/5.3.6.Final/hibernate-validator-5.3.6.Final.jar:/Users/xyq/.m2/repository/javax/validation/validation-api/1.1.0.Final/validation-api-1.1.0.Final.jar:/Users/xyq/.m2/repository/org/jboss/logging/jboss-logging/3.3.1.Final/jboss-logging-3.3.1.Final.jar:/Users/xyq/.m2/repository/com/fasterxml/classmate/1.3.4/classmate-1.3.4.jar:/Users/xyq/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.8.10/jackson-databind-2.8.10.jar:/Users/xyq/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.8.0/jackson-annotations-2.8.0.jar:/Users/xyq/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.8.10/jackson-core-2.8.10.jar:/Users/xyq/.m2/repository/org/springframework/spring-web/4.3.13.RELEASE/spring-web-4.3.13.RELEASE.jar:/Users/xyq/.m2/repository/org/springframework/spring-aop/4.3.13.RELEASE/spring-aop-4.3.13.RELEASE.jar:/Users/xyq/.m2/repository/org/springframework/spring-webmvc/4.3.13.RELEASE/spring-webmvc-4.3.13.RELEASE.jar:/Users/xyq/.m2/repository/org/springframework/spring-expression/4.3.13.RELEASE/spring-expression-4.3.13.RELEASE.jar:/Users/xyq/.m2/repository/org/slf4j/slf4j-api/1.7.25/slf4j-api-1.7.25.jar:/Users/xyq/.m2/repository/junit/junit/4.12/junit-4.12.jar:/Users/xyq/.m2/repository/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar:/Users/xyq/.m2/repository/org/springframework/spring-core/4.3.13.RELEASE/spring-core-4.3.13.RELEASE.jar:/Users/xyq/.m2/repository/com/alibaba/dubbo/2.5.8/dubbo-2.5.8.jar:/Users/xyq/.m2/repository/org/springframework/spring-context/4.3.13.RELEASE/spring-context-4.3.13.RELEASE.jar:/Users/xyq/.m2/repository/org/springframework/spring-beans/4.3.13.RELEASE/spring-beans-4.3.13.RELEASE.jar:/Users/xyq/.m2/repository/org/javassist/javassist/3.21.0-GA/javassist-3.21.0-GA.jar:/Users/xyq/.m2/repository/org/jboss/netty/netty/3.2.5.Final/netty-3.2.5.Final.jar:/Users/xyq/.m2/repository/com/github/sgroschupf/zkclient/0.1/zkclient-0.1.jar:/Users/xyq/.m2/repository/org/apache/zookeeper/zookeeper/3.3.3/zookeeper-3.3.3.jar:/Users/xyq/.m2/repository/jline/jline/0.9.94/jline-0.9.94.jar:/Users/xyq/.m2/repository/log4j/log4j/1.2.14/log4j-1.2.14.jar:/Users/xyq/workspace/myproject/dubbo-api/target/classes:/Applications/IntelliJ IDEA.app/Contents/lib/idea_rt.jar</span><br><span class="line">2017-12-28 21:42:45.785  INFO 13482 --- [clientConnector] org.apache.zookeeper.ZooKeeper           : Client environment:java.library.path=/Users/xyq/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:.</span><br><span class="line">2017-12-28 21:42:45.785  INFO 13482 --- [clientConnector] org.apache.zookeeper.ZooKeeper           : Client environment:java.io.tmpdir=/var/folders/yq/d0v9dm456zd_xzc1lhllw19m0000gn/T/</span><br><span class="line">2017-12-28 21:42:45.787  INFO 13482 --- [clientConnector] org.apache.zookeeper.ZooKeeper           : Client environment:java.compiler=&lt;NA&gt;</span><br><span class="line">2017-12-28 21:42:45.787  INFO 13482 --- [clientConnector] org.apache.zookeeper.ZooKeeper           : Client environment:os.name=Mac OS X</span><br><span class="line">2017-12-28 21:42:45.787  INFO 13482 --- [clientConnector] org.apache.zookeeper.ZooKeeper           : Client environment:os.arch=x86_64</span><br><span class="line">2017-12-28 21:42:45.787  INFO 13482 --- [clientConnector] org.apache.zookeeper.ZooKeeper           : Client environment:os.version=10.13.1</span><br><span class="line">2017-12-28 21:42:45.787  INFO 13482 --- [clientConnector] org.apache.zookeeper.ZooKeeper           : Client environment:user.name=xyq</span><br><span class="line">2017-12-28 21:42:45.787  INFO 13482 --- [clientConnector] org.apache.zookeeper.ZooKeeper           : Client environment:user.home=/Users/xyq</span><br><span class="line">2017-12-28 21:42:45.787  INFO 13482 --- [clientConnector] org.apache.zookeeper.ZooKeeper           : Client environment:user.dir=/Users/xyq/workspace</span><br><span class="line">2017-12-28 21:42:45.788  INFO 13482 --- [clientConnector] org.apache.zookeeper.ZooKeeper           : Initiating client connection, connectString=localhost:2181 sessionTimeout=30000 watcher=org.I0Itec.zkclient.ZkClient@5cee7de6</span><br><span class="line">2017-12-28 21:42:45.798  INFO 13482 --- [or-SendThread()] org.apache.zookeeper.ClientCnxn          : Opening socket connection to server localhost/0:0:0:0:0:0:0:1:2181</span><br><span class="line">2017-12-28 21:42:45.818  INFO 13482 --- [localhost:2181)] org.apache.zookeeper.ClientCnxn          : Socket connection established to localhost/0:0:0:0:0:0:0:1:2181, initiating session</span><br><span class="line">2017-12-28 21:42:45.825  INFO 13482 --- [localhost:2181)] org.apache.zookeeper.ClientCnxn          : Session establishment complete on server localhost/0:0:0:0:0:0:0:1:2181, sessionid = 0x1609d33be850006, negotiated timeout = 30000</span><br><span class="line">2017-12-28 21:42:45.826  INFO 13482 --- [tor-EventThread] org.I0Itec.zkclient.ZkClient             : zookeeper state changed (SyncConnected)</span><br><span class="line">2017-12-28 21:42:45.846  INFO 13482 --- [           main] c.a.d.r.zookeeper.ZookeeperRegistry      :  [DUBBO] Register: consumer://10.236.19.51/iservice.IUserService?application=dubbo-consumer&amp;category=consumers&amp;check=false&amp;cluster=failfast&amp;dubbo=2.5.8&amp;interface=iservice.IUserService&amp;methods=hello&amp;pid=13482&amp;side=consumer&amp;timestamp=1514468565714, dubbo version: 2.5.8, current host: 10.236.19.51</span><br><span class="line">2017-12-28 21:42:45.859  INFO 13482 --- [           main] c.a.d.r.zookeeper.ZookeeperRegistry      :  [DUBBO] Subscribe: consumer://10.236.19.51/iservice.IUserService?application=dubbo-consumer&amp;category=providers,configurators,routers&amp;check=false&amp;cluster=failfast&amp;dubbo=2.5.8&amp;interface=iservice.IUserService&amp;methods=hello&amp;pid=13482&amp;side=consumer&amp;timestamp=1514468565714, dubbo version: 2.5.8, current host: 10.236.19.51</span><br><span class="line">2017-12-28 21:42:45.871  INFO 13482 --- [           main] c.a.d.r.zookeeper.ZookeeperRegistry      :  [DUBBO] Notify urls for subscribe url consumer://10.236.19.51/iservice.IUserService?application=dubbo-consumer&amp;category=providers,configurators,routers&amp;check=false&amp;cluster=failfast&amp;dubbo=2.5.8&amp;interface=iservice.IUserService&amp;methods=hello&amp;pid=13482&amp;side=consumer&amp;timestamp=1514468565714, urls: [dubbo://10.236.19.51:12345/iservice.IUserService?anyhost=true&amp;application=dubbo-provider&amp;default.cluster=failfast&amp;dubbo=2.5.8&amp;generic=false&amp;interface=iservice.IUserService&amp;methods=hello&amp;pid=13377&amp;side=provider&amp;timestamp=1514468397346, empty://10.236.19.51/iservice.IUserService?application=dubbo-consumer&amp;category=configurators&amp;check=false&amp;cluster=failfast&amp;dubbo=2.5.8&amp;interface=iservice.IUserService&amp;methods=hello&amp;pid=13482&amp;side=consumer&amp;timestamp=1514468565714, empty://10.236.19.51/iservice.IUserService?application=dubbo-consumer&amp;category=routers&amp;check=false&amp;cluster=failfast&amp;dubbo=2.5.8&amp;interface=iservice.IUserService&amp;methods=hello&amp;pid=13482&amp;side=consumer&amp;timestamp=1514468565714], dubbo version: 2.5.8, current host: 10.236.19.51</span><br><span class="line">2017-12-28 21:42:45.966  INFO 13482 --- [           main] c.a.d.remoting.transport.AbstractClient  :  [DUBBO] Successed connect to server /10.236.19.51:12345 from NettyClient 10.236.19.51 using dubbo version 2.5.8, channel is NettyChannel [channel=[id: 0x3f3c966c, /10.236.19.51:61111 =&gt; /10.236.19.51:12345]], dubbo version: 2.5.8, current host: 10.236.19.51</span><br><span class="line">2017-12-28 21:42:45.966  INFO 13482 --- [           main] c.a.d.remoting.transport.AbstractClient  :  [DUBBO] Start NettyClient bogon/10.236.19.51 connect to the server /10.236.19.51:12345, dubbo version: 2.5.8, current host: 10.236.19.51</span><br><span class="line">2017-12-28 21:42:45.998  INFO 13482 --- [           main] com.alibaba.dubbo.config.AbstractConfig  :  [DUBBO] Refer dubbo service iservice.IUserService from url zookeeper://localhost:2181/com.alibaba.dubbo.registry.RegistryService?anyhost=true&amp;application=dubbo-consumer&amp;check=false&amp;cluster=failfast&amp;default.cluster=failfast&amp;dubbo=2.5.8&amp;generic=false&amp;interface=iservice.IUserService&amp;methods=hello&amp;pid=13482&amp;register.ip=10.236.19.51&amp;remote.timestamp=1514468397346&amp;side=consumer&amp;timestamp=1514468565714, dubbo version: 2.5.8, current host: 10.236.19.51</span><br><span class="line">2017-12-28 21:42:46.218  INFO 13482 --- [           main] s.w.s.m.m.a.RequestMappingHandlerAdapter : Looking for @ControllerAdvice: org.springframework.boot.context.embedded.AnnotationConfigEmbeddedWebApplicationContext@2d127a61: startup date [Thu Dec 28 21:42:43 CST 2017]; root of context hierarchy</span><br><span class="line">2017-12-28 21:42:46.268  INFO 13482 --- [           main] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped &quot;&#123;[/hello]&#125;&quot; onto public java.lang.String xyq.UserController.sayHello(java.lang.String)</span><br><span class="line">2017-12-28 21:42:46.270  INFO 13482 --- [           main] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped &quot;&#123;[/error]&#125;&quot; onto public org.springframework.http.ResponseEntity&lt;java.util.Map&lt;java.lang.String, java.lang.Object&gt;&gt; org.springframework.boot.autoconfigure.web.BasicErrorController.error(javax.servlet.http.HttpServletRequest)</span><br><span class="line">2017-12-28 21:42:46.270  INFO 13482 --- [           main] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped &quot;&#123;[/error],produces=[text/html]&#125;&quot; onto public org.springframework.web.servlet.ModelAndView org.springframework.boot.autoconfigure.web.BasicErrorController.errorHtml(javax.servlet.http.HttpServletRequest,javax.servlet.http.HttpServletResponse)</span><br><span class="line">2017-12-28 21:42:46.294  INFO 13482 --- [           main] o.s.w.s.handler.SimpleUrlHandlerMapping  : Mapped URL path [/webjars/**] onto handler of type [class org.springframework.web.servlet.resource.ResourceHttpRequestHandler]</span><br><span class="line">2017-12-28 21:42:46.294  INFO 13482 --- [           main] o.s.w.s.handler.SimpleUrlHandlerMapping  : Mapped URL path [/**] onto handler of type [class org.springframework.web.servlet.resource.ResourceHttpRequestHandler]</span><br><span class="line">2017-12-28 21:42:46.323  INFO 13482 --- [           main] o.s.w.s.handler.SimpleUrlHandlerMapping  : Mapped URL path [/**/favicon.ico] onto handler of type [class org.springframework.web.servlet.resource.ResourceHttpRequestHandler]</span><br><span class="line">2017-12-28 21:42:46.430  INFO 13482 --- [           main] o.s.j.e.a.AnnotationMBeanExporter        : Registering beans for JMX exposure on startup</span><br><span class="line">2017-12-28 21:42:46.472  INFO 13482 --- [           main] s.b.c.e.t.TomcatEmbeddedServletContainer : Tomcat started on port(s): 8889 (http)</span><br><span class="line">2017-12-28 21:42:46.476  INFO 13482 --- [           main] xyq.DubboConsumerApplication             : Started DubboConsumerApplication in 3.634 seconds (JVM running for 3.99)</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h2 id="4-测试"><a href="#4-测试" class="headerlink" title="4. 测试"></a>4. 测试</h2><p>浏览器中打开 <a href="http://localhost:8889/hello?name=gilgamesh" target="_blank" rel="noopener">http://localhost:8889/hello?name=gilgamesh</a> ，可以看见回复：hello gilgamesh!</p>
+<h2 id="5-注意事项"><a href="#5-注意事项" class="headerlink" title="5. 注意事项"></a>5. 注意事项</h2><p>项目中需要添加 ZkClient 的依赖：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.github.sgroschupf<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>zkclient<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">version</span>&gt;</span>0.1<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Dubbo/" rel="tag"># Dubbo</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/12/29/《从 Paxos 到 ZooKeeper：分布式一致性原理与实践》：集群启动与选举/" rel="next" title="《从 Paxos 到 ZooKeeper：分布式一致性原理与实践》：集群启动与选举">
+                <i class="fa fa-chevron-left"></i> 《从 Paxos 到 ZooKeeper：分布式一致性原理与实践》：集群启动与选举
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/01/10/大数据算法问题/" rel="prev" title="大数据算法问题">
+                大数据算法问题 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="Yongqiang Xiang" />
+          <p class="site-author-name" itemprop="name">Yongqiang Xiang</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">66</span>
+                <span class="site-state-item-name">posts</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">28</span>
+                <span class="site-state-item-name">categories</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">28</span>
+                <span class="site-state-item-name">tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/xiangyq000" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                    
+                      GitHub
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://stackoverflow.com/users/4945225/xiangyq000" target="_blank" title="StackOverflow">
+                  
+                    <i class="fa fa-fw fa-stack-overflow"></i>
+                  
+                    
+                      StackOverflow
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-启动-ZooKeeper"><span class="nav-number">1.</span> <span class="nav-text">1. 启动 ZooKeeper</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-dubbo-api"><span class="nav-number">2.</span> <span class="nav-text">2. dubbo-api</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-dubbo-provider"><span class="nav-number">3.</span> <span class="nav-text">2. dubbo-provider</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-dubbo-consumer"><span class="nav-number">4.</span> <span class="nav-text">3. dubbo-consumer</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-测试"><span class="nav-number">5.</span> <span class="nav-text">4. 测试</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-注意事项"><span class="nav-number">6.</span> <span class="nav-text">5. 注意事项</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yongqiang Xiang</span>
+</div>
+
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script><!-- hexo-inject:begin --><!-- Begin: Injected MathJax -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config("");
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+      all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+  });
+</script>
+
+<script type="text/javascript" src="custom_mathjax_source">
+</script>
+<!-- End: Injected MathJax -->
+<!-- hexo-inject:end -->
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-cn">
+<head>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="JVM," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="1. JVM 内存结构在 Java 虚拟机规范中将 Java 运行时数据划分为 6 种，分别为：  PC 寄存器数据； Java 栈； 堆； 方法区； 本地方法区； 运行时常量池。">
+<meta name="keywords" content="JVM">
+<meta property="og:type" content="article">
+<meta property="og:title" content="《深入分析 Java Web 技术内幕》：JVM 内存管理">
+<meta property="og:url" content="http://yoursite.com/2017/04/28/《深入分析 Java Web 技术内幕》：JVM内存管理/index.html">
+<meta property="og:site_name" content="天歌のBlog">
+<meta property="og:description" content="1. JVM 内存结构在 Java 虚拟机规范中将 Java 运行时数据划分为 6 种，分别为：  PC 寄存器数据； Java 栈； 堆； 方法区； 本地方法区； 运行时常量池。">
+<meta property="og:locale" content="zh-cn">
+<meta property="og:updated_time" content="2018-01-05T08:22:21.320Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="《深入分析 Java Web 技术内幕》：JVM 内存管理">
+<meta name="twitter:description" content="1. JVM 内存结构在 Java 虚拟机规范中将 Java 运行时数据划分为 6 种，分别为：  PC 寄存器数据； Java 栈； 堆； 方法区； 本地方法区； 运行时常量池。">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/04/28/《深入分析 Java Web 技术内幕》：JVM内存管理/"/>
+
+
+
+
+
+  <title>《深入分析 Java Web 技术内幕》：JVM 内存管理 | 天歌のBlog</title><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-cn">
+
+  
+  
+    
+  
+
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">天歌のBlog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/04/28/《深入分析 Java Web 技术内幕》：JVM内存管理/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Yongqiang Xiang">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天歌のBlog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">《深入分析 Java Web 技术内幕》：JVM 内存管理</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-04-28T13:14:02+08:00">
+                2017-04-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/读书笔记/" itemprop="url" rel="index">
+                    <span itemprop="name">读书笔记</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/读书笔记/Java/" itemprop="url" rel="index">
+                    <span itemprop="name">Java</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="1-JVM-内存结构"><a href="#1-JVM-内存结构" class="headerlink" title="1. JVM 内存结构"></a>1. JVM 内存结构</h2><p>在 Java 虚拟机规范中将 Java 运行时数据划分为 6 种，分别为：</p>
+<ul>
+<li>PC 寄存器数据；</li>
+<li>Java 栈；</li>
+<li>堆；</li>
+<li>方法区；</li>
+<li>本地方法区；</li>
+<li>运行时常量池。</li>
+</ul>
+<a id="more"></a>
+<h3 id="1-1-Java-栈"><a href="#1-1-Java-栈" class="headerlink" title="1.1 Java 栈"></a>1.1 Java 栈</h3><p>Java 栈总是和线程关联在一起，每当创建一个线程时，JVM 就会为这个线程创建一个对应的 Java 栈，在这个 Java 栈中又会含有多个栈帧（Frames），这些栈帧是与每个方法关联起来的，每运行一个方法就创建一个栈帧，每个栈帧会含有一些内部变量（在方法内定义的变量）、操作栈和方法返回值等信息。</p>
+<p>每当一个方法执行完成时，这个栈帧就会弹出栈帧的元素作为这个方法的返回值，并清除这个栈帧，Java 栈的栈顶的栈帧就是当前正在执行的活动栈，也就是当前正在执行的方法，PC 寄存器也会指向这个地址。只有这个活动的栈帧的本地变量可以被操作栈使用，当在这个栈帧中调用另外一个方法时，与之对应的一个新的栈帧又被创建，这个新创建的栈帧又被放到 Java 栈的顶部，变为当前的活动栈帧。同样现在只有这个栈帧的本地变量才能被使用，当在这个栈帧中所有指令执行完成时这个栈帧移出 Java 栈，刚才的那个栈帧又变为活动栈帧，前面的栈帧的返回值又变为这个栈帧的操作栈中的一个操作数。如果前面的栈帧没有返回值，那么当前的栈帧的操作栈的操作数没有变化。</p>
+<p>由于 Java 栈是与 Java 线程对应起来的，这个数据不是线程共享的，所以我们不用关心它的数据一致性问题，也不会存在同步锁的问题。</p>
+<h3 id="1-2-方法区"><a href="#1-2-方法区" class="headerlink" title="1.2 方法区"></a>1.2 方法区</h3><p>JVM 方法区是用于存储类结构信息的地方，class 文件会被 JVM 解析成几个部分，这些不同的部分在这个 class 被加载到 JVM 时，会被存储在不同的数据结构中，其中的常量池、域、方法数据、方法体、构造函数，包括类中的专用方法、实例初始化、接口初始化都存储在这个区域。</p>
+<p>方法区这个存储区域也属于后面介绍的 Java 堆中的一部分，也就是我们通常所说的 Java 堆中的永久区。这个区域可以被所有的线程共享，并且它的大小可以通过参数来设置。</p>
+<p>这个方法区存储区域的大小一般在程序启动后的一段时间内就是固定的了，JVM 运行一段时间后，需要加载的类通常都已经加载到 JVM 中了。但是有一种情况是需要注意的，那就是在项目中如果存在对类的动态编译，而且是同样一个类的多次编译，那么需要观察方法区的大小是否能满足类存储。</p>
+<h3 id="1-3-运行时常量池"><a href="#1-3-运行时常量池" class="headerlink" title="1.3 运行时常量池"></a>1.3 运行时常量池</h3><p>在 JVM 规范中是这样定义运行时常量池这个数据结构的：Runtime Constant Pool 代表运行时每个 class 文件中的常量表。它包括几种常量：编译期的数字常量、方法或者域的引用（在运行时解析）。Runtime Constant Pool 的功能类似于传统编程语言的符号表，尽管它包含的数据比典型的符号表要丰富得多。每个Runtime Constant pool 都是在 JVM 的 Method area 中分配的，每个 Class 或者 Interface 的 Constant Pool 都是在 JVM 创建 class 或接口时创建的。</p>
+<p>运行时常量池是方法区的一部分，所以它的存储也受方法区的规范约束，如果常量池无法分配，同样会 抛出 OutOfMemoryError。</p>
+<h3 id="1-4-本地方法栈"><a href="#1-4-本地方法栈" class="headerlink" title="1.4 本地方法栈"></a>1.4 本地方法栈</h3><p>本地方法栈是为 JVM 运行 Native 方法准备的空间，它和前面介绍的 Java 栈的作用是类似的，由于很多 Native 方法都是用 C 语言实现的，所以它通常又叫 C 栈，除了在我们的代码中包含的常规的 Native 方法会使用这个存储空间，在 JVM 利用 JIT 技术时会将一些 Java 方法重新编译为 Native Code 代码，这些编译后的本地代码通常也是利用这个栈来跟踪方法的执行状态的。</p>
+<h2 id="2-垃圾回收"><a href="#2-垃圾回收" class="headerlink" title="2. 垃圾回收"></a>2. 垃圾回收</h2><h3 id="2-1-如何检测垃圾"><a href="#2-1-如何检测垃圾" class="headerlink" title="2.1 如何检测垃圾"></a>2.1 如何检测垃圾</h3><p>只要是某个对象不再被其他活动对象引用，那么这个对象就可以被回收了。这里的活动对象指的是能够被一个根对象集合到达的对象。根对象集合大都会包含如下一些元素：</p>
+<ul>
+<li>在方法中局部变量区的元素的引用；</li>
+<li>在 Java 操作栈中的对象的引用；</li>
+<li>在常量池中的对象引用；</li>
+<li>在本地方法中持有的对象的引用；</li>
+<li>类的 Class 对象。</li>
+</ul>
+<h3 id="2-2-基于分代的垃圾回收算法"><a href="#2-2-基于分代的垃圾回收算法" class="headerlink" title="2.2 基于分代的垃圾回收算法"></a>2.2 基于分代的垃圾回收算法</h3><p>该算法的设计思路是：把对象按照寿命长短来分组，分为年轻代和年老代，新创建的对象被分在年轻代，如果对象经过几次回收后仍然存活，那么再把这个对象划分到年老代。年老代的收集频度不像年轻代那么频繁，这样就减少了每次垃圾收集时所要扫描的对象的数量，从而提高了垃圾回收效率。</p>
+<p>这种设计的思路是把堆划分成若干个子堆，每个子堆对应一个年龄代。</p>
+<p>JVM 将整个堆划分为 Young 区、Old 区和 Perm 区，分别存放不同年龄的对象，这三个区存放的对象有如下区别。</p>
+<ul>
+<li>Young 区又分为 Eden 区和两个 Survivor 区，其中所有新创建的对象都在 Eden 区，当 Eden 区满后会触发 minor GC 将 Eden 区仍然存活的对象复制到其中一个<br>Survivor 区中，另外一个 Survivor 区中的存活对象也复制到这个 Survivor 中，以<br>保证始终有一个 Survivor 区是空的。</li>
+<li>Old 区存放的是 Young 区的 Survivor 满后触发 minor GC 后仍然存活的对象，当 Eden 区满后会将对象存放到 Survivor 区中，如果 Survivor 区仍然存不下这些对象，GC 收集器会将这些对象直接存放到 Old 区。如果在 Survivor 区中的对象足<br>够老，也直接存放到 Old 区。如果 Old 区也满了，将会触发 Full GC，回收整个堆<br>内存。</li>
+<li>Perm 区存放的主要是类的 Class 对象，如果一个类被频繁地加载，也可能会导致 Perm 区满，Perm 区的垃圾回收也是由 Full GC 触发的。</li>
+</ul>
+<p>Sun 对堆中的不同代的大小也给出了建议，一般建议 Young 区的大小为整个堆的 1/4，而 Young 区中 Survivor 区一般设置为整个 Young 区的 1/8。</p>
+<h3 id="2-3-Serial-Collector"><a href="#2-3-Serial-Collector" class="headerlink" title="2.3 Serial Collector"></a>2.3 Serial Collector</h3><p>Serial Collector 是 JVM 在client 模式下默认的 GC 方式。可以通过 JVM 配置参数 <code>-XX:+UseSerialGC</code> 来指定 GC 使用该收集算法。我们指定所有的对象都在 Young 区的 Eden中创建，但是如果创建的对象超过 Eden 区的总大小，或者超过了 <code>PretenureSizeThreshold</code> 配置参数配置的大小，就只能在 Old 区分配了。</p>
+<p>当 Eden 空间不足时就触发了 Minor GC，触发 Minor GC 时首先会检查之前每次 Minor GC 时晋升到 Old 区的平均对象大小是否大于 Old 区的剩余空间，如果大于，则将直接触发 Full GC，如果小于，则要看 <code>HandlePromotionFailure</code> 参数（<code>-XX:-HandlePromotionFailure</code>）的值。如果为 true，仅触发 Minor GC，否则再触发一次 Full GC。其实这个规则很好理解，如果每次晋升的对象大小都超过了 Old 区的剩余空间，那么说明当前的 Old 区的空间已经不能满足新对象所占空间的大小，只有触发 Full GC 才能获得更多的内存空间。</p>
+<p>当 Minor GC时，除了将 Eden 区的非活动对象回收以外，还会把一些老对象也复制到 Old 区中。这个老对象的定义是通过配置参数 <code>MaxTenuringThreshold</code> 来控制的，如 <code>-XX:MaxTenuringThreshold=10</code>，则如果这个对象已经被 Minor GC 回收过 10 次后仍然存活，那么这个对象在这次 Minor GC 后直接放入 Old 区。还有一种情况，当这次 Minor GC 时 Survivor 区中的 To Space 放不下这些对象时，这些对象也将直接放入 Old 区。如果 Old 区或者 Perm 区空间不足，将会触发 Full GC，Full GC 会检查 Heap 堆中的所有对象，清除所有垃圾对象，如果是 Perm 区，会清除已经被卸载的 classloader 中加载的类的信息。</p>
+<h3 id="2-4-Parallel-Collector"><a href="#2-4-Parallel-Collector" class="headerlink" title="2.4 Parallel Collector"></a>2.4 Parallel Collector</h3><p>Parallel GC 根据 Minor GC 和 Full GC 的不同分为三种，分别是 ParNewGC、ParallelGC 和 ParallelOldGC。</p>
+<ol>
+<li><p>ParNewGC</p>
+<p>可以通过 <code>-XX:+UseParNewGC</code> 参数来指定， 它的对象分配和回收策略与 Serial<br>Collector 类似，只是回收的线程不是单线程的，而是多线程并行回收。在 Parallel Collector 中还有一个 <code>UseAdaptiveSizePolicy</code> 配置参数，这个参数是用来动态控制 Eden、From Space 和 To Space 的 <code>TenuringThreshold</code> 大小的，以便于控制哪些对象经过多少次回收后可以直接放入 Old 区。</p>
+</li>
+<li><p>ParallelGC</p>
+<p>在 Server 下默认的 GC 方式，可以通过 <code>-XX:+UseParallelGC</code> 参数来强制指定，并行回收的线程数可以通过 <code>-XX:ParallelGCThreads</code> 来指定，这个值有个计算公式，如果 CPU 和核数小于 8，线程数可以和核数一样，如果大于 8，值为 $3+(cpu core*5)/8$。</p>
+<p>可以通过 <code>-Xmn</code> 来控制 Young 区的大小，如 <code>-Xman10m</code>，即设置 Young 区的大小为 10MB。在 Young 区内的 Eden、From Space 和 To Space 的大小控制可以通过 <code>SurvivorRatio</code> 参数来完成，如设置成 <code>-XX:SurvivorRatio=8</code>，表示 Eden 区与 From Space 的大小为 8:1，如果 Young 区的总大小为 10 MB，那么 Eden、s0 和 s1 的大小分别为 8 MB、1 MB 和 1 MB。但在默认情况下以 <code>-XX:InitialSurivivorRatio</code> 设置的为准，这个值默认也为 8，表示的是 Young:s0 为 8:1。当在 Eden 区中申请内存空间时，如果 Eden 区不够，那么看当前申请的空间是否大于等于 Eden 的一半，如果大于则这次申请的空间直接在 Old 中分配，如果小于则触发 Minor GC。在触发 GC 之前首先会检查每次晋升到 Old 区的平均大小是否大于 Old 区的剩余空间，如大于则再触发 Full GC。在这次触发 GC 后仍然会按照这个规则重新检查一次。也就是如果满足上面这个规则，Full GC 会执行两次。</p>
+<p>在 Young 区的对象经过多次 GC 后有可能仍然存活，那么它们晋升到 Old 区的规则可以通过如下参数来控制：<code>AlwaysTenure</code>，默认为false，表示只要 Minor GC 时存活就晋升到 old；<code>NeverTenure</code>，默认为 false，表示永远不晋升到old 区。如果在上面两个都没设置的情况下设置 <code>UseAdaptiveSizePolicy</code>，启动时以 <code>InitialTenuringThreshold</code> 值作为存活次数的阈值，在每次 GC 后会动态调整，如果不想使用 <code>UseAdaptiveSizePolicy</code>，则以 <code>MaxTenuringThreshold</code><br>为准，不使用 <code>UseAdaptiveSizePolicy</code> 可以设置为 <code>-XX:-UseAdaptiveSizePolicy</code>。如果 Minor GC 时 To Space 不够，对象也将会直接放到 Old 区。当 Old 或者 Perm 区空间不足时会触发 Full GC，如果配置了参数 <code>ScavengeBeforeFullGC</code>，在 Full GC 之前会先触发Minor GC。</p>
+</li>
+<li><p>ParallelOldGC<br>可以通过 <code>-XX:+UseParallelOldGC</code> 参数来强制指定， 并行回收的线程数可以通过<br><code>-XX:ParallelGCThreads</code> 来指定，这个数字的值有个计算公式，如果 CPU 和核数小于 8，线程数可以和核数一样，如果大于 8，值为 $3+(cpu core*5)/8$。</p>
+<p>它与 ParallelGC 有何不同呢？其实不同之处在 Full GC 上，前者 Full GC 进行的动作为清空整个 Heap 堆中的垃圾对象，清除 Perm 区中已经被卸载的类信息，并进行压缩。而后者是清除 Heap 堆中的部分垃圾对象，并进行部分的空间压缩。GC 垃圾回收都是以多线程方式进行的，同样也将暂停所有的应用程序。</p>
+</li>
+</ol>
+<h3 id="2-5-CMS-Collector"><a href="#2-5-CMS-Collector" class="headerlink" title="2.5 CMS Collector"></a>2.5 CMS Collector</h3><p>可通过 <code>-XX:+UseConcMarkSweepGC</code> 来指定，并发的线程数默认为 4（并行GC 线程数 +3），也可通过 <code>ParallelCMSThreads</code> 来指定。</p>
+<p>CMS GC 与上面讨论的 GC 不太一样，它既不是上面所说的 Minor GC，也不是 Full GC，它是基于这两种 GC 之间的一种 GC。它的触发规则是检查 Old 区或者 Perm 区的使用率，当达到一定比例时就会触发 CMS GC，触发时会回收 Old 区中的内存空间。这个比例可以通过 <code>CMSInitiatingOccupancyFraction</code> 参数来指定， 默认是 92%， 这个默认值是通过</p>
+<p>$$ ((100-MinHeapFreeRatio)+(double)(CMSTriggerRatio*MinHeapFreeRatio)/100.0)/100.0$$</p>
+<p>计算出来的，其中的 <code>MinHeapFreeRatio</code> 为 40、<code>CMSTriggerRatio</code> 为 80。如果让 Perm 区也使用 CMS GC 可以通过 <code>-XX:+CMSClassUnloadingEnabled</code> 来设定，Perm 区的比例默认值也是 92%，这个值可以通过 <code>CMSInitiatingPermOccupancyFraction</code> 设定。这个默认值也是通过一个公式计算出来的：</p>
+<p>$$<br>((100-MinHeapFreeRatio)+(double)(CMSTriggerPermRatio*MinHeapFreeRatio)/</p>
+<p>100.0)/100.0<br>$$<br>其中 <code>MinHeapFreeRatio</code> 为 40，<code>CMSTriggerPermRatio</code> 为 80。</p>
+<p>触发 CMS GC 时回收的只是 Old 区或者 Perm 区的垃圾对象，在回收时和前面所说的<br>Minor GC 和 Full GC 基本没有关系。在这个模式下的 Minor GC 触发规则和回收规则与 Serial Collector 基本一致，不同之处只是GC 回收的线程是多线程而已。</p>
+<p>触发 Full GC 是在这两种情况下发生的：一种是 Eden 分配失败，Minor GC 后分配到 ToSpace，To Space 不够再分配到 Old 区，Old 区不够则触发 Full GC；另外一种情况是，当CMS GC 正在进行时向Old 申请内存失败则会直接触发 Full GC。</p>
+<p>这里还需要特别提醒一下，在Hotspot 1.6 中使用这种 GC 方式时在程序中显式地调用<br>了 <code>System.gc</code>，且设置了 <code>ExplicitGCInvokesConcurrent</code> 参数，那么使用 NIO 时可能会引发内存泄漏。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/JVM/" rel="tag"># JVM</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/04/23/《深入分析 Java Web 技术内幕》：Java-I-O/" rel="next" title="《深入分析 Java Web 技术内幕》：Java I/O">
+                <i class="fa fa-chevron-left"></i> 《深入分析 Java Web 技术内幕》：Java I/O
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/05/04/《Spring Boot 实战》：Spring EL和资源调用/" rel="prev" title="《Spring Boot 实战》: Spring EL 和资源调用">
+                《Spring Boot 实战》: Spring EL 和资源调用 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="Yongqiang Xiang" />
+          <p class="site-author-name" itemprop="name">Yongqiang Xiang</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">66</span>
+                <span class="site-state-item-name">posts</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">28</span>
+                <span class="site-state-item-name">categories</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">28</span>
+                <span class="site-state-item-name">tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/xiangyq000" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                    
+                      GitHub
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://stackoverflow.com/users/4945225/xiangyq000" target="_blank" title="StackOverflow">
+                  
+                    <i class="fa fa-fw fa-stack-overflow"></i>
+                  
+                    
+                      StackOverflow
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-JVM-内存结构"><span class="nav-number">1.</span> <span class="nav-text">1. JVM 内存结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-Java-栈"><span class="nav-number">1.1.</span> <span class="nav-text">1.1 Java 栈</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-方法区"><span class="nav-number">1.2.</span> <span class="nav-text">1.2 方法区</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-运行时常量池"><span class="nav-number">1.3.</span> <span class="nav-text">1.3 运行时常量池</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-4-本地方法栈"><span class="nav-number">1.4.</span> <span class="nav-text">1.4 本地方法栈</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-垃圾回收"><span class="nav-number">2.</span> <span class="nav-text">2. 垃圾回收</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-如何检测垃圾"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 如何检测垃圾</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-基于分代的垃圾回收算法"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 基于分代的垃圾回收算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-Serial-Collector"><span class="nav-number">2.3.</span> <span class="nav-text">2.3 Serial Collector</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-4-Parallel-Collector"><span class="nav-number">2.4.</span> <span class="nav-text">2.4 Parallel Collector</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-5-CMS-Collector"><span class="nav-number">2.5.</span> <span class="nav-text">2.5 CMS Collector</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yongqiang Xiang</span>
+</div>
+
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script><!-- hexo-inject:begin --><!-- Begin: Injected MathJax -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config("");
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+      all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+  });
+</script>
+
+<script type="text/javascript" src="custom_mathjax_source">
+</script>
+<!-- End: Injected MathJax -->
+<!-- hexo-inject:end -->
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

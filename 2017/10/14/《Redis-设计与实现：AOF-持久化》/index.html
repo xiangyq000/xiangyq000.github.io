@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-cn">
+<head>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Redis,Database," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="AOF 持久化保存数据库状态的方法是将服务器执行的命令保存到文件中。被写入 AOF 文件的所有命令都是以 Redis 的命令请求协议格式保存的。 服务器在启动时，可以通过载入和执行 AOF 文件中保存的命令来还原服务器关闭之前的数据库状态，以下就是服务器载入 AOF 文件并还原数据库状态时打印的日志： 123[8321] 05 Sep 11:58:50.448 # Server started,">
+<meta name="keywords" content="Redis,Database">
+<meta property="og:type" content="article">
+<meta property="og:title" content="《Redis 设计与实现：AOF 持久化》">
+<meta property="og:url" content="http://yoursite.com/2017/10/14/《Redis-设计与实现：AOF-持久化》/index.html">
+<meta property="og:site_name" content="天歌のBlog">
+<meta property="og:description" content="AOF 持久化保存数据库状态的方法是将服务器执行的命令保存到文件中。被写入 AOF 文件的所有命令都是以 Redis 的命令请求协议格式保存的。 服务器在启动时，可以通过载入和执行 AOF 文件中保存的命令来还原服务器关闭之前的数据库状态，以下就是服务器载入 AOF 文件并还原数据库状态时打印的日志： 123[8321] 05 Sep 11:58:50.448 # Server started,">
+<meta property="og:locale" content="zh-cn">
+<meta property="og:updated_time" content="2018-01-05T08:30:06.001Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="《Redis 设计与实现：AOF 持久化》">
+<meta name="twitter:description" content="AOF 持久化保存数据库状态的方法是将服务器执行的命令保存到文件中。被写入 AOF 文件的所有命令都是以 Redis 的命令请求协议格式保存的。 服务器在启动时，可以通过载入和执行 AOF 文件中保存的命令来还原服务器关闭之前的数据库状态，以下就是服务器载入 AOF 文件并还原数据库状态时打印的日志： 123[8321] 05 Sep 11:58:50.448 # Server started,">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/10/14/《Redis-设计与实现：AOF-持久化》/"/>
+
+
+
+
+
+  <title>《Redis 设计与实现：AOF 持久化》 | 天歌のBlog</title><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-cn">
+
+  
+  
+    
+  
+
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">天歌のBlog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/10/14/《Redis-设计与实现：AOF-持久化》/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Yongqiang Xiang">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天歌のBlog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">《Redis 设计与实现：AOF 持久化》</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-10-14T16:57:41+08:00">
+                2017-10-14
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/读书笔记/" itemprop="url" rel="index">
+                    <span itemprop="name">读书笔记</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/读书笔记/Redis/" itemprop="url" rel="index">
+                    <span itemprop="name">Redis</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>AOF 持久化保存数据库状态的方法是将服务器执行的命令保存到文件中。被写入 AOF 文件的所有命令都是以 Redis 的命令请求协议格式保存的。</p>
+<p>服务器在启动时，可以通过载入和执行 AOF 文件中保存的命令来还原服务器关闭之前的数据库状态，以下就是服务器载入 AOF 文件并还原数据库状态时打印的日志：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[8321] 05 Sep 11:58:50.448 # Server started, Redisversion 2.9.11</span><br><span class="line">[8321] 05 Sep 11:58:50.449 * DB loaded from append only file: 0.000 seconds</span><br><span class="line">[8321] 05 Sep 11:58:50.449 * The server is now ready to accept connections on port 6379</span><br></pre></td></tr></table></figure>
+<a id="more"></a>
+<h2 id="1-AOF-持久化的实现"><a href="#1-AOF-持久化的实现" class="headerlink" title="1. AOF 持久化的实现"></a>1. AOF 持久化的实现</h2><h3 id="1-1-命令追加"><a href="#1-1-命令追加" class="headerlink" title="1.1 命令追加"></a>1.1 命令追加</h3><p>当 AOF 持久化功能处于打开状态时， 服务器在执行完一个写命令之后， 会以协议格式将被执行的写命令追加到服务器状态的 <code>aof_buf</code> 缓冲区的末尾：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">redisServer</span> &#123;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// AOF 缓冲区</span></span><br><span class="line">    sds aof_buf;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h3 id="1-2-AOF-文件的写入与同步"><a href="#1-2-AOF-文件的写入与同步" class="headerlink" title="1.2 AOF 文件的写入与同步"></a>1.2 AOF 文件的写入与同步</h3><p>Redis 的服务器进程就是一个事件循环（loop）， 这个循环中的文件事件负责接收客户端的命令请求， 以及向客户端发送命令回复， 而时间事件则负责执行像 <code>serverCron</code> 函数这样需要定时运行的函数。</p>
+<p>因为服务器在处理文件事件时可能会执行写命令， 使得一些内容被追加到 <code>aof_buf</code> 缓冲区里面， 所以在服务器每次结束一个事件循环之前， 它都会调用 <code>flushAppendOnlyFile</code> 函数， 考虑是否需要将 <code>aof_buf</code> 缓冲区中的内容写入和保存到 AOF 文件里面， 这个过程可以用以下伪代码表示：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">def eventLoop():</span><br><span class="line"></span><br><span class="line">    while True:</span><br><span class="line"></span><br><span class="line">        # 处理文件事件，接收命令请求以及发送命令回复</span><br><span class="line">        # 处理命令请求时可能会有新内容被追加到 aof_buf 缓冲区中</span><br><span class="line">        processFileEvents()</span><br><span class="line"></span><br><span class="line">        # 处理时间事件</span><br><span class="line">        processTimeEvents()</span><br><span class="line"></span><br><span class="line">        # 考虑是否要将 aof_buf 中的内容写入和保存到 AOF 文件里面</span><br><span class="line">        flushAppendOnlyFile()</span><br></pre></td></tr></table></figure>
+<p><code>flushAppendOnlyFile</code> 函数的行为由服务器配置的 <code>appendfsync</code> 选项的值来决定， 各个不同值产生的行为如下表所示：</p>
+<table>
+<thead>
+<tr>
+<th><code>appendfsync</code> 选项的值</th>
+<th><code>flushAppendOnlyFile</code> 函数的行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>always</code></td>
+<td>将 <code>aof_buf</code> 缓冲区中的所有内容写入并同步到 AOF 文件。</td>
+</tr>
+<tr>
+<td><code>everysec</code></td>
+<td>将 <code>aof_buf</code> 缓冲区中的所有内容写入到 AOF 文件， 如果上次同步 AOF 文件的时间距离现在超过一秒钟， 那么再次对 AOF 文件进行同步， 并且这个同步操作是由一个线程专门负责执行的。</td>
+</tr>
+<tr>
+<td><code>no</code></td>
+<td>将 <code>aof_buf</code> 缓冲区中的所有内容写入到 AOF 文件， 但并不对 AOF 文件进行同步， 何时同步由操作系统来决定。</td>
+</tr>
+</tbody>
+</table>
+<p>如果用户没有主动为 <code>appendfsync</code> 选项设置值， 那么 <code>appendfsync</code> 选项的默认值为 <code>everysec</code>。</p>
+<h3 id="1-3-AOF-持久化的效率和安全性"><a href="#1-3-AOF-持久化的效率和安全性" class="headerlink" title="1.3 AOF 持久化的效率和安全性"></a>1.3 AOF 持久化的效率和安全性</h3><p>服务器配置 <code>appendfsync</code> 选项的值直接决定 AOF 持久化功能的效率和安全性。</p>
+<ul>
+<li><p>当 <code>appendfsync</code> 的值为 <code>always</code> 时， 服务器在每个事件循环都要将 <code>aof_buf</code> 缓冲区中的所有内容写入到 AOF 文件， 并且同步 AOF 文件， 所以 <code>always</code> 的效率是 <code>appendfsync</code> 选项三个值当中最慢的一个， 但从安全性来说， <code>always</code> 也是最安全的， 因为即使出现故障停机， AOF 持久化也只会丢失一个事件循环中所产生的命令数据。</p>
+</li>
+<li><p>当 <code>appendfsync</code> 的值为 <code>everysec</code> 时， 服务器在每个事件循环都要将 <code>aof_buf</code> 缓冲区中的所有内容写入到 AOF 文件， 并且每隔超过一秒就要在子线程中对 AOF 文件进行一次同步： 从效率上来讲， <code>everysec</code> 模式足够快， 并且就算出现故障停机， 数据库也只丢失一秒钟的命令数据。</p>
+</li>
+<li><p>当 <code>appendfsync</code> 的值为 <code>no</code> 时， 服务器在每个事件循环都要将 <code>aof_buf</code> 缓冲区中的所有内容写入到 AOF 文件， 至于何时对 AOF 文件进行同步， 则由操作系统控制。因为处于 <code>no</code> 模式下的 <code>flushAppendOnlyFile</code> 调用无须执行同步操作， 所以该模式下的 AOF 文件写入速度总是最快的， 不过因为这种模式会在系统缓存中积累一段时间的写入数据， 所以该模式的单次同步时长通常是三种模式中时间最长的： 从平摊操作的角度来看， <code>no</code> 模式和 <code>everysec</code> 模式的效率类似， 当出现故障停机时， 使用 <code>no</code> 模式的服务器将丢失上次同步 AOF 文件之后的所有写命令数据。</p>
+</li>
+</ul>
+<h2 id="2-AOF-文件的载入与数据还原"><a href="#2-AOF-文件的载入与数据还原" class="headerlink" title="2. AOF 文件的载入与数据还原"></a>2. AOF 文件的载入与数据还原</h2><p>因为 AOF 文件里面包含了重建数据库状态所需的所有写命令，所以服务器只要读入并重新执行一遍 AOF 文件里面保存的写命令，就可以还原服务器关闭之前的数据库状态。</p>
+<p>Redis 读取 AOF 文件并还原数据库状态的详细步骤如下：</p>
+<ol>
+<li>创建一个不带网络连接的伪客户端（fake client）：因为 Redis 的命令只能在客户端上下文中执行，而载入 AOF 文件时所使用的命令直接来源于 AOF 文件而不是网络连接，所以服务器使用了一个没有网络连接的伪客户端来执行 AOF 文件保存的写命令，伪客户端执行命令的效果和带网络连接的客户端执行命令的效果完全一样。</li>
+<li>从 AOF 文件中分析并读取出一条写命令。</li>
+<li>使用伪客户端执行被读出的写命令。</li>
+<li>一直执行步骤 2 和 步骤 3，直到 AOF 文件中的所有写命令都被处理完毕为止。</li>
+</ol>
+<h2 id="3-AOF重写"><a href="#3-AOF重写" class="headerlink" title="3. AOF重写"></a>3. AOF重写</h2><p>为了解决 AOF 文件体积膨胀的问题，Redis 提供了 AOF 重写功能：Redis 服务器可以创建一个新的 AOF 文件来替代现有的 AOF 文件，新旧两个文件所保存的数据库状态是相同的，但是新的 AOF 文件不会包含任何浪费空间的冗余命令，通常体积会较旧 AOF 文件小很多。</p>
+<h3 id="3-1-AOF-文件重写的实现"><a href="#3-1-AOF-文件重写的实现" class="headerlink" title="3.1 AOF 文件重写的实现"></a>3.1 AOF 文件重写的实现</h3><p>AOF 重写并不需要对原有 AOF 文件进行任何的读取、写入、分析等操作，这个功能是通过读取服务器当前的数据库状态来实现的。首先从数据库中读取键现在的值，然后用一条命令去记录键值对，代替之前记录该键值对的多个命令。整个重写过程可以用以下的伪代码表示：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><span class="line">def AOF_REWRITE(tmp_tile_name):</span><br><span class="line"></span><br><span class="line">  f = create(tmp_tile_name)</span><br><span class="line"></span><br><span class="line">  # 遍历所有数据库</span><br><span class="line">  for db in redisServer.db:</span><br><span class="line"></span><br><span class="line">    # 如果数据库为空，那么跳过这个数据库</span><br><span class="line">    if db.is_empty(): continue</span><br><span class="line"></span><br><span class="line">    # 写入 SELECT 命令，用于切换数据库</span><br><span class="line">    f.write_command(&quot;SELECT &quot; + db.number)</span><br><span class="line"></span><br><span class="line">    # 遍历所有键</span><br><span class="line">    for key in db:</span><br><span class="line"></span><br><span class="line">      # 如果键带有过期时间，并且已经过期，那么跳过这个键</span><br><span class="line">      if key.have_expire_time() and key.is_expired(): continue</span><br><span class="line"></span><br><span class="line">      if key.type == String:</span><br><span class="line"></span><br><span class="line">        # 用 SET key value 命令来保存字符串键</span><br><span class="line"></span><br><span class="line">        value = get_value_from_string(key)</span><br><span class="line"></span><br><span class="line">        f.write_command(&quot;SET &quot; + key + value)</span><br><span class="line"></span><br><span class="line">      elif key.type == List:</span><br><span class="line"></span><br><span class="line">        # 用 RPUSH key item1 item2 ... itemN 命令来保存列表键</span><br><span class="line"></span><br><span class="line">        item1, item2, ..., itemN = get_item_from_list(key)</span><br><span class="line"></span><br><span class="line">        f.write_command(&quot;RPUSH &quot; + key + item1 + item2 + ... + itemN)</span><br><span class="line"></span><br><span class="line">      elif key.type == Set:</span><br><span class="line"></span><br><span class="line">        # 用 SADD key member1 member2 ... memberN 命令来保存集合键</span><br><span class="line"></span><br><span class="line">        member1, member2, ..., memberN = get_member_from_set(key)</span><br><span class="line"></span><br><span class="line">        f.write_command(&quot;SADD &quot; + key + member1 + member2 + ... + memberN)</span><br><span class="line"></span><br><span class="line">      elif key.type == Hash:</span><br><span class="line"></span><br><span class="line">        # 用 HMSET key field1 value1 field2 value2 ... fieldN valueN 命令来保存哈希键</span><br><span class="line"></span><br><span class="line">        field1, value1, field2, value2, ..., fieldN, valueN =\</span><br><span class="line">        get_field_and_value_from_hash(key)</span><br><span class="line"></span><br><span class="line">        f.write_command(&quot;HMSET &quot; + key + field1 + value1 + field2 + value2 +\</span><br><span class="line">                        ... + fieldN + valueN)</span><br><span class="line"></span><br><span class="line">      elif key.type == SortedSet:</span><br><span class="line"></span><br><span class="line">        # 用 ZADD key score1 member1 score2 member2 ... scoreN memberN</span><br><span class="line">        # 命令来保存有序集键</span><br><span class="line"></span><br><span class="line">        score1, member1, score2, member2, ..., scoreN, memberN = \</span><br><span class="line">        get_score_and_member_from_sorted_set(key)</span><br><span class="line"></span><br><span class="line">        f.write_command(&quot;ZADD &quot; + key + score1 + member1 + score2 + member2 +\</span><br><span class="line">                        ... + scoreN + memberN)</span><br><span class="line"></span><br><span class="line">      else:</span><br><span class="line"></span><br><span class="line">        raise_type_error()</span><br><span class="line"></span><br><span class="line">      # 如果键带有过期时间，那么用 EXPIREAT key time 命令来保存键的过期时间</span><br><span class="line">      if key.have_expire_time():</span><br><span class="line">        f.write_command(&quot;EXPIREAT &quot; + key + key.expire_time_in_unix_timestamp())</span><br><span class="line"></span><br><span class="line">    # 关闭文件</span><br><span class="line">    f.close()</span><br></pre></td></tr></table></figure>
+<p>在实际中，为了避免在执行命令时造成客户端输入缓冲区溢出，重写程序在处理列表、哈希表、集合、有序集合这四种可能会带有多个元素的键时，会先检查键所包含的元素数量，如果元素的数量超过了<code>redis.h/REDIS_AOF_REWRITE_ITEMS_PER_CMD</code> 常量的值，那么重写程序将使用多条命令来记录键的值，而不单单使用一条命令。</p>
+<p>在目前版本中，<code>REDIS_AOF_REWRITE_ITEMS_PER_CMD</code> 常量的值为 64，这也就是说，如果一个集合键包含了超过 64 个元素，那么重写程序会用多条SADD命令来记录这个集合，并且每条命令设置的元素数量也为 64 个：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SADD &lt;set-key&gt; &lt;elem1&gt; &lt;elem2&gt; ... &lt;elem64&gt;</span><br><span class="line">SADD &lt;set-key&gt; &lt;elem65&gt; &lt;elem66&gt; ... &lt;elem128&gt;</span><br><span class="line">SADD &lt;set-key&gt; &lt;elem129&gt; &lt;elem130&gt; ... &lt;elem192&gt;</span><br></pre></td></tr></table></figure>
+<p>另一方面如果一个列表键包含了超过 64 个项，那么重写程序会用多条 <code>RPUSH</code> 命令来保存这个列表，并且每条命令设置的项数量也为 64 个：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SADD &lt;list-key&gt; &lt;item1&gt; &lt;item2&gt; ... &lt;item64&gt;</span><br><span class="line">SADD &lt;list-key&gt; &lt;item65&gt; &lt;item66&gt; ... &lt;item128&gt;</span><br><span class="line">SADD &lt;list-key&gt; &lt;item129&gt; &lt;item130&gt; ... &lt;item192&gt;</span><br></pre></td></tr></table></figure>
+<h3 id="3-2-AOF-后台重写"><a href="#3-2-AOF-后台重写" class="headerlink" title="3.2 AOF 后台重写"></a>3.2 AOF 后台重写</h3><p>Redis 决定将 AOF 重写程序放到（后台）子进程里执行， 这样做可以同时达到两个目的：</p>
+<ol>
+<li>子进程进行 AOF 重写期间，服务器进程（父进程）可以继续处理命令请求。</li>
+<li>子进程带有服务器进程的数据副本，使用子进程而不是线程，可以在避免使用锁的情况下，保证数据的安全性。</li>
+</ol>
+<p>子进程在进行 AOF 重写期间，服务器进程还需要继续处理命令请求，而新的命令可能会对现有的数据库状态进行修改，从而使得服务器当前的数据库状态和重写后的 AOF 文件所保存的数据库状态不一致。</p>
+<p>为了解决这种数据不一致问题，Redis 服务器设置了一个 AOF 重写缓冲区，这个缓冲区在服务器创建子进程之后开始使用，当 Redis 服务器执行完一个写命令之后，它会同时将这个写命令发送给 AOF 缓冲区和 AOF 重写缓冲区。这也就是说，在子进程执行 AOF 重写期间，服务器进程需要执行以下三个工作：</p>
+<ol>
+<li>执行客户端发来的命令。</li>
+<li>将执行后的写命令追加到 AOF 缓冲区。</li>
+<li>将执行后的写命令追加到 AOF 重写缓冲区。</li>
+</ol>
+<p>这样一来，可以保证:</p>
+<ul>
+<li>AOF 缓冲区的内容会定期被写入和同步到 AOF 文件，对现有 AOF 文件的处理工作会如常进行。</li>
+<li>从创建子进程开始，服务器执行的所有写命令都会被记录到 AOF 重写缓冲区里面。</li>
+</ul>
+<p>当子进程完成 AOF 重写工作之后，它会向父进程发送一个信号，父进程在接到该信号之后，会调用一个信号处理函数，并执行以下工作：</p>
+<ul>
+<li>将 AOF 重写缓冲区中的所有内容写入到新 AOF 文件中，这时新 AOF 文件所保存的数据库状态将和服务器当前的数据库状态一致。</li>
+<li>对新的 AOF 文件进行改名，原子地（atomic）覆盖现有的 AOF 文件，完成新旧两个 AOF 文件的替换。</li>
+</ul>
+<p>信号处理函数执行完毕之后，父进程就可以继续像往常一样接受命令请求了。</p>
+<p>在整个 AOF 后台重写过程中，只有信号处理函数执行时会对服务器进程（父进程）造成阻塞，其他时候，AOF 后台重写都不会阻塞父进程，这将 AOF 重写对服务器性能造成的影响降到了最低。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Redis/" rel="tag"># Redis</a>
+          
+            <a href="/tags/Database/" rel="tag"># Database</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/10/10/《Redis-设计与实现：RDB-持久化》/" rel="next" title="《Redis 设计与实现：RDB 持久化》">
+                <i class="fa fa-chevron-left"></i> 《Redis 设计与实现：RDB 持久化》
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/10/16/《Redis-设计与实现：发布与订阅》/" rel="prev" title="《Redis 设计与实现：发布与订阅》">
+                《Redis 设计与实现：发布与订阅》 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="Yongqiang Xiang" />
+          <p class="site-author-name" itemprop="name">Yongqiang Xiang</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">66</span>
+                <span class="site-state-item-name">posts</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">28</span>
+                <span class="site-state-item-name">categories</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">28</span>
+                <span class="site-state-item-name">tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/xiangyq000" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                    
+                      GitHub
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://stackoverflow.com/users/4945225/xiangyq000" target="_blank" title="StackOverflow">
+                  
+                    <i class="fa fa-fw fa-stack-overflow"></i>
+                  
+                    
+                      StackOverflow
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-AOF-持久化的实现"><span class="nav-number">1.</span> <span class="nav-text">1. AOF 持久化的实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-命令追加"><span class="nav-number">1.1.</span> <span class="nav-text">1.1 命令追加</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-AOF-文件的写入与同步"><span class="nav-number">1.2.</span> <span class="nav-text">1.2 AOF 文件的写入与同步</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-AOF-持久化的效率和安全性"><span class="nav-number">1.3.</span> <span class="nav-text">1.3 AOF 持久化的效率和安全性</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-AOF-文件的载入与数据还原"><span class="nav-number">2.</span> <span class="nav-text">2. AOF 文件的载入与数据还原</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-AOF重写"><span class="nav-number">3.</span> <span class="nav-text">3. AOF重写</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-AOF-文件重写的实现"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 AOF 文件重写的实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-AOF-后台重写"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 AOF 后台重写</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yongqiang Xiang</span>
+</div>
+
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script><!-- hexo-inject:begin --><!-- Begin: Injected MathJax -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config("");
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+      all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+  });
+</script>
+
+<script type="text/javascript" src="custom_mathjax_source">
+</script>
+<!-- End: Injected MathJax -->
+<!-- hexo-inject:end -->
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

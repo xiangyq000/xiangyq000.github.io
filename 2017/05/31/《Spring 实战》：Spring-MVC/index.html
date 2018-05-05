@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-cn">
+<head>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Spring," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="1. 请求处理流程">
+<meta name="keywords" content="Spring">
+<meta property="og:type" content="article">
+<meta property="og:title" content="《Spring 实战》：Spring MVC">
+<meta property="og:url" content="http://yoursite.com/2017/05/31/《Spring 实战》：Spring-MVC/index.html">
+<meta property="og:site_name" content="天歌のBlog">
+<meta property="og:description" content="1. 请求处理流程">
+<meta property="og:locale" content="zh-cn">
+<meta property="og:image" content="https://user-images.githubusercontent.com/12514722/30251731-612d2c8c-9698-11e7-8c34-df6e0f96bd8f.png">
+<meta property="og:updated_time" content="2018-01-05T08:35:38.789Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="《Spring 实战》：Spring MVC">
+<meta name="twitter:description" content="1. 请求处理流程">
+<meta name="twitter:image" content="https://user-images.githubusercontent.com/12514722/30251731-612d2c8c-9698-11e7-8c34-df6e0f96bd8f.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/05/31/《Spring 实战》：Spring-MVC/"/>
+
+
+
+
+
+  <title>《Spring 实战》：Spring MVC | 天歌のBlog</title><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-cn">
+
+  
+  
+    
+  
+
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">天歌のBlog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/05/31/《Spring 实战》：Spring-MVC/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Yongqiang Xiang">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天歌のBlog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">《Spring 实战》：Spring MVC</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-05-31T01:56:47+08:00">
+                2017-05-31
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/读书笔记/" itemprop="url" rel="index">
+                    <span itemprop="name">读书笔记</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/读书笔记/Spring/" itemprop="url" rel="index">
+                    <span itemprop="name">Spring</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="1-请求处理流程"><a href="#1-请求处理流程" class="headerlink" title="1. 请求处理流程"></a>1. 请求处理流程</h2><p><img src="https://user-images.githubusercontent.com/12514722/30251731-612d2c8c-9698-11e7-8c34-df6e0f96bd8f.png" alt=""><br><a id="more"></a><br>在请求离开浏览器时①，会带有用户所请求内容的信息，至少会包含请求的 URL。</p>
+<p>请求旅程的第一站是 Spring 的 <code>DispatcherServlet</code>。Spring MVC 所有的请求都会通过一个前端控制器（front controller）Servlet。前端控制器是常用的 Web 应用程序模式，在这里一个单实例的 Servlet 将请求委托给应用程序的其他组件来执行实际的处理。在 Spring MVC 中，<code>DispatcherServlet</code> 就是前端控制器。</p>
+<p><code>DispatcherServlet</code> 的任务是将请求发送给 Spring MVC 控制器（controller）。控制器是一个用于处理请求的 Spring 组件。在典型的应用程序中可能会有多个控制器，<code>DispatcherServlet</code> 需要知道应该将请求发送给哪个控制器。所以<code>DispatcherServlet</code> 以会查询一个或多个处理器映射（handler mapping）②来确定请求的下一站在哪里。处理器映射会根据请求所携带的 URL 信息来进行决策。</p>
+<p>一旦选择了合适的控制器，<code>DispatcherServlet</code> 会将请求发送给选中的控制器③。到了控制器，请求会卸下其负载（用户提交的信息）并耐心等待控制器处理这些信息。（实际上，设计良好的控制器本身只处理很少甚至不处理工作，而是将业务逻辑委托给一个或多个服务对象进行处理。）</p>
+<p>控制器在完成逻辑处理后，通常会产生一些信息，这些信息需要返回给用户并在浏览器上显示。这些信息被称为模型（model）。不过仅仅给用户返回原始的信息是不够的——这些信息需要以用户友好的方式进行格式化，一般会是 HTML。所以，信息需要发送给一个视图（view），通常会是 JSP。</p>
+<p>控制器所做的最后一件事就是将模型数据打包，并且标示出用于渲染输出的视图名。它接下来会将请求连同模型和视图名发送回 <code>DispatcherServlet</code>④。</p>
+<p>这样，控制器就不会与特定的视图相耦合，传递给 <code>DispatcherServlet</code> 的视图名并不直接表示某个特定的 JSP。实际上，它甚至并不能确定视图就是 JSP。相反，它仅仅传递了一个逻辑名称，这个名字将会用来查找产生结果的真正视图。<code>DispatcherServlet</code> 将会使用视图解析器（view resolver）⑤来将逻辑视图名匹配为一个特定的视图实现，它可能是也可能不是 JSP。</p>
+<p>既然 <code>DispatcherServlet</code> 已经知道由哪个视图渲染结果，那请求的任务基本上也就完成了。它的最后一站是视图的实现（可能是 JSP）⑥，在这里它交付模型数据。请求的任务就完成了。视图将使用模型数据渲染输出，这个输出会通过响应对象传递给客户端。</p>
+<h2 id="2-基于-Java-类配置的-DispatcherServlet"><a href="#2-基于-Java-类配置的-DispatcherServlet" class="headerlink" title="2. 基于 Java 类配置的 DispatcherServlet"></a>2. 基于 Java 类配置的 DispatcherServlet</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyWebAppInitializer</span> <span class="keyword">extends</span> <span class="title">AbstractAnnotationConfigDispactcherServletInitializer</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">protected</span> String[] getServletMappings() <span class="comment">// 将DispatcherServlet映射到“/”</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> String[] &#123;<span class="string">"/"</span>&#125;;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    protected class&lt;?&gt;[] getRootConfigClasses()</span><br><span class="line">    &#123;</span><br><span class="line">        return new class&lt;?&gt;[] &#123;RootConfig.class&#125;;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    protected class&lt;?&gt;[] getServletConfigClasses() // 指定配置类</span><br><span class="line">    &#123;</span><br><span class="line">        return new class&lt;?&gt;[] &#123;WebConfig.class&#125;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>扩展 <code>AbstractAnnotationConfigDispatcherServletInitializer</code> 的任意类都会自动地配置 <code>DispatcherServlet</code> 和 Spring 应用上下文，Spring 的应用上下文会位于应用程序的 Servlet 上下文之中。</p>
+<p>在 Servlet 3.0 环境中，容器会在类路径中查找实现 <code>javax.servlet.ServletContainerInitializer</code> 接口的类，如果能发现的话，就会用它来配置 Servlet 容器。</p>
+<p>Spring 提供了这个接口的实现，名为 <code>SpringServletContainerInitializer</code>，这个类反过来又会查找实现 <code>WebApplicationInitializer</code> 的类并将配置的任务交给它们来完成。Spring 3.2 引入了一个便利的 <code>WebApplicationInitializer</code> 基础实现，也就是 <code>AbstractAnnotationConfigDispatcherServletInitializer</code>。因为我们的 <code>Spittr-WebAppInitializer</code> 扩展了 <code>AbstractAnnotationConfigDispatcherServletInitializer</code>（同时也就实现了 <code>WebApplicationInitializer</code>），因此当部署到 Servlet 3.0 容器中的时候，容器会自动发现它，并用它来配置 Servlet 上下文。</p>
+<p>在上述程序中，<code>SpittrWebAppInitializer</code> 重写了三个方法：第一个方法 <code>getServletMappings()</code>，它会将一个或多个路径映射到 <code>DispatcherServlet</code> 上。在本例中，它映射的是“/”，这表示它会是应用的默认 Servlet。它会处理进入应用的所有请求。</p>
+<p><code>AbstractAnnotationConfigDispatcherServletInitializer</code> 会同时创建 <code>DispatcherServlet</code> 和 <code>ContextLoaderListener</code>。<code>GetServletConfigClasses()</code> 方法返回的带有 <code>@Configuration</code> 注解的类将会用来定义 <code>DispatcherServlet</code> 应用上下文中的 bean。<code>getRootConfigClasses()</code> 方法返回的带有 <code>@Configuration</code> 注解的类将会用来配置 <code>ContextLoaderListener</code> 创建的应用上下文中的 bean。</p>
+<h2 id="3-ViewResolver"><a href="#3-ViewResolver" class="headerlink" title="3. ViewResolver"></a>3. ViewResolver</h2><p>Spring 自带了 12 个视图解析器，能够将逻辑视图名转换为物理实现。</p>
+<table>
+<thead>
+<tr>
+<th>视图解析器</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BeanNameViewResolver</td>
+<td>将视图解析为 Spring 应用上下文中的 bean，其中 bean 的 ID 与视图的名字相同</td>
+</tr>
+<tr>
+<td>ContentNegotiatingViewResolver</td>
+<td>通过考虑客户端需要的内容类型来解析视图，委托给另外一个能够产生对应内容类型的视图解析器</td>
+</tr>
+<tr>
+<td>FreeMarkerViewResolver</td>
+<td>将视图解析为 FreeMarker 模板</td>
+</tr>
+<tr>
+<td>InternalResourceViewResolver</td>
+<td>将视图解析为 Web 应用的内部资源（一般为 JSP）</td>
+</tr>
+<tr>
+<td>JasperReportsViewResolver</td>
+<td>将视图解析为 JasperReports 定义</td>
+</tr>
+<tr>
+<td>ResourceBundleViewResolver</td>
+<td>将视图解析为资源 bundle（一般为属性文件）</td>
+</tr>
+<tr>
+<td>TilesViewResolver</td>
+<td>将视图解析为 Apache Tile 定义，其中 tile ID 与视图名称相同。注意有两个不同的 TilesViewResolver 实现，分别对应于 Tiles 2.0 和 Tiles 3.0</td>
+</tr>
+<tr>
+<td>UrlBasedViewResolver</td>
+<td>直接根据视图的名称解析视图，视图的名称会匹配一个物理视图的定义</td>
+</tr>
+<tr>
+<td>VelocityLayoutViewResolver</td>
+<td>将视图解析为 Velocity 布局，从不同的 Velocity 模板中组合页面</td>
+</tr>
+<tr>
+<td>VelocityViewResolver</td>
+<td>将视图解析为 Velocity 模板</td>
+</tr>
+<tr>
+<td>XmlViewResolver</td>
+<td>将视图解析为特定 XML 文件中的 bean 定义。类似于 BeanNameViewResolver</td>
+</tr>
+<tr>
+<td>XsltViewResolver</td>
+<td>将视图解析为 XSLT 转换后的结果</td>
+</tr>
+</tbody>
+</table>
+<h2 id="4-HTTPMessageConverter"><a href="#4-HTTPMessageConverter" class="headerlink" title="4. HTTPMessageConverter"></a>4. HTTPMessageConverter</h2><p>消息转换（message conversion）它能够将控制器产生的数据转换为服务于客户端的表述形式。Spring 提供了多个 HTTP 信息转换器，用于实现资源表述与各种 Java 类型之间的互相转换。</p>
+<table>
+<thead>
+<tr>
+<th>信息转换器</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AtomFeedHttpMessageConverter</td>
+<td>Rome Feed 对象和 Atom feed（媒体类型 application/atom+xml）之间的互相转换。如果 Rome 包在类路径下将会进行注册</td>
+</tr>
+<tr>
+<td>BufferedImageHttpMessageConverter</td>
+<td>BufferedImages 与图片二进制数据之间互相转换</td>
+</tr>
+<tr>
+<td>ByteArrayHttpMessageConverter</td>
+<td>读取/写入字节数组。从所有媒体类型(*/*)中读取，并以 application/octet-stream 格式写入</td>
+</tr>
+<tr>
+<td>FormHttpMessageConverter</td>
+<td>将 application/x-www-form-urlencoded 内容读入到 <code>MultiValueMap&lt;String,String&gt;</code> 中，也会将 <code>MultiValueMap&lt;String,String&gt;</code> 写入到 application/x-www-form-urlencoded 中或将 <code>MultiValueMap&lt;String,Object&gt;</code> 写入到 multipart/form-data 中</td>
+</tr>
+<tr>
+<td>Jaxb2RootElementHttpMessageConverter</td>
+<td>在 XML（ text/xml 或 application/xml）和使用 JAXB2 注解的对象间互相读取和写入。如果 JAXB v2 库在类路径下，将进行注册</td>
+</tr>
+<tr>
+<td>MappingJackson2HttpMessageConverter</td>
+<td>在 JSON 和类型化的对象或非类型化的 HashMap 间互相读取和写入。如果 Jackson 2 JSON 库字类路径下，将进行注册</td>
+</tr>
+<tr>
+<td>MarshallingHttpMessageConverter</td>
+<td>使用注入的编排器和解排器（marshaller 和 unmarshaller）来读取和写入 XML。支持的编排器和解排器包括 Castor、JAXB2、JIBX、XMLBeans 以及 Xstream</td>
+</tr>
+<tr>
+<td>ResourceHttpMessageConverter</td>
+<td>读取或写入 Resource</td>
+</tr>
+<tr>
+<td>RssChannelHttpMessageConverter</td>
+<td>在 RSS feed 和 Rome Channel 对象间互相读取或写入。如果 Rome 库在类路径下，将进行注册</td>
+</tr>
+<tr>
+<td>SourceHttpMessageConverter</td>
+<td>在 XML 和 <code>javax.xml.transform.Source</code> 对象间互相读取和写入。默认注册</td>
+</tr>
+<tr>
+<td>StringHttpMessageConverter</td>
+<td>将所有媒体类型(*/*)读取为 String。将 String 写入为 text/plain</td>
+</tr>
+<tr>
+<td>XmlAwareFormHttpMessageConverter</td>
+<td>FormHttpMessageConverter 的扩展，使用 SourceHttpMessageConverter 来支持基于 XML 的部分</td>
+</tr>
+</tbody>
+</table>
+<p>表中的 HTTP 信息转换器除了其中的五个以外都是自动注册的，所以要使用它们的话，不需要 Spring 配置。但是为了支持它们，需要添加一些库到应用程序的类路径下。</p>
+<h2 id="5-异常"><a href="#5-异常" class="headerlink" title="5. 异常"></a>5. 异常</h2><p>Spring 的一些异常会默认映射为 HTTP 状态码。</p>
+<table>
+<thead>
+<tr>
+<th>Spring 异常</th>
+<th>HTTP 状态码</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BindException</td>
+<td>400 - Bad Request</td>
+</tr>
+<tr>
+<td>ConversionNotSupportedException</td>
+<td>500 - Internal Server Error</td>
+</tr>
+<tr>
+<td>HttpMediaTypeNotAcceptableExceptio</td>
+<td>406 - Not Acceptable</td>
+</tr>
+<tr>
+<td>HttpMediaTypeNotSupportedException</td>
+<td>415 - Unsupported Media Type</td>
+</tr>
+<tr>
+<td>HttpMessageNotReadableException</td>
+<td>400 - Bad Request</td>
+</tr>
+<tr>
+<td>MissingServletRequestParameterException</td>
+<td>400 - Bad Request</td>
+</tr>
+<tr>
+<td>MissingServletRequestPartException</td>
+<td>400 - Bad Requestn</td>
+</tr>
+<tr>
+<td>NoSuchRequestHandlingMethodExceptio</td>
+<td>404 - Not Found</td>
+</tr>
+<tr>
+<td>TypeMismatchException</td>
+<td>400 - Bad Request</td>
+</tr>
+<tr>
+<td>HttpMessageNotWritableException</td>
+<td>500 - Internal Server Error</td>
+</tr>
+<tr>
+<td>HttpRequestMethodNotSupportedException</td>
+<td>405 - Method Not Allowed</td>
+</tr>
+</tbody>
+</table>
+<p>异常一般会由 Spring 自身抛出，作为 <code>DispatcherServlet</code> 处理过程中或执行校验时出现问题的结果。</p>
+<p>Spring 提供了一种机制，能够通过 <code>@ResponseStatus</code> 注解将异常映射为 HTTP 状态码。（作用于自定义异常类上）</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Spring/" rel="tag"># Spring</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/05/19/《Spring Boot 实战》：@Enable*注解的工作原理/" rel="next" title="《Spring Boot 实战》: @Enable* 注解的工作原理">
+                <i class="fa fa-chevron-left"></i> 《Spring Boot 实战》: @Enable* 注解的工作原理
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/07/01/《微服务架构与实践》：微服务模型/" rel="prev" title="《微服务架构与实践》：微服务模型">
+                《微服务架构与实践》：微服务模型 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="Yongqiang Xiang" />
+          <p class="site-author-name" itemprop="name">Yongqiang Xiang</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">66</span>
+                <span class="site-state-item-name">posts</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">28</span>
+                <span class="site-state-item-name">categories</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">28</span>
+                <span class="site-state-item-name">tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/xiangyq000" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                    
+                      GitHub
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://stackoverflow.com/users/4945225/xiangyq000" target="_blank" title="StackOverflow">
+                  
+                    <i class="fa fa-fw fa-stack-overflow"></i>
+                  
+                    
+                      StackOverflow
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-请求处理流程"><span class="nav-number">1.</span> <span class="nav-text">1. 请求处理流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-基于-Java-类配置的-DispatcherServlet"><span class="nav-number">2.</span> <span class="nav-text">2. 基于 Java 类配置的 DispatcherServlet</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-ViewResolver"><span class="nav-number">3.</span> <span class="nav-text">3. ViewResolver</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-HTTPMessageConverter"><span class="nav-number">4.</span> <span class="nav-text">4. HTTPMessageConverter</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-异常"><span class="nav-number">5.</span> <span class="nav-text">5. 异常</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yongqiang Xiang</span>
+</div>
+
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script><!-- hexo-inject:begin --><!-- Begin: Injected MathJax -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config("");
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+      all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+  });
+</script>
+
+<script type="text/javascript" src="custom_mathjax_source">
+</script>
+<!-- End: Injected MathJax -->
+<!-- hexo-inject:end -->
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-cn">
+<head>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Spring Cloud Config," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="当Config Server已注册到Spring Cloud Eureka上时，想从Config Server获取配置信息的Client可以通过从Eureka获得服务注册信息，动态发现Config Server实例。">
+<meta name="keywords" content="Spring Cloud Config">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring Cloud Config: 基于服务发现的客户端启动过程">
+<meta property="og:url" content="http://yoursite.com/2017/08/13/Spring Cloud Config：基于服务发现的客户端启动过程/index.html">
+<meta property="og:site_name" content="天歌のBlog">
+<meta property="og:description" content="当Config Server已注册到Spring Cloud Eureka上时，想从Config Server获取配置信息的Client可以通过从Eureka获得服务注册信息，动态发现Config Server实例。">
+<meta property="og:locale" content="zh-cn">
+<meta property="og:updated_time" content="2018-01-05T08:36:17.501Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spring Cloud Config: 基于服务发现的客户端启动过程">
+<meta name="twitter:description" content="当Config Server已注册到Spring Cloud Eureka上时，想从Config Server获取配置信息的Client可以通过从Eureka获得服务注册信息，动态发现Config Server实例。">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/08/13/Spring Cloud Config：基于服务发现的客户端启动过程/"/>
+
+
+
+
+
+  <title>Spring Cloud Config: 基于服务发现的客户端启动过程 | 天歌のBlog</title><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-cn">
+
+  
+  
+    
+  
+
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">天歌のBlog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/08/13/Spring Cloud Config：基于服务发现的客户端启动过程/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Yongqiang Xiang">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天歌のBlog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Spring Cloud Config: 基于服务发现的客户端启动过程</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-08-13T10:56:06+08:00">
+                2017-08-13
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Spring-Cloud/" itemprop="url" rel="index">
+                    <span itemprop="name">Spring Cloud</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>当Config Server已注册到Spring Cloud Eureka上时，想从Config Server获取配置信息的Client可以通过从Eureka获得服务注册信息，动态发现Config Server实例。<br><a id="more"></a></p>
+<h3 id="1-Config-Client配置"><a href="#1-Config-Client配置" class="headerlink" title="1. Config Client配置"></a>1. Config Client配置</h3><ol>
+<li><p>在<code>application.properties</code>中配置如下项：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">spring.application.name=demo-server</span><br><span class="line">server.port=10001</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在<code>bootstrap-test.properties</code>中配置如下项：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">spring.cloud.config.discovery.enabled=true</span><br><span class="line">spring.cloud.config.discovery.service-id=cloud-config</span><br><span class="line">spring.cloud.config.fail-fast=true</span><br><span class="line">spring.cloud.config.profile=test</span><br><span class="line">eureka.client.serviceUrl.defaultZone = http://localhost:9090/eureka/</span><br></pre></td></tr></table></figure>
+<p>启动时设置<code>spring.profile.active=test</code>。</p>
+<p>也可以用<code>bootstrap.properties</code>并采用default的profile。</p>
+</li>
+<li><p>Config Server运行在localhost:9086，eureka server运行在localhost:9090。Config server已以服务名cloud-config注册到eureka server。Config Server使用本地文件作为仓库。</p>
+</li>
+</ol>
+<h3 id="2-Config-Client处理流程："><a href="#2-Config-Client处理流程：" class="headerlink" title="2. Config Client处理流程："></a>2. Config Client处理流程：</h3><ol>
+<li><p>构建bootstrap的context</p>
+<p>Spring Cloud Commons的说明：</p>
+<blockquote>
+<p>A Spring Cloud application operates by creating a “bootstrap” context, which is a parent context for the main application. Out of the box it is responsible for loading configuration properties from the external sources, and also decrypting properties in the local external configuration files. The two contexts share an Environment which is the source of external properties for any Spring application. Bootstrap properties are added with high precedence, so they cannot be overridden by local configuration, by default.</p>
+</blockquote>
+<p>根据<code>org.springframework.cloud.bootstrap.BootstrapApplicationListener</code>的类说明：</p>
+<blockquote>
+<p> A listener that prepares a SpringApplication (e.g. populating its Environment) by delegating to {@link ApplicationContextInitializer} beans in a separate bootstrap context. The bootstrap context is a SpringApplication created from sources defined in spring.factories as {@link BootstrapConfiguration}, and initialized with external config taken from “bootstrap.properties” (or yml), instead of the normal “application.properties”.</p>
+</blockquote>
+<p>Spring Cloud会根据<code>boostrap.properties</code>及<code>boostrap-{profile}.properties</code>的配置构建单独的BootStrapContext。这个BootStrapContext是Main Application的父Context，其配置属性可以被子Context获取。</p>
+</li>
+<li><p>构建<code>CompositePropertySource</code></p>
+<p>根据Spring-Cloud-Commons的文档：</p>
+<blockquote>
+<p>“bootstrap”: an optional CompositePropertySource appears with high priority if any PropertySourceLocators are found in the Bootstrap context, and they have non-empty properties. An example would be properties from the Spring Cloud Config Server. See below for instructions on how to customize the contents of this property source.</p>
+<p>​</p>
+<p>“applicationConfig: [classpath:bootstrap.yml]” (and friends if Spring profiles are active). If you have a bootstrap.yml (or properties) then those properties are used to configure the Bootstrap context, and then they get added to the child context when its parent is set. They have lower precedence than the application.yml (or properties) and any other property sources that are added to the child as a normal part of the process of creating a Spring Boot application. See below for instructions on how to customize the contents of these property sources.</p>
+</blockquote>
+<p>注意，Bootstrap获取到的远程配置具有高优先级，但<code>bootstrap.properties</code>里的配置项本身是低优先级。</p>
+<p>在Spring Cloud Config项目中配置了<code>ConfigServicePropertySourceLocator</code>，在BootstrapContext构建阶段，它从<code>bootstrap.properties</code>中拿到<code>eureka.client.serviceUrl.defaultZone</code>，并访问eureka server，请求获取服务注册信息。在config client的console输出中可以看到：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">2017-09-07 15:59:53.704  INFO [bootstrap,,,] 77988 --- [  restartedMain] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration</span><br><span class="line">2017-09-07 15:59:53.736  INFO [bootstrap,,,] 77988 --- [  restartedMain] com.netflix.discovery.DiscoveryClient    : Disable delta property : false</span><br><span class="line">2017-09-07 15:59:53.736  INFO [bootstrap,,,] 77988 --- [  restartedMain] com.netflix.discovery.DiscoveryClient    : Single vip registry refresh property : null</span><br><span class="line">2017-09-07 15:59:53.736  INFO [bootstrap,,,] 77988 --- [  restartedMain] com.netflix.discovery.DiscoveryClient    : Force full registry fetch : false</span><br><span class="line">2017-09-07 15:59:53.736  INFO [bootstrap,,,] 77988 --- [  restartedMain] com.netflix.discovery.DiscoveryClient    : Application is null : false</span><br><span class="line">2017-09-07 15:59:53.736  INFO [bootstrap,,,] 77988 --- [  restartedMain] com.netflix.discovery.DiscoveryClient    : Registered Applications size is zero : true</span><br><span class="line">2017-09-07 15:59:53.737  INFO [bootstrap,,,] 77988 --- [  restartedMain] com.netflix.discovery.DiscoveryClient    : Application version is -1: true</span><br><span class="line">2017-09-07 15:59:53.737  INFO [bootstrap,,,] 77988 --- [  restartedMain] com.netflix.discovery.DiscoveryClient    : Getting all instance registry info from the eureka server</span><br><span class="line">2017-09-07 15:59:53.964  INFO [bootstrap,,,] 77988 --- [  restartedMain] com.netflix.discovery.DiscoveryClient    : The response status is 200</span><br><span class="line">2017-09-07 15:59:53.966  INFO [bootstrap,,,] 77988 --- [  restartedMain] com.netflix.discovery.DiscoveryClient    : Not registering with Eureka server per configuration</span><br></pre></td></tr></table></figure>
+<p>与此对应的eureka server的log：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">2017-09-07 15:59:53.882 DEBUG [http-nio-9090-exec-6] org.apache.coyote.http11.Http11InputBuffer: Received [GET /eu</span><br><span class="line">reka/apps/ HTTP/1.1</span><br><span class="line">Accept: application/json</span><br><span class="line">DiscoveryIdentity-Name: DefaultClient</span><br><span class="line">DiscoveryIdentity-Version: 1.4</span><br><span class="line">DiscoveryIdentity-Id: 10.236.19.51</span><br><span class="line">Accept-Encoding: gzip</span><br><span class="line">Host: localhost:9090</span><br><span class="line">Connection: Keep-Alive</span><br><span class="line">User-Agent: Java-EurekaClient/v1.6.2</span><br><span class="line"></span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+<p>可以看到Bootstrap阶段config client并不向eureka server注册自己，仅是获取服务列表，并从中查找config server。Bootstrap Context的工作到此结束。</p>
+</li>
+<li><p>从config server获取配置</p>
+<p>config client日志：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">2017-09-07 16:00:08.855 DEBUG [demo-server,,,] 77988 --- [restartedMain] o.s.c.e.PropertySourcesPropertyResolver  : Could not find key &apos;spring.profiles.default&apos; in any property source</span><br><span class="line">2017-09-07 16:00:08.856 DEBUG [demo-server,,,] 77988 --- [restartedMain] o.s.retry.support.RetryTemplate          : Retry: count=0</span><br><span class="line">2017-09-07 16:00:08.856 DEBUG [demo-server,,,] 77988 --- [restartedMain] o.s.c.e.PropertySourcesPropertyResolver  : Could not find key &apos;spring.application.name:application&apos; in any property source</span><br><span class="line">2017-09-07 16:00:08.856 DEBUG [demo-server,,,] 77988 --- [restartedMain] o.s.c.e.PropertySourcesPropertyResolver  : Found key &apos;spring.application.name&apos; in [applicationConfig: [classpath:/application.properties]] with type [String]</span><br><span class="line">2017-09-07 16:00:08.856 DEBUG [demo-server,,,] 77988 --- [restartedMain] o.s.c.e.PropertySourcesPropertyResolver  : Could not find key &apos;spring.cloud.config.name:demo-server&apos; in any property source</span><br><span class="line">2017-09-07 16:00:08.856 DEBUG [demo-server,,,] 77988 --- [restartedMain] o.s.c.e.PropertySourcesPropertyResolver  : Could not find key &apos;spring.cloud.config.name&apos; in any property source</span><br><span class="line">2017-09-07 16:00:08.856 DEBUG [demo-server,,,] 77988 --- [restartedMain] o.s.c.e.PropertySourcesPropertyResolver  : Found key &apos;spring.cloud.config.profile&apos; in [applicationConfig: [classpath:/bootstrap-test.properties]] with type [String]</span><br><span class="line">2017-09-07 16:00:08.862  INFO [demo-server,,,] 77988 --- [restartedMain] c.c.c.ConfigServicePropertySourceLocator : Fetching config from server at: http://localhost:9086/</span><br><span class="line">2017-09-07 16:00:08.862 DEBUG [demo-server,,,] 77988 --- [restartedMain] o.s.web.client.RestTemplate              : Created GET request for &quot;http://localhost:9086/demo-server/test&quot;</span><br><span class="line">2017-09-07 16:00:08.865 DEBUG [demo-server,,,] 77988 --- [restartedMain] o.s.web.client.RestTemplate              : Setting request Accept header to [application/json, application/*+json]</span><br><span class="line">2017-09-07 16:00:08.866 DEBUG [demo-server,,,] 77988 --- [restartedMain] s.n.www.protocol.http.HttpURLConnection  : sun.net.www.MessageHeader@a83b1655 pairs: &#123;GET /demo-server/test HTTP/1.1: null&#125;&#123;Accept: application/json, application/*+json&#125;&#123;User-Agent: Java/1.8.0_91&#125;&#123;Host: localhost:9086&#125;&#123;Connection: keep-alive&#125;</span><br><span class="line">2017-09-07 16:00:08.997 DEBUG [demo-server,,,] 77988 --- [restartedMain] s.n.www.protocol.http.HttpURLConnection  : sun.net.www.MessageHeader@231715a35 pairs: &#123;null: HTTP/1.1 200&#125;&#123;X-Application-Context: cloud-config:native:9086&#125;&#123;Content-Type: application/json;charset=UTF-8&#125;&#123;Transfer-Encoding: chunked&#125;&#123;Date: Thu, 07 Sep 2017 08:00:08 GMT&#125;</span><br><span class="line">2017-09-07 16:00:08.998 DEBUG [demo-server,,,] 77988 --- [restartedMain] o.s.web.client.RestTemplate              : GET request for &quot;http://localhost:9086/demo-server/test&quot; resulted in 200 (null)</span><br><span class="line">2017-09-07 16:00:08.998 DEBUG [demo-server,,,] 77988 --- [restartedMain] o.s.web.client.RestTemplate              : Reading [class org.springframework.cloud.config.environment.Environment] as &quot;application/json;charset=UTF-8&quot; using [org.springframework.http.converter.json.MappingJackson2HttpMessageConverter@7044a1c0]</span><br><span class="line">2017-09-07 16:00:08.999  INFO [demo-server,,,] 77988 --- [restartedMain] c.c.c.ConfigServicePropertySourceLocator : Located environment: name=demo-server, profiles=[test], label=null, version=null, state=null</span><br><span class="line">2017-09-07 16:00:08.999  INFO [demo-server,,,] 77988 --- [restartedMain] b.c.PropertySourceBootstrapConfiguration : Located property source: CompositePropertySource [name=&apos;configService&apos;, propertySources=[MapPropertySource@1198162374 [name=&apos;classpath:native/demo-server-test.properties&apos;, properties=&#123;test-key=test-value&#125;]]]</span><br></pre></td></tr></table></figure>
+<p>此时已经到Main Application Context构建阶段，作为Bootstrap Context的子Context，它可以从<code>application.properties</code>，<code>application-{profile}.properties</code>，<code>bootstrap.properties</code>，<code>bootstrap-{profile}.properties</code>和System properties中查找访问config server所需的application name，label，profile等属性。</p>
+<p>Moreover，config server可能配置了basic authentication。在这种情况下，config server需要在向eureka server注册的metadataMap中上传user和password参数，以供config client访问。这里的源码如下：<br><code>org.springframework.cloud.config.client.DiscoveryClientConfigServiceBootstrapConfiguration</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ConditionalOnProperty</span>(value = <span class="string">"spring.cloud.config.discovery.enabled"</span>, matchIfMissing = <span class="keyword">false</span>)</span><br><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="meta">@Import</span>(&#123; UtilAutoConfiguration.class &#125;)</span><br><span class="line"><span class="meta">@EnableDiscoveryClient</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DiscoveryClientConfigServiceBootstrapConfiguration</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">static</span> Log logger = LogFactory</span><br><span class="line">			.getLog(DiscoveryClientConfigServiceBootstrapConfiguration.class);</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Autowired</span></span><br><span class="line">	<span class="keyword">private</span> ConfigClientProperties config;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Autowired</span></span><br><span class="line">	<span class="keyword">private</span> DiscoveryClient client;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">private</span> HeartbeatMonitor monitor = <span class="keyword">new</span> HeartbeatMonitor();</span><br><span class="line"></span><br><span class="line">	<span class="meta">@EventListener</span>(ContextRefreshedEvent.class)</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">startup</span><span class="params">(ContextRefreshedEvent event)</span> </span>&#123;</span><br><span class="line">		refresh();</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@EventListener</span>(HeartbeatEvent.class)</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">heartbeat</span><span class="params">(HeartbeatEvent event)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">if</span> (monitor.update(event.getValue())) &#123;</span><br><span class="line">			refresh();</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">refresh</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">			logger.debug(<span class="string">"Locating configserver via discovery"</span>);</span><br><span class="line">			String serviceId = <span class="keyword">this</span>.config.getDiscovery().getServiceId();</span><br><span class="line">			List&lt;ServiceInstance&gt; instances = <span class="keyword">this</span>.client.getInstances(serviceId);</span><br><span class="line">			<span class="keyword">if</span> (instances.isEmpty()) &#123;</span><br><span class="line">				logger.warn(<span class="string">"No instances found of configserver ("</span> + serviceId + <span class="string">")"</span>);</span><br><span class="line">				<span class="keyword">return</span>;</span><br><span class="line">			&#125;</span><br><span class="line">			ServiceInstance server = instances.get(<span class="number">0</span>);</span><br><span class="line">			String url = getHomePage(server);</span><br><span class="line">			<span class="keyword">if</span> (server.getMetadata().containsKey(<span class="string">"password"</span>)) &#123;</span><br><span class="line">				String user = server.getMetadata().get(<span class="string">"user"</span>);</span><br><span class="line">				user = user == <span class="keyword">null</span> ? <span class="string">"user"</span> : user;</span><br><span class="line">				<span class="keyword">this</span>.config.setUsername(user);</span><br><span class="line">				String password = server.getMetadata().get(<span class="string">"password"</span>);</span><br><span class="line">				<span class="keyword">this</span>.config.setPassword(password);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">if</span> (server.getMetadata().containsKey(<span class="string">"configPath"</span>)) &#123;</span><br><span class="line">				String path = server.getMetadata().get(<span class="string">"configPath"</span>);</span><br><span class="line">				<span class="keyword">if</span> (url.endsWith(<span class="string">"/"</span>) &amp;&amp; path.startsWith(<span class="string">"/"</span>)) &#123;</span><br><span class="line">					url = url.substring(<span class="number">0</span>, url.length() - <span class="number">1</span>);</span><br><span class="line">				&#125;</span><br><span class="line">				url = url + path;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">this</span>.config.setUri(url);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">			logger.warn(<span class="string">"Could not locate configserver via discovery"</span>, ex);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">private</span> String <span class="title">getHomePage</span><span class="params">(ServiceInstance server)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> server.getUri().toString() + <span class="string">"/"</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>向eureka server注册</p>
+<ul>
+<li>client log：</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">2017-09-07 15:59:53.882 DEBUG [http-nio-9090-exec-6] org.apache.coyote.http11.Http11InputBuffer: Received [GET /eu</span><br><span class="line">reka/apps/ HTTP/1.1</span><br><span class="line">Accept: application/json</span><br><span class="line">DiscoveryIdentity-Name: DefaultClient</span><br><span class="line">DiscoveryIdentity-Version: 1.4</span><br><span class="line">DiscoveryIdentity-Id: 10.236.19.51</span><br><span class="line">Accept-Encoding: gzip</span><br><span class="line">Host: localhost:9090</span><br><span class="line">Connection: Keep-Alive</span><br><span class="line">User-Agent: Java-EurekaClient/v1.6.2</span><br><span class="line"></span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+<ul>
+<li>eureka server log:</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">2017-09-07 16:00:13.111 DEBUG [http-nio-9090-exec-7] org.apache.coyote.http11.Http11InputBuffer: Received [PUT /eureka/apps/DEMO-SERVER/localhost:10001:demo-server?status=UP&amp;lastDirtyTimestamp=1504771208220 HTTP/1.1</span><br><span class="line">DiscoveryIdentity-Name: DefaultClient</span><br><span class="line">DiscoveryIdentity-Version: 1.4</span><br><span class="line">DiscoveryIdentity-Id: 10.236.19.51</span><br><span class="line">Accept-Encoding: gzip</span><br><span class="line">Content-Length: 0</span><br><span class="line">Host: localhost:9090</span><br><span class="line">Connection: Keep-Alive</span><br><span class="line">User-Agent: Java-EurekaClient/v1.6.2</span><br><span class="line"></span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+<p>这个过程甚至发生在config client向config server请求之后。</p>
+</li>
+</ol>
+<h3 id="3-一个脑洞"><a href="#3-一个脑洞" class="headerlink" title="3. 一个脑洞"></a>3. 一个脑洞</h3><p>假如我在config server的远程配置中配置另一个地址作为<code>eureka.client.serviceUrl.defaultZone</code>，config client获取到配置后会怎么办呢？</p>
+<ol>
+<li><p>仓库修改配置，重启config server。访问<a href="http://localhost:9086/demo-server-test.properties得到" target="_blank" rel="noopener">http://localhost:9086/demo-server-test.properties得到</a></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">eureka.client.serviceUrl.defaultZone: http://localhost:9091/eureka/</span><br></pre></td></tr></table></figure>
+<p>实际上eureka server仍然运行在localhost:9090。</p>
+</li>
+<li><p>启动Demo-server。正确地从eureka server拿到了服务注册信息，然后从config server更新了配置：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">2017-09-07 17:06:26.782  INFO [demo-server,,,] 78952 --- [  restartedMain] b.c.PropertySourceBootstrapConfiguration : Located property source: CompositePropertySource [name=&apos;configService&apos;, propertySources=[MapPropertySource@1069590480 [name=&apos;classpath:native/demo-server-test.properties&apos;, properties=&#123;eureka.client.serviceUrl.defaultZone=http://localhost:9091/eureka/&#125;]]]</span><br></pre></td></tr></table></figure>
+<p>但此后无法注册到eureka server：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">2017-09-07 17:10:17.698  WARN [demo-server,,,] 78952 --- [tbeatExecutor-0] c.n.d.s.t.d.RetryableEurekaHttpClient    : Request execution failed with message: java.net.ConnectException: Connection refused</span><br><span class="line">2017-09-07 17:10:17.698 ERROR [demo-server,,,] 78952 --- [tbeatExecutor-0] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_DEMO-SERVER/localhost:10001:demo-server - was unable to send heartbeat!</span><br><span class="line"></span><br><span class="line">com.netflix.discovery.shared.transport.TransportException: Cannot execute request on any known server</span><br></pre></td></tr></table></figure>
+<p>其原因在于<code>org.springframework.cloud.config.client.ConfigServicePropertySourceLocator</code>注解了<code>@Order(0)</code>，会首先执行并更新配置，client注册eureka server时，会使用从config server拿到的更新后的地址。</p>
+</li>
+</ol>
+<h3 id="4-另一个脑洞"><a href="#4-另一个脑洞" class="headerlink" title="4. 另一个脑洞"></a>4. 另一个脑洞</h3><p>如果我是在Demo-Server启动并连接上eureka server后再修改config server里配置的地址呢？</p>
+<p>这种情况下config server的仓库需要配置为git等外部仓库，push到仓库后以post访问demo-server的/refresh endpoint，则之后log里抛出无法连接的异常。</p>
+<p>那么以这种方式，应该也同样可以动态配置其他参数。</p>
+<p>有一点比较特殊，在这个例子中，修改的是eureka server的注册地址，且config client使用的是基于服务化的查找方式。那么即使我们此后revert掉git仓库的修改，并对demo-server发起refresh请求，由于demo-server无法连接到eureka-server，那么自然也就无法查找config server并获取更新后的配置了。若client是基于uri的形式配置的config server，则可以刷新配置。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Spring-Cloud-Config/" rel="tag"># Spring Cloud Config</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/08/10/Spring Cloud Config：整合 Spring Cloud Bus/" rel="next" title="Spring Cloud Config：整合 Spring Cloud Bus">
+                <i class="fa fa-chevron-left"></i> Spring Cloud Config：整合 Spring Cloud Bus
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/08/30/《Spring Cloud 微服务实战》：属性加载顺序/" rel="prev" title="《Spring Cloud 微服务实战》：属性加载顺序">
+                《Spring Cloud 微服务实战》：属性加载顺序 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="Yongqiang Xiang" />
+          <p class="site-author-name" itemprop="name">Yongqiang Xiang</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">66</span>
+                <span class="site-state-item-name">posts</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">28</span>
+                <span class="site-state-item-name">categories</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">28</span>
+                <span class="site-state-item-name">tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/xiangyq000" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                    
+                      GitHub
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://stackoverflow.com/users/4945225/xiangyq000" target="_blank" title="StackOverflow">
+                  
+                    <i class="fa fa-fw fa-stack-overflow"></i>
+                  
+                    
+                      StackOverflow
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-Config-Client配置"><span class="nav-number">1.</span> <span class="nav-text">1. Config Client配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-Config-Client处理流程："><span class="nav-number">2.</span> <span class="nav-text">2. Config Client处理流程：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-一个脑洞"><span class="nav-number">3.</span> <span class="nav-text">3. 一个脑洞</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-另一个脑洞"><span class="nav-number">4.</span> <span class="nav-text">4. 另一个脑洞</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yongqiang Xiang</span>
+</div>
+
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script><!-- hexo-inject:begin --><!-- Begin: Injected MathJax -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config("");
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+      all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+  });
+</script>
+
+<script type="text/javascript" src="custom_mathjax_source">
+</script>
+<!-- End: Injected MathJax -->
+<!-- hexo-inject:end -->
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,1434 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-cn">
+<head>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="ZooKeeper,源码阅读," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="1. 会话创建请求ZooKeeper 服务端对于会话创建的处理，大体可以分为请求接收、会话创建、预处理、事务处理、事务应用和会话响应 6 大环节，其大体流程如图。">
+<meta name="keywords" content="ZooKeeper,源码阅读">
+<meta property="og:type" content="article">
+<meta property="og:title" content="《从 Paxos 到 ZooKeeper：分布式一致性原理与实践》：请求处理">
+<meta property="og:url" content="http://yoursite.com/2017/12/19/《从 Paxos 到 ZooKeeper：分布式一致性原理与实践》：请求处理/index.html">
+<meta property="og:site_name" content="天歌のBlog">
+<meta property="og:description" content="1. 会话创建请求ZooKeeper 服务端对于会话创建的处理，大体可以分为请求接收、会话创建、预处理、事务处理、事务应用和会话响应 6 大环节，其大体流程如图。">
+<meta property="og:locale" content="zh-cn">
+<meta property="og:image" content="https://user-images.githubusercontent.com/12514722/34207103-ffdb7a80-e5c3-11e7-85e4-f5bb3b99bc40.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/12514722/34207238-a43f0c04-e5c4-11e7-872c-34123aba3b83.png">
+<meta property="og:updated_time" content="2017-12-30T17:07:01.682Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="《从 Paxos 到 ZooKeeper：分布式一致性原理与实践》：请求处理">
+<meta name="twitter:description" content="1. 会话创建请求ZooKeeper 服务端对于会话创建的处理，大体可以分为请求接收、会话创建、预处理、事务处理、事务应用和会话响应 6 大环节，其大体流程如图。">
+<meta name="twitter:image" content="https://user-images.githubusercontent.com/12514722/34207103-ffdb7a80-e5c3-11e7-85e4-f5bb3b99bc40.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/12/19/《从 Paxos 到 ZooKeeper：分布式一致性原理与实践》：请求处理/"/>
+
+
+
+
+
+  <title>《从 Paxos 到 ZooKeeper：分布式一致性原理与实践》：请求处理 | 天歌のBlog</title><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-cn">
+
+  
+  
+    
+  
+
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">天歌のBlog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/12/19/《从 Paxos 到 ZooKeeper：分布式一致性原理与实践》：请求处理/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Yongqiang Xiang">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天歌のBlog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">《从 Paxos 到 ZooKeeper：分布式一致性原理与实践》：请求处理</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-12-19T01:01:58+08:00">
+                2017-12-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ZooKeeper/" itemprop="url" rel="index">
+                    <span itemprop="name">ZooKeeper</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ZooKeeper/读书笔记/" itemprop="url" rel="index">
+                    <span itemprop="name">读书笔记</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="1-会话创建请求"><a href="#1-会话创建请求" class="headerlink" title="1. 会话创建请求"></a>1. 会话创建请求</h2><p>ZooKeeper 服务端对于会话创建的处理，大体可以分为请求接收、会话创建、预处理、事务处理、事务应用和会话响应 6 大环节，其大体流程如图。</p>
+<p><img src="https://user-images.githubusercontent.com/12514722/34207103-ffdb7a80-e5c3-11e7-85e4-f5bb3b99bc40.png" alt=""></p>
+<a id="more"></a>
+<h3 id="1-1-请求接收"><a href="#1-1-请求接收" class="headerlink" title="1.1     请求接收"></a>1.1     请求接收</h3><h4 id="1-1-1-I-O-层接收来自客户端的请求"><a href="#1-1-1-I-O-层接收来自客户端的请求" class="headerlink" title="1.1.1 I/O 层接收来自客户端的请求"></a>1.1.1 I/O 层接收来自客户端的请求</h4><p>在 ZooKeeper 中，<code>NIOServerCnxnFactory</code> 会在运行过程中为客户端连接创建对应的  <code>NIOServerCnxn</code> 实例，客户端与服务端的所有通信都是由<code>NIOServerCnxn</code> 负责的 —— 其负责统一接收来自客户端的所有请求，并将请求内容从底层网络 I/O 中完整地读取出来，一个客户端连接就对应了一个 <code>NIOServerCnxn</code> 的实例。注意刚创建时 <code>NIOServerCnxn</code> 实例的 <code>initialized</code> 字段为 false。</p>
+<p><code>org.apache.zookeeper.server.NIOServerCnxnFactory#run</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">while</span> (!ss.socket().isClosed()) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            selector.select(<span class="number">1000</span>);</span><br><span class="line">            Set&lt;SelectionKey&gt; selected;</span><br><span class="line">            <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">                selected = selector.selectedKeys();</span><br><span class="line">            &#125;</span><br><span class="line">            ArrayList&lt;SelectionKey&gt; selectedList = <span class="keyword">new</span> ArrayList&lt;SelectionKey&gt;(</span><br><span class="line">                    selected);</span><br><span class="line">            Collections.shuffle(selectedList);</span><br><span class="line">            <span class="keyword">for</span> (SelectionKey k : selectedList) &#123;</span><br><span class="line">                <span class="keyword">if</span> ((k.readyOps() &amp; SelectionKey.OP_ACCEPT) != <span class="number">0</span>) &#123;</span><br><span class="line">                    SocketChannel sc = ((ServerSocketChannel) k</span><br><span class="line">                            .channel()).accept();</span><br><span class="line">                    InetAddress ia = sc.socket().getInetAddress();</span><br><span class="line">                    <span class="keyword">int</span> cnxncount = getClientCnxnCount(ia);</span><br><span class="line">                    <span class="keyword">if</span> (maxClientCnxns &gt; <span class="number">0</span> &amp;&amp; cnxncount &gt;= maxClientCnxns)&#123;</span><br><span class="line">                        LOG.warn(<span class="string">"Too many connections from "</span> + ia</span><br><span class="line">                                 + <span class="string">" - max is "</span> + maxClientCnxns );</span><br><span class="line">                        sc.close();</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        LOG.info(<span class="string">"Accepted socket connection from "</span></span><br><span class="line">                                 + sc.socket().getRemoteSocketAddress());</span><br><span class="line">                        sc.configureBlocking(<span class="keyword">false</span>);</span><br><span class="line">                        SelectionKey sk = sc.register(selector,</span><br><span class="line">                                SelectionKey.OP_READ);</span><br><span class="line">                        NIOServerCnxn cnxn = createConnection(sc, sk);</span><br><span class="line">                        sk.attach(cnxn);</span><br><span class="line">                        addCnxn(cnxn);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125; <span class="keyword">else</span> <span class="keyword">if</span> ((k.readyOps() &amp; (SelectionKey.OP_READ | SelectionKey.OP_WRITE)) != <span class="number">0</span>) &#123;</span><br><span class="line">                    NIOServerCnxn c = (NIOServerCnxn) k.attachment();</span><br><span class="line">                    c.doIO(k);</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    <span class="keyword">if</span> (LOG.isDebugEnabled()) &#123;</span><br><span class="line">                        LOG.debug(<span class="string">"Unexpected ops in select "</span></span><br><span class="line">                                  + k.readyOps());</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            selected.clear();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (RuntimeException e) &#123;</span><br><span class="line">            LOG.warn(<span class="string">"Ignoring unexpected runtime exception"</span>, e);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            LOG.warn(<span class="string">"Ignoring exception"</span>, e);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    closeAll();</span><br><span class="line">    LOG.info(<span class="string">"NIOServerCnxn factory exited run method"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="1-1-2-判断是否是客户端会话创建请求"><a href="#1-1-2-判断是否是客户端会话创建请求" class="headerlink" title="1.1.2 判断是否是客户端会话创建请求"></a>1.1.2 判断是否是客户端会话创建请求</h4><p>当底层 I/O 有数据可读时，<code>NIOServerCnxnFactory</code> 找到绑定的 <code>NIOServerCnxn</code> 实例，调用其 <code>doIO</code> 方法。这里会做一个判断，若 <code>initialized</code> 字段为 false，则这一定是客户端的第一个请求会话创建请求。</p>
+<p><code>org.apache.zookeeper.server.NIOServerCnxn#readPayload</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** Read the request payload (everything following the length prefix) */</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">readPayload</span><span class="params">()</span> <span class="keyword">throws</span> IOException, InterruptedException </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (incomingBuffer.remaining() != <span class="number">0</span>) &#123; <span class="comment">// have we read length bytes?</span></span><br><span class="line">        <span class="keyword">int</span> rc = sock.read(incomingBuffer); <span class="comment">// sock is non-blocking, so ok</span></span><br><span class="line">        <span class="keyword">if</span> (rc &lt; <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> EndOfStreamException(</span><br><span class="line">                    <span class="string">"Unable to read additional data from client sessionid 0x"</span></span><br><span class="line">                    + Long.toHexString(sessionId)</span><br><span class="line">                    + <span class="string">", likely client has closed socket"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (incomingBuffer.remaining() == <span class="number">0</span>) &#123; <span class="comment">// have we read length bytes?</span></span><br><span class="line">        packetReceived();</span><br><span class="line">        incomingBuffer.flip();</span><br><span class="line">        <span class="keyword">if</span> (!initialized) &#123;</span><br><span class="line">            readConnectRequest();</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            readRequest();</span><br><span class="line">        &#125;</span><br><span class="line">        lenBuffer.clear();</span><br><span class="line">        incomingBuffer = lenBuffer;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="1-1-3-反序列化-ConnectRequest-请求"><a href="#1-1-3-反序列化-ConnectRequest-请求" class="headerlink" title="1.1.3 反序列化 ConnectRequest 请求"></a>1.1.3 反序列化 ConnectRequest 请求</h4><p>一旦确定客户端请求是会话创建请求，那么服务端就可以对其进行反序列化，并生成一个 <code>ConnectRequest</code> 请求实体。</p>
+<p><code>org.apache.zookeeper.server.NIOServerCnxn#readConnectRequest</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">readConnectRequest</span><span class="params">()</span> <span class="keyword">throws</span> IOException, InterruptedException </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!isZKServerRunning()) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IOException(<span class="string">"ZooKeeperServer not running"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    zkServer.processConnectRequest(<span class="keyword">this</span>, incomingBuffer);</span><br><span class="line">    initialized = <span class="keyword">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>org.apache.zookeeper.server.ZooKeeperServer#processConnectRequest</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">processConnectRequest</span><span class="params">(ServerCnxn cnxn, ByteBuffer incomingBuffer)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    BinaryInputArchive bia = BinaryInputArchive.getArchive(<span class="keyword">new</span> ByteBufferInputStream(incomingBuffer));</span><br><span class="line">    ConnectRequest connReq = <span class="keyword">new</span> ConnectRequest();</span><br><span class="line">    connReq.deserialize(bia, <span class="string">"connect"</span>);</span><br><span class="line">    <span class="keyword">boolean</span> readOnly = <span class="keyword">false</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        readOnly = bia.readBool(<span class="string">"readOnly"</span>);</span><br><span class="line">        cnxn.isOldClient = <span class="keyword">false</span>;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">        <span class="comment">// this is ok -- just a packet from an old client which</span></span><br><span class="line">        <span class="comment">// doesn't contain readOnly field</span></span><br><span class="line">        LOG.warn(<span class="string">"Connection request from old client "</span></span><br><span class="line">                + cnxn.getRemoteSocketAddress()</span><br><span class="line">                + <span class="string">"; will be dropped if server is in r-o mode"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (readOnly == <span class="keyword">false</span> &amp;&amp; <span class="keyword">this</span> <span class="keyword">instanceof</span> ReadOnlyZooKeeperServer) &#123;</span><br><span class="line">        String msg = <span class="string">"Refusing session request for not-read-only client "</span></span><br><span class="line">            + cnxn.getRemoteSocketAddress();</span><br><span class="line">        LOG.info(msg);</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> CloseRequestException(msg);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (connReq.getLastZxidSeen() &gt; zkDb.dataTree.lastProcessedZxid) &#123;</span><br><span class="line">        String msg = <span class="string">"Refusing session request for client "</span></span><br><span class="line">            + cnxn.getRemoteSocketAddress()</span><br><span class="line">            + <span class="string">" as it has seen zxid 0x"</span></span><br><span class="line">            + Long.toHexString(connReq.getLastZxidSeen())</span><br><span class="line">            + <span class="string">" our last zxid is 0x"</span></span><br><span class="line">            + Long.toHexString(getZKDatabase().getDataTreeLastProcessedZxid())</span><br><span class="line">            + <span class="string">" client must try another server"</span>;</span><br><span class="line"></span><br><span class="line">        LOG.info(msg);</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> CloseRequestException(msg);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">int</span> sessionTimeout = connReq.getTimeOut();</span><br><span class="line">    <span class="keyword">byte</span> passwd[] = connReq.getPasswd();</span><br><span class="line">    <span class="keyword">int</span> minSessionTimeout = getMinSessionTimeout();</span><br><span class="line">    <span class="keyword">if</span> (sessionTimeout &lt; minSessionTimeout) &#123;</span><br><span class="line">        sessionTimeout = minSessionTimeout;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">int</span> maxSessionTimeout = getMaxSessionTimeout();</span><br><span class="line">    <span class="keyword">if</span> (sessionTimeout &gt; maxSessionTimeout) &#123;</span><br><span class="line">        sessionTimeout = maxSessionTimeout;</span><br><span class="line">    &#125;</span><br><span class="line">    cnxn.setSessionTimeout(sessionTimeout);</span><br><span class="line">    <span class="comment">// We don't want to receive any packets until we are sure that the</span></span><br><span class="line">    <span class="comment">// session is setup</span></span><br><span class="line">    cnxn.disableRecv();</span><br><span class="line">    <span class="keyword">long</span> sessionId = connReq.getSessionId();</span><br><span class="line">    <span class="keyword">if</span> (sessionId != <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">long</span> clientSessionId = connReq.getSessionId();</span><br><span class="line">        serverCnxnFactory.closeSession(sessionId);</span><br><span class="line">        cnxn.setSessionId(sessionId);</span><br><span class="line">        reopenSession(cnxn, sessionId, passwd, sessionTimeout);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        createSession(cnxn, passwd, sessionTimeout);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="1-1-4-判断是否-ReadOnly-客户端"><a href="#1-1-4-判断是否-ReadOnly-客户端" class="headerlink" title="1.1.4 判断是否 ReadOnly 客户端"></a>1.1.4 判断是否 ReadOnly 客户端</h4><p>如果当前 ZooKeeper 客户端是以 ReadOnly 模式启动的，那么所有来自非 ReadOnly 客户端的请求将无法被处理。因此，服务端需要先检查其是否是 ReadOnly 客户端，并以此来决定是否接受该会话创建请求。</p>
+<h4 id="1-1-5-检查客户端-ZXID"><a href="#1-1-5-检查客户端-ZXID" class="headerlink" title="1.1.5 检查客户端 ZXID"></a>1.1.5 检查客户端 ZXID</h4><p>在正常情况下，同一个 ZooKeeper 集群中，服务端的 ZXID 必定大于客户端的 ZXID，因此如果发现客户端的 ZXID 大于服务端的 ZXID，那么服务端不接受该客户端的会话创建请求。</p>
+<h4 id="1-1-6-协商-sessionTimeout"><a href="#1-1-6-协商-sessionTimeout" class="headerlink" title="1.1.6 协商 sessionTimeout"></a>1.1.6 协商 sessionTimeout</h4><p>客户端在构造 ZooKeeper 实例时，会有一个 <code>sessionTimeout</code> 参数用于指定会话的超时时间。客户端向服务器发送这个超时时间后，服务器会根据自己的超时时间限制最终确定该会话的超时时间。</p>
+<p>默认情况下，ZooKeeper 服务器对超时时间的限制介于 2 个 <code>tickTime</code> 到 20 个 <code>tickTime</code> 之间。</p>
+<h4 id="1-1-7-判断是否需要重新创建会话"><a href="#1-1-7-判断是否需要重新创建会话" class="headerlink" title="1.1.7 判断是否需要重新创建会话"></a>1.1.7 判断是否需要重新创建会话</h4><p>服务端根据客户端请求中是否包含 <code>sessionID</code> 来判断该客户端是否需要重新创建会话。如果客户端请求中已经包含了 <code>sessionID</code>，那么就认为该客户端正在进行会话重连。这种情况下，服务端只需要重新打开这个会话，否则需要重新创建。</p>
+<h3 id="1-2-会话创建"><a href="#1-2-会话创建" class="headerlink" title="1.2 会话创建"></a>1.2 会话创建</h3><p><code>org.apache.zookeeper.server.ZooKeeperServer#createSession</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">long</span> <span class="title">createSession</span><span class="params">(ServerCnxn cnxn, <span class="keyword">byte</span> passwd[], <span class="keyword">int</span> timeout)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">long</span> sessionId = sessionTracker.createSession(timeout);</span><br><span class="line">    Random r = <span class="keyword">new</span> Random(sessionId ^ superSecret);</span><br><span class="line">    r.nextBytes(passwd);</span><br><span class="line">    ByteBuffer to = ByteBuffer.allocate(<span class="number">4</span>);</span><br><span class="line">    to.putInt(timeout);</span><br><span class="line">    cnxn.setSessionId(sessionId);</span><br><span class="line">    submitRequest(cnxn, sessionId, OpCode.createSession, <span class="number">0</span>, to, <span class="keyword">null</span>);</span><br><span class="line">    <span class="keyword">return</span> sessionId;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>org.apache.zookeeper.server.SessionTrackerImpl#createSession</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">synchronized</span> <span class="keyword">public</span> <span class="keyword">long</span> <span class="title">createSession</span><span class="params">(<span class="keyword">int</span> sessionTimeout)</span> </span>&#123;</span><br><span class="line">    addSession(nextSessionId, sessionTimeout);</span><br><span class="line">    <span class="keyword">return</span> nextSessionId++;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="1-2-1-为客户端生成-sessionId"><a href="#1-2-1-为客户端生成-sessionId" class="headerlink" title="1.2.1 为客户端生成 sessionId"></a>1.2.1 为客户端生成 sessionId</h4><p>在为客户端创建会话之前，服务端首先会为每个客户端都分配一个 <code>sessionId</code>。 分配方式是通过 <code>SessionTracker</code> 对基准 <code>sessionId</code> 做自增操作。无论客户端连的是哪台服务器，生成的 <code>sessionId</code> 都是全局唯一的。</p>
+<h4 id="1-2-2-注册会话"><a href="#1-2-2-注册会话" class="headerlink" title="1.2.2 注册会话"></a>1.2.2 注册会话</h4><p>在会话创建初期，会将客户端会话的相关信息保存到 <code>SessionTracker</code> 的 <code>sessionWithTimeout</code> 和 <code>sessionById</code> 中。</p>
+<p><code>org.apache.zookeeper.server.SessionTrackerImpl#addSession</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">synchronized</span> <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addSession</span><span class="params">(<span class="keyword">long</span> id, <span class="keyword">int</span> sessionTimeout)</span> </span>&#123;</span><br><span class="line">    sessionsWithTimeout.put(id, sessionTimeout);</span><br><span class="line">    <span class="keyword">if</span> (sessionsById.get(id) == <span class="keyword">null</span>) &#123;</span><br><span class="line">        SessionImpl s = <span class="keyword">new</span> SessionImpl(id, sessionTimeout, <span class="number">0</span>);</span><br><span class="line">        sessionsById.put(id, s);</span><br><span class="line">    &#125;</span><br><span class="line">    touchSession(id, sessionTimeout);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="1-2-3-激活会话"><a href="#1-2-3-激活会话" class="headerlink" title="1.2.3 激活会话"></a>1.2.3 激活会话</h4><p>为会话安排一个区块，方便会话清理程序能够快速高效地进行会话清理。</p>
+<p><code>org.apache.zookeeper.server.SessionTrackerImpl#touchSession</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">synchronized</span> <span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">touchSession</span><span class="params">(<span class="keyword">long</span> sessionId, <span class="keyword">int</span> timeout)</span> </span>&#123;</span><br><span class="line">    SessionImpl s = sessionsById.get(sessionId);</span><br><span class="line">    <span class="comment">// Return false, if the session doesn't exists or marked as closing</span></span><br><span class="line">    <span class="keyword">if</span> (s == <span class="keyword">null</span> || s.isClosing()) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">long</span> expireTime = roundToInterval(Time.currentElapsedTime() + timeout);</span><br><span class="line">    <span class="keyword">if</span> (s.tickTime &gt;= expireTime) &#123;</span><br><span class="line">        <span class="comment">// Nothing needs to be done</span></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    SessionSet set = sessionSets.get(s.tickTime);</span><br><span class="line">    <span class="keyword">if</span> (set != <span class="keyword">null</span>) &#123;</span><br><span class="line">        set.sessions.remove(s);</span><br><span class="line">    &#125;</span><br><span class="line">    s.tickTime = expireTime;</span><br><span class="line">    set = sessionSets.get(s.tickTime);</span><br><span class="line">    <span class="keyword">if</span> (set == <span class="keyword">null</span>) &#123;</span><br><span class="line">        set = <span class="keyword">new</span> SessionSet();</span><br><span class="line">        sessionSets.put(expireTime, set);</span><br><span class="line">    &#125;</span><br><span class="line">    set.sessions.add(s);</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="1-2-4-生成会话密钥"><a href="#1-2-4-生成会话密钥" class="headerlink" title="1.2.4 生成会话密钥"></a>1.2.4 生成会话密钥</h4><p>服务端在创建一个客户端会话时，会同时为客户端生成一个会话密码，连同 <code>sessionId</code> 一起发送给客户端，作为会话在集群中不同机器间转移的凭证。</p>
+<h4 id="1-2-5-将请求交给-firstProcessor"><a href="#1-2-5-将请求交给-firstProcessor" class="headerlink" title="1.2.5 将请求交给 firstProcessor"></a>1.2.5 将请求交给 firstProcessor</h4><p><code>org.apache.zookeeper.server.ZooKeeperServer#submitRequest(org.apache.zookeeper.server.ServerCnxn, long, int, int, java.nio.ByteBuffer, java.util.List&lt;org.apache.zookeeper.data.Id&gt;)</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">submitRequest</span><span class="params">(ServerCnxn cnxn, <span class="keyword">long</span> sessionId, <span class="keyword">int</span> type,</span></span></span><br><span class="line"><span class="function"><span class="params">        <span class="keyword">int</span> xid, ByteBuffer bb, List&lt;Id&gt; authInfo)</span> </span>&#123;</span><br><span class="line">    Request si = <span class="keyword">new</span> Request(cnxn, sessionId, xid, type, bb, authInfo);</span><br><span class="line">    submitRequest(si);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里的 <code>type</code> 为 <code>createSession</code>。</p>
+<p><code>org.apache.zookeeper.server.ZooKeeperServer#submitRequest(org.apache.zookeeper.server.Request)</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">submitRequest</span><span class="params">(Request si)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (firstProcessor == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="comment">// Since all requests are passed to the request</span></span><br><span class="line">                <span class="comment">// processor it should wait for setting up the request</span></span><br><span class="line">                <span class="comment">// processor chain. The state will be updated to RUNNING</span></span><br><span class="line">                <span class="comment">// after the setup.</span></span><br><span class="line">                <span class="keyword">while</span> (state == State.INITIAL) &#123;</span><br><span class="line">                    wait(<span class="number">1000</span>);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                LOG.warn(<span class="string">"Unexpected interruption"</span>, e);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (firstProcessor == <span class="keyword">null</span> || state != State.RUNNING) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"Not started"</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        touch(si.cnxn);</span><br><span class="line">        <span class="keyword">boolean</span> validpacket = Request.isValid(si.type);</span><br><span class="line">        <span class="keyword">if</span> (validpacket) &#123;</span><br><span class="line">            firstProcessor.processRequest(si);</span><br><span class="line">            <span class="keyword">if</span> (si.cnxn != <span class="keyword">null</span>) &#123;</span><br><span class="line">                incInProcess();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            LOG.warn(<span class="string">"Received packet at server of unknown type "</span> + si.type);</span><br><span class="line">            <span class="keyword">new</span> UnimplementedRequestProcessor().processRequest(si);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; </span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>firstProcessor</code> 是一个 <code>RequestProcessor</code> 类型的变量。在提交给 <code>firstProcessor</code> 处理器之前，Zookeeper 会根据该请求所属的会话，进行一次激活会话操作，以确保当前会话处于激活状态，完成会话激活后，则提交请求至 <code>firstProcessor</code> 处理器，放入待处理请求队列中。</p>
+<p>到这里 <code>createSession</code> 方法结束，后续流程由 <code>firstProcessor</code> 线程异步处理。</p>
+<p>在会话创建请求的处理中，无论客户端连接的是 Leader 还是 Learner，到目前为止的处理流程都是相同的。接下来的差别在于：</p>
+<ul>
+<li>对于 Leader 服务器，其 <code>firstProcessor</code> 的实现为 <code>PrepRequestProcessor</code>。</li>
+<li>对于 Follower 服务器，其 <code>firstProcessor</code> 的实现为 <code>FollowerRequestProcessor</code>。</li>
+<li>对于 Observer 服务器，其 <code>firstProcessor</code> 的实现为 <code>ObserverRequestProcessor</code>。</li>
+</ul>
+<p><code>FollowerRequestProcessor</code> 和 <code>ObserverRequestProcessor</code>会将事务请求以 REQUEST 消息的形式转发给 Leader 处理。Leader 的 <code>LearnerHandler</code> 在接收到这个消息后，会解析出客户端的原始请求，然后提交到自己的请求处理链中开始进行事务请求的处理。</p>
+<h3 id="1-3-事务预处理"><a href="#1-3-事务预处理" class="headerlink" title="1.3 事务预处理"></a>1.3 事务预处理</h3><h4 id="1-3-1-异步处理请求"><a href="#1-3-1-异步处理请求" class="headerlink" title="1.3.1 异步处理请求"></a>1.3.1 异步处理请求</h4><p><code>org.apache.zookeeper.server.PrepRequestProcessor#run</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">            Request request = submittedRequests.take();</span><br><span class="line">            <span class="keyword">long</span> traceMask = ZooTrace.CLIENT_REQUEST_TRACE_MASK;</span><br><span class="line">            <span class="keyword">if</span> (request.type == OpCode.ping) &#123;</span><br><span class="line">                traceMask = ZooTrace.CLIENT_PING_TRACE_MASK;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (Request.requestOfDeath == request) &#123;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            pRequest(request);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; </span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>org.apache.zookeeper.server.PrepRequestProcessor#pRequest</code> 方法根据请求的类型，将事务类请求交由 <code>org.apache.zookeeper.server.PrepRequestProcessor#pRequest2Txn</code> 方法处理。对一些类型的事务请求，还要生成变更记录放入 <code>outstandingChanges</code> 队列中。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ... </span></span><br><span class="line">request.hdr = <span class="keyword">new</span> TxnHeader(request.sessionId, request.cxid, zxid, Time.currentWallTime(), type);        </span><br><span class="line"><span class="keyword">switch</span> (type) &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">    <span class="keyword">case</span> OpCode.createSession:</span><br><span class="line">        request.request.rewind();</span><br><span class="line">        <span class="keyword">int</span> to = request.request.getInt();</span><br><span class="line">        request.txn = <span class="keyword">new</span> CreateSessionTxn(to);</span><br><span class="line">        request.request.rewind();</span><br><span class="line">        zks.sessionTracker.addSession(request.sessionId, to);</span><br><span class="line">        zks.setOwner(request.sessionId, request.getOwner());</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// ...</span></span><br></pre></td></tr></table></figure>
+<h4 id="1-3-2-创建请求事务头"><a href="#1-3-2-创建请求事务头" class="headerlink" title="1.3.2 创建请求事务头"></a>1.3.2 创建请求事务头</h4><p>对于事务请求，ZooKeeper 首先会为其创建请求事务头。请求事务头包含了一个事务请求最基本的一些信息，包括 <code>sessionId</code>、ZXID、CXID（客户端的操作序列号） 和请求类型等。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TxnHeader</span> <span class="keyword">implements</span> <span class="title">Record</span> </span>&#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">long</span> clientId;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">int</span> cxid;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">long</span> zxid;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">long</span> time;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">int</span> type;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="1-3-3-创建请求事务体"><a href="#1-3-3-创建请求事务体" class="headerlink" title="1.3.3 创建请求事务体"></a>1.3.3 创建请求事务体</h4><p>对于事务请求，ZooKeeper 还会为其创建请求事务体。对应到会话创建请求，对应的事务体实现为 <code>CreateSessionTxn</code>。</p>
+<h4 id="1-3-4-注册与激活会话"><a href="#1-3-4-注册与激活会话" class="headerlink" title="1.3.4 注册与激活会话"></a>1.3.4 注册与激活会话</h4><p>此处进行会话注册与激活的目的是处理由非 Leader 服务器转发过来的会话创建请求，在这种情况下，其尚未在 Leader 的 <code>SessionTracker</code> 中进行会话的注册，因此需要在此处进行一次注册与激活。</p>
+<h3 id="1-4-事务处理"><a href="#1-4-事务处理" class="headerlink" title="1.4 事务处理"></a>1.4 事务处理</h3><p>在 <code>pRequest</code> 方法最后，会将请求提交给 <code>RequestProcessor</code> 类型变量 <code>nextProcessor</code> 处理。对于 Leader，这个变量的实现类为 <code>ProposalRequestProcessor</code>。</p>
+<p><code>ProposalRequestProcessor</code> 顾名思义是一个与提案相关的处理器。所谓的提案，是 ZooKeeper 中针对事务请求所展开的一个投票流程中对事务操作的包装。从 <code>ProposalRequestProcessor</code> 处理器开始，请求的处理将会同时进入三个子处理流程，分别是 Sync 流程、Proposal 流程和 Commit 流程。</p>
+<p><img src="https://user-images.githubusercontent.com/12514722/34207238-a43f0c04-e5c4-11e7-872c-34123aba3b83.png" alt="image"></p>
+<p><code>org.apache.zookeeper.server.quorum.ProposalRequestProcessor#processRequest</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">processRequest</span><span class="params">(Request request)</span> <span class="keyword">throws</span> RequestProcessorException </span>&#123;</span><br><span class="line">    <span class="comment">/* In the following IF-THEN-ELSE block, we process syncs on the leader. </span></span><br><span class="line"><span class="comment">     * If the sync is coming from a follower, then the follower</span></span><br><span class="line"><span class="comment">     * handler adds it to syncHandler. Otherwise, if it is a client of</span></span><br><span class="line"><span class="comment">     * the leader that issued the sync command, then syncHandler won't </span></span><br><span class="line"><span class="comment">     * contain the handler. In this case, we add it to syncHandler, and </span></span><br><span class="line"><span class="comment">     * call processRequest on the next processor.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span>(request <span class="keyword">instanceof</span> LearnerSyncRequest)&#123;</span><br><span class="line">        zks.getLeader().processSync((LearnerSyncRequest)request);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            nextProcessor.processRequest(request);</span><br><span class="line">            <span class="keyword">if</span> (request.hdr != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="comment">// We need to sync and get consensus on any transactions</span></span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                zks.getLeader().propose(request);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (XidRolloverException e) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> RequestProcessorException(e.getMessage(), e);</span><br><span class="line">            &#125;</span><br><span class="line">            syncProcessor.processRequest(request);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>对 Leader 而言：</p>
+<ul>
+<li><code>ProposalRequestProcessor</code> 会首先将请求提交给 <code>nextProcessor</code>，其具体实现是 <code>CommitProcessor</code>。请求被放入 <code>CommitProcessor</code> 的 队列 <code>queuedRequests</code>，等待 <code>CommitProcessor</code> 的线程异步处理（即等待投票完成），此即 Commit 流程。</li>
+<li>调用 Leader 的 <code>propose</code> 方法，生成 <code>Proposal</code> 并广播给 Follower，统计 Follower 返回的投票结果并通知各个 Learner 最终提交事务，此即 Proposal 流程。这个流程会在完成后唤醒 Commit 流程。</li>
+<li>由 <code>SyncRequestProcessor</code> 进行事务日志的记录，并调用 <code>AckRequestProcessor</code> 处理 Leader 自己的投票，此即 Sync 流程。这个流程会流向 Proposal 流程。</li>
+</ul>
+<p>当 Leader 对非事务请求的处理流程到达此处时，由于不包含请求事务头，因此仅仅只是把请求提交给 <code>CommitProcessor</code>。</p>
+<h4 id="1-4-1-Proposal-流程"><a href="#1-4-1-Proposal-流程" class="headerlink" title="1.4.1 Proposal 流程"></a>1.4.1 Proposal 流程</h4><p><code>org.apache.zookeeper.server.quorum.Leader#propose</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * create a proposal and send it out to all the members</span></span><br><span class="line"><span class="comment"> * </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> request</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> the proposal that is queued to send to all the members</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Proposal <span class="title">propose</span><span class="params">(Request request)</span> <span class="keyword">throws</span> XidRolloverException </span>&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Address the rollover issue. All lower 32bits set indicate a new leader</span></span><br><span class="line"><span class="comment">     * election. Force a re-election instead. See ZOOKEEPER-1277</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">if</span> ((request.zxid &amp; <span class="number">0xffffffffL</span>) == <span class="number">0xffffffffL</span>) &#123;</span><br><span class="line">        String msg = <span class="string">"zxid lower 32 bits have rolled over, forcing re-election, and therefore new epoch start"</span>;</span><br><span class="line">        shutdown(msg);</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> XidRolloverException(msg);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ByteArrayOutputStream baos = <span class="keyword">new</span> ByteArrayOutputStream();</span><br><span class="line">    BinaryOutputArchive boa = BinaryOutputArchive.getArchive(baos);</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        request.hdr.serialize(boa, <span class="string">"hdr"</span>);</span><br><span class="line">        <span class="keyword">if</span> (request.txn != <span class="keyword">null</span>) &#123;</span><br><span class="line">            request.txn.serialize(boa, <span class="string">"txn"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        baos.close();</span><br><span class="line">    &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">        LOG.warn(<span class="string">"This really should be impossible"</span>, e);</span><br><span class="line">    &#125;</span><br><span class="line">    QuorumPacket pp = <span class="keyword">new</span> QuorumPacket(Leader.PROPOSAL, request.zxid, baos.toByteArray(), <span class="keyword">null</span>);</span><br><span class="line">    </span><br><span class="line">    Proposal p = <span class="keyword">new</span> Proposal();</span><br><span class="line">    p.packet = pp;</span><br><span class="line">    p.request = request;</span><br><span class="line">    <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">        lastProposed = p.packet.getZxid();</span><br><span class="line">        outstandingProposals.put(lastProposed, p);</span><br><span class="line">        sendPacket(pp);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> p;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="1-4-1-1-发起投票"><a href="#1-4-1-1-发起投票" class="headerlink" title="1.4.1.1 发起投票"></a>1.4.1.1 发起投票</h5><p>如果当前请求是事务请求，那么 Leader 服务器就会发起一轮事务投票。在发起事务投票之前，会首先检查当前服务器的 ZXID 是否可用。</p>
+<h5 id="1-4-1-2-生成提案-Proposal"><a href="#1-4-1-2-生成提案-Proposal" class="headerlink" title="1.4.1.2 生成提案 Proposal"></a>1.4.1.2 生成提案 Proposal</h5><p>若 ZXID 可用，ZooKeeper 会将之前创建的请求头和事务体，以及 ZXID 和请求本身序列化到 <code>Proposal</code> 对象中 —— 此 <code>Proposal</code> 对象就是一个提案，即针对 ZooKeeper 服务器状态的一次变更申请。</p>
+<h5 id="1-4-1-3-广播提案"><a href="#1-4-1-3-广播提案" class="headerlink" title="1.4.1.3 广播提案"></a>1.4.1.3 广播提案</h5><p>更新 <code>lastProposed</code>，以 ZXID 作为 key 将该提案放入投票箱 <code>outstandingProposals</code> 中，同时将该提案广播给所有 Follower。</p>
+<p><code>org.apache.zookeeper.server.quorum.Leader#sendPacket</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">sendPacket</span><span class="params">(QuorumPacket qp)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">synchronized</span> (forwardingFollowers) &#123;</span><br><span class="line">        <span class="keyword">for</span> (LearnerHandler f : forwardingFollowers) &#123;                </span><br><span class="line">            f.queuePacket(qp);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="1-4-1-4-Follower-接收提案（Follower-Sync-流程）"><a href="#1-4-1-4-Follower-接收提案（Follower-Sync-流程）" class="headerlink" title="1.4.1.4 Follower 接收提案（Follower Sync 流程）"></a>1.4.1.4 Follower 接收提案（Follower Sync 流程）</h5><p>Follower 启动后，会通过 <code>followLeader</code> 方法不断从与 Leader 之间的连接中读取数据并作相应处理。</p>
+<p><code>org.apache.zookeeper.server.quorum.Follower#processPacket</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Examine the packet received in qp and dispatch based on its contents.</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> qp</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@throws</span> IOException</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">processPacket</span><span class="params">(QuorumPacket qp)</span> <span class="keyword">throws</span> IOException</span>&#123;</span><br><span class="line">    <span class="keyword">switch</span> (qp.getType()) &#123;</span><br><span class="line">    <span class="keyword">case</span> Leader.PING:            </span><br><span class="line">        ping(qp);            </span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">case</span> Leader.PROPOSAL:            </span><br><span class="line">        TxnHeader hdr = <span class="keyword">new</span> TxnHeader();</span><br><span class="line">        Record txn = SerializeUtils.deserializeTxn(qp.getData(), hdr);</span><br><span class="line">        <span class="keyword">if</span> (hdr.getZxid() != lastQueued + <span class="number">1</span>) &#123;</span><br><span class="line">            LOG.warn(<span class="string">"Got zxid 0x"</span></span><br><span class="line">                    + Long.toHexString(hdr.getZxid())</span><br><span class="line">                    + <span class="string">" expected 0x"</span></span><br><span class="line">                    + Long.toHexString(lastQueued + <span class="number">1</span>));</span><br><span class="line">        &#125;</span><br><span class="line">        lastQueued = hdr.getZxid();</span><br><span class="line">        fzk.logRequest(hdr, txn);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">case</span> Leader.COMMIT:</span><br><span class="line">        fzk.commit(qp.getZxid());</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">case</span> Leader.UPTODATE:</span><br><span class="line">        LOG.error(<span class="string">"Received an UPTODATE message after Follower started"</span>);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">case</span> Leader.REVALIDATE:</span><br><span class="line">        revalidate(qp);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">case</span> Leader.SYNC:</span><br><span class="line">        fzk.sync();</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">        LOG.error(<span class="string">"Invalid packet type: &#123;&#125; received by Observer"</span>, qp.getType());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>org.apache.zookeeper.server.quorum.FollowerZooKeeperServer#logRequest</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">logRequest</span><span class="params">(TxnHeader hdr, Record txn)</span> </span>&#123;</span><br><span class="line">    Request request = <span class="keyword">new</span> Request(<span class="keyword">null</span>, hdr.getClientId(), hdr.getCxid(),</span><br><span class="line">            hdr.getType(), <span class="keyword">null</span>, <span class="keyword">null</span>);</span><br><span class="line">    request.hdr = hdr;</span><br><span class="line">    request.txn = txn;</span><br><span class="line">    request.zxid = hdr.getZxid();</span><br><span class="line">    <span class="keyword">if</span> ((request.zxid &amp; <span class="number">0xffffffffL</span>) != <span class="number">0</span>) &#123;</span><br><span class="line">        pendingTxns.add(request);</span><br><span class="line">    &#125;</span><br><span class="line">    syncProcessor.processRequest(request);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>到这里，Follower 将这个事务记录到 <code>pendingTxns</code> 中，并将事务请求提交给 <code>syncProcessor</code> 作异步处理，在 Follower 的 Sync 流程中对提案做响应并向 Leader 提交 ACK 信息。</p>
+<h5 id="1-4-1-5-Leader-统计投票"><a href="#1-4-1-5-Leader-统计投票" class="headerlink" title="1.4.1.5 Leader 统计投票"></a>1.4.1.5 Leader 统计投票</h5><p>Leader 的 <code>LearnerHandler</code> 会接收来自各个 Follower 的 ACK 信息，并调用 Leader 的 <code>org.apache.zookeeper.server.quorum.Leader#processAck</code> 对投票做处理。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Keep a count of acks that are received by the leader for a particular proposal</span></span><br><span class="line"><span class="comment"> * </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> zxid the zxid of the proposal sent out</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> followerAddr</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">synchronized</span> <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">processAck</span><span class="params">(<span class="keyword">long</span> sid, <span class="keyword">long</span> zxid, SocketAddress followerAddr)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> ((zxid &amp; <span class="number">0xffffffffL</span>) == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (outstandingProposals.size() == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (lastCommitted &gt;= zxid) &#123;</span><br><span class="line">        <span class="comment">// The proposal has already been committed</span></span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    Proposal p = outstandingProposals.get(zxid);</span><br><span class="line">    <span class="keyword">if</span> (p == <span class="keyword">null</span>) &#123;</span><br><span class="line">        LOG.warn(<span class="string">"Trying to commit future proposal: zxid 0x&#123;&#125; from &#123;&#125;"</span>, Long.toHexString(zxid), followerAddr);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    p.ackSet.add(sid);</span><br><span class="line">    <span class="keyword">if</span> (self.getQuorumVerifier().containsQuorum(p.ackSet))&#123;             </span><br><span class="line">        <span class="keyword">if</span> (zxid != lastCommitted+<span class="number">1</span>) &#123;</span><br><span class="line">            LOG.warn(<span class="string">"Commiting zxid 0x&#123;&#125; from &#123;&#125; not first!"</span>, Long.toHexString(zxid), followerAddr);</span><br><span class="line">            LOG.warn(<span class="string">"First is 0x&#123;&#125;"</span>, Long.toHexString(lastCommitted + <span class="number">1</span>));</span><br><span class="line">        &#125;</span><br><span class="line">        outstandingProposals.remove(zxid);</span><br><span class="line">        <span class="keyword">if</span> (p.request != <span class="keyword">null</span>) &#123;</span><br><span class="line">            toBeApplied.add(p);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (p.request == <span class="keyword">null</span>) &#123;</span><br><span class="line">            LOG.warn(<span class="string">"Going to commmit null request for proposal: &#123;&#125;"</span>, p);</span><br><span class="line">        &#125;</span><br><span class="line">        commit(zxid);</span><br><span class="line">        inform(p);</span><br><span class="line">        zk.commitProcessor.commit(p.request);</span><br><span class="line">        <span class="keyword">if</span>(pendingSyncs.containsKey(zxid))&#123;</span><br><span class="line">            <span class="keyword">for</span>(LearnerSyncRequest r: pendingSyncs.remove(zxid)) &#123;</span><br><span class="line">                sendSync(r);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>当提案获得了集群中过半 PARTICIPANT 的投票，那么就认为该提案通过。</p>
+<h5 id="1-4-1-6-处理通过的提案"><a href="#1-4-1-6-处理通过的提案" class="headerlink" title="1.4.1.6 处理通过的提案"></a>1.4.1.6 处理通过的提案</h5><ol>
+<li>将提案的 ZXID 从 <code>outstandingProposals</code> 中移除。</li>
+<li>将提案添加到 <code>toBeApplied</code> 队列。</li>
+<li>向所有 Follower 发送 <code>COMMIT</code> 消息。由于 Follower 已经保存了所有关于该提案的信息，这里只需向其发送 ZXID 即可。</li>
+<li>向所有 Observer 发送 <code>INFORM</code> 消息。由于 Observer 并未参与之前的投票阶段，因此 Observer 服务器并未保存任何关于该提案的信息。<code>INFORM</code> 消息中会包含当前提案的内容。</li>
+<li>向 <code>CommitProcessor</code> 提交这个被通过的事务，进入 Leader 的 Commit 流程。</li>
+</ol>
+<h4 id="1-4-2-Sync-流程"><a href="#1-4-2-Sync-流程" class="headerlink" title="1.4.2 Sync 流程"></a>1.4.2 Sync 流程</h4><p>Leader 在生成事务提案和 Follower 接收到事务提案时，都会将提案放入 <code>SyncRequestProcessor</code> 的提案队列 <code>queuedRequests</code>，等待 <code>SyncRequestProcessor</code> 线程异步处理。 <code>SyncRequestProcessor</code> 处理器会记录事务日志，并提交给 <code>nextProcessor</code> 做后续处理。但是，Leader 和 Follower 的  <code>SyncRequestProcessor</code> 具有不同的 <code>nextProcessor</code> 实现。</p>
+<h5 id="1-4-2-1-Leader-的-Sync-流程"><a href="#1-4-2-1-Leader-的-Sync-流程" class="headerlink" title="1.4.2.1 Leader 的 Sync 流程"></a>1.4.2.1 Leader 的 Sync 流程</h5><p>对于 Leader，其 <code>SyncRequestProcessor</code> 的 <code>nextProcessor</code> 是 <code>AckRequestProcessor</code>。由于 Leader 自己也需要对事务进行投票，<code>AckRequestProcessor</code> 会用事务请求本身作为 ACK，并调用 Leader 的方法处理该 ACK。因此，Leader 的 Sync 流程最终会流向 Proposal 流程。</p>
+<p><code>org.apache.zookeeper.server.quorum.AckRequestProcessor#processRequest</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Forward the request as an ACK to the leader</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">processRequest</span><span class="params">(Request request)</span> </span>&#123;</span><br><span class="line">    QuorumPeer self = leader.self;</span><br><span class="line">    <span class="keyword">if</span>(self != <span class="keyword">null</span>)</span><br><span class="line">        leader.processAck(self.getId(), request.zxid, <span class="keyword">null</span>);</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        LOG.error(<span class="string">"Null QuorumPeer"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="1-4-2-2-Follower-的-Sync-流程"><a href="#1-4-2-2-Follower-的-Sync-流程" class="headerlink" title="1.4.2.2 Follower 的 Sync 流程"></a>1.4.2.2 Follower 的 Sync 流程</h5><p>对于 Follower，其 <code>SyncRequestProcessor</code> 的 <code>nextProcessor</code> 是 <code>SendAckRequestProcessor</code>。<code>syncProcessor</code> 进行事务日志的记录后，由 <code>SendAckRequestProcessor</code> 向 Leader 回复一个 ACK 消息。</p>
+<p><code>org.apache.zookeeper.server.quorum.SendAckRequestProcessor#processRequest</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">processRequest</span><span class="params">(Request si)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(si.type != OpCode.sync)&#123;</span><br><span class="line">        QuorumPacket qp = <span class="keyword">new</span> QuorumPacket(Leader.ACK, si.hdr.getZxid(), <span class="keyword">null</span>,</span><br><span class="line">            <span class="keyword">null</span>);</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            learner.writePacket(qp, <span class="keyword">false</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            LOG.warn(<span class="string">"Closing connection to leader, exception during packet send"</span>, e);</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> (!learner.sock.isClosed()) &#123;</span><br><span class="line">                    learner.sock.close();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">catch</span> (IOException e1) &#123;</span><br><span class="line">                <span class="comment">// Nothing to do, we are shutting things down, so an exception here is irrelevant</span></span><br><span class="line">                LOG.debug(<span class="string">"Ignoring error closing the connection"</span>, e1);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="1-4-2-3-Observer-的-Sync-流程"><a href="#1-4-2-3-Observer-的-Sync-流程" class="headerlink" title="1.4.2.3 Observer 的 Sync 流程"></a>1.4.2.3 Observer 的 Sync 流程</h5><p>虽然 Observer 会初始化 <code>SyncRequestProcessor</code>，但由于 Leader 不会向 Observer 转发事务提案，因此 Observer 不存在 Sync 流程。</p>
+<h4 id="1-4-3-Commit-流程"><a href="#1-4-3-Commit-流程" class="headerlink" title="1.4.3 Commit 流程"></a>1.4.3 Commit 流程</h4><p><code>org.apache.zookeeper.server.quorum.CommitProcessor#run</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        Request nextPending = <span class="keyword">null</span>;            </span><br><span class="line">        <span class="keyword">while</span> (!finished) &#123;</span><br><span class="line">            <span class="keyword">int</span> len = toProcess.size();</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; len; i++) &#123;</span><br><span class="line">                nextProcessor.processRequest(toProcess.get(i));</span><br><span class="line">            &#125;</span><br><span class="line">            toProcess.clear();</span><br><span class="line">            <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">                <span class="keyword">if</span> ((queuedRequests.size() == <span class="number">0</span> || nextPending != <span class="keyword">null</span>) &amp;&amp; committedRequests.size() == <span class="number">0</span>) &#123;</span><br><span class="line">                    wait();</span><br><span class="line">                    <span class="keyword">continue</span>;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> ((queuedRequests.size() == <span class="number">0</span> || nextPending != <span class="keyword">null</span>) &amp;&amp; committedRequests.size() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                    Request r = committedRequests.remove();</span><br><span class="line">                    <span class="keyword">if</span> (nextPending != <span class="keyword">null</span> &amp;&amp; nextPending.sessionId == r.sessionId &amp;&amp; nextPending.cxid == r.cxid) &#123;</span><br><span class="line">                        nextPending.hdr = r.hdr;</span><br><span class="line">                        nextPending.txn = r.txn;</span><br><span class="line">                        nextPending.zxid = r.zxid;</span><br><span class="line">                        toProcess.add(nextPending);</span><br><span class="line">                        nextPending = <span class="keyword">null</span>;</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        toProcess.add(r);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (nextPending != <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">                <span class="keyword">while</span> (nextPending == <span class="keyword">null</span> &amp;&amp; queuedRequests.size() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                    Request request = queuedRequests.remove();</span><br><span class="line">                    <span class="keyword">switch</span> (request.type) &#123;</span><br><span class="line">                    <span class="keyword">case</span> OpCode.create:</span><br><span class="line">                    <span class="keyword">case</span> OpCode.delete:</span><br><span class="line">                    <span class="keyword">case</span> OpCode.setData:</span><br><span class="line">                    <span class="keyword">case</span> OpCode.multi:</span><br><span class="line">                    <span class="keyword">case</span> OpCode.setACL:</span><br><span class="line">                    <span class="keyword">case</span> OpCode.createSession:</span><br><span class="line">                    <span class="keyword">case</span> OpCode.closeSession:</span><br><span class="line">                        nextPending = request;</span><br><span class="line">                        <span class="keyword">break</span>;</span><br><span class="line">                    <span class="keyword">case</span> OpCode.sync:</span><br><span class="line">                        <span class="keyword">if</span> (matchSyncs) &#123;</span><br><span class="line">                            nextPending = request;</span><br><span class="line">                        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                            toProcess.add(request);</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="keyword">break</span>;</span><br><span class="line">                    <span class="keyword">default</span>:</span><br><span class="line">                        toProcess.add(request);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">        LOG.warn(<span class="string">"Interrupted exception while waiting"</span>, e);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">        LOG.error(<span class="string">"Unexpected exception causing CommitProcessor to exit"</span>, e);</span><br><span class="line">    &#125;</span><br><span class="line">    LOG.info(<span class="string">"CommitProcessor exited loop!"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="1-4-3-1-Leader-的-Commit-流程"><a href="#1-4-3-1-Leader-的-Commit-流程" class="headerlink" title="1.4.3.1 Leader 的 Commit 流程"></a>1.4.3.1 Leader 的 Commit 流程</h5><ol>
+<li><p>将请求交付给 <code>CommitProcessor</code> 处理器。</p>
+<p>如前所述，Leader 在生成提案之前，会首先将生成的提案放到 <code>CommitProcessor</code> 的 <code>queuedRequests</code> 队列中。</p>
+</li>
+<li><p>处理 <code>queuedRequests</code> 队列请求。</p>
+<p><code>CommitProcessor</code> 会有一个单独的线程来处理 <code>queuedRequests</code> 队列中的请求。</p>
+</li>
+<li><p>标记 <code>nextPending</code>。</p>
+<p>若从 <code>queuedRequests</code> 中取出的请求是一个事务请求，则需要在集群中进行投票处理，同时将<code>nextPending</code> 标记为当前请求。</p>
+</li>
+<li><p>等待 Proposal 投票。</p>
+<p>在进行 Commit 流程的同时，Leader 会生成 <code>Proposal</code> 并广播给所有 Follower 服务器，此时，Commit 流程等待，直到投票结束。</p>
+</li>
+<li><p>投票通过。</p>
+<p>若提案获得过半 PARTICIPANT 认可，那么进入请求提交阶段。Leader 会将该请求放入 <code>commitedRequests</code> 队列中，同时唤醒 Commit 流程。</p>
+</li>
+<li><p>提交请求。</p>
+<p>若 <code>commitedRequests</code> 队列中存在可以提交的请求，那么 Commit 流程将请求放入 <code>toProcess</code> 队列中。在这个过程中为了保证事务请求的顺序执行，Commit 流程还会对比之前标记的 <code>nextPending</code> 和 <code>commitedRequests</code> 队列中的第一个请求是否一致。在下一次循环中，<code>toProcess</code> 队列中的请求将被取出交付下一个请求处理器。对于 Leader 而言，下一个请求处理器是 <code>ToBeAppliedRequestProcessor</code>。</p>
+</li>
+</ol>
+<h5 id="1-4-3-2-Follower-的-Commit-流程"><a href="#1-4-3-2-Follower-的-Commit-流程" class="headerlink" title="1.4.3.2 Follower 的 Commit 流程"></a>1.4.3.2 Follower 的 Commit 流程</h5><p><code>org.apache.zookeeper.server.quorum.FollowerZooKeeperServer#commit</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">commit</span><span class="params">(<span class="keyword">long</span> zxid)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (pendingTxns.size() == <span class="number">0</span>) &#123;</span><br><span class="line">        LOG.warn(<span class="string">"Committing "</span> + Long.toHexString(zxid)</span><br><span class="line">                + <span class="string">" without seeing txn"</span>);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">long</span> firstElementZxid = pendingTxns.element().zxid;</span><br><span class="line">    <span class="keyword">if</span> (firstElementZxid != zxid) &#123;</span><br><span class="line">        LOG.error(<span class="string">"Committing zxid 0x"</span> + Long.toHexString(zxid) + <span class="string">" but next pending txn 0x"</span> + Long.toHexString(firstElementZxid));</span><br><span class="line">        System.exit(<span class="number">12</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    Request request = pendingTxns.remove();</span><br><span class="line">    commitProcessor.commit(request);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Follower 在收到 <code>COMMIT</code> 消息时，会首先将该事务的 ZXID 与 <code>pendingTxns</code> 队列中缓存的事务对比，然后放入 <code>CommitProcessor</code> 的 <code>committedRequests</code> 队列。</p>
+<p>Follower 的 <code>CommitProcessor</code> 将在两个队列中整理事务信息，在后续循环中提交给下一个请求处理器，即 <code>FinalRequestProcessor</code>。</p>
+<h5 id="1-4-3-3-Observer-的-Commit-流程"><a href="#1-4-3-3-Observer-的-Commit-流程" class="headerlink" title="1.4.3.3 Observer 的 Commit 流程"></a>1.4.3.3 Observer 的 Commit 流程</h5><p><code>org.apache.zookeeper.server.quorum.Observer#processPacket</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Controls the response of an observer to the receipt of a quorumpacket</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> qp</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@throws</span> IOException</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">processPacket</span><span class="params">(QuorumPacket qp)</span> <span class="keyword">throws</span> IOException</span>&#123;</span><br><span class="line">    <span class="keyword">switch</span> (qp.getType()) &#123;</span><br><span class="line">    <span class="keyword">case</span> Leader.PING:</span><br><span class="line">        ping(qp);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">case</span> Leader.PROPOSAL:</span><br><span class="line">        LOG.warn(<span class="string">"Ignoring proposal"</span>);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">case</span> Leader.COMMIT:</span><br><span class="line">        LOG.warn(<span class="string">"Ignoring commit"</span>);            </span><br><span class="line">        <span class="keyword">break</span>;            </span><br><span class="line">    <span class="keyword">case</span> Leader.UPTODATE:</span><br><span class="line">        LOG.error(<span class="string">"Received an UPTODATE message after Observer started"</span>);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">case</span> Leader.REVALIDATE:</span><br><span class="line">        revalidate(qp);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">case</span> Leader.SYNC:</span><br><span class="line">        ((ObserverZooKeeperServer)zk).sync();</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">case</span> Leader.INFORM:            </span><br><span class="line">        TxnHeader hdr = <span class="keyword">new</span> TxnHeader();</span><br><span class="line">        Record txn = SerializeUtils.deserializeTxn(qp.getData(), hdr);</span><br><span class="line">        Request request = <span class="keyword">new</span> Request (<span class="keyword">null</span>, hdr.getClientId(), </span><br><span class="line">                                       hdr.getCxid(),</span><br><span class="line">                                       hdr.getType(), <span class="keyword">null</span>, <span class="keyword">null</span>);</span><br><span class="line">        request.txn = txn;</span><br><span class="line">        request.hdr = hdr;</span><br><span class="line">        ObserverZooKeeperServer obs = (ObserverZooKeeperServer)zk;</span><br><span class="line">        obs.commitRequest(request);            </span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">        LOG.error(<span class="string">"Invalid packet type: &#123;&#125; received by Observer"</span>, qp.getType());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Observer 收到来自 Leader 的 <code>INFORM</code> 消息后的处理过程类似于 Follower。</p>
+<h3 id="1-5-事务应用"><a href="#1-5-事务应用" class="headerlink" title="1.5 事务应用"></a>1.5 事务应用</h3><p>对于 Leader，事务由 <code>CommitProcessor</code> 提交给 <code>ToBeAppliedRequestProcessor</code>，再由 <code>ToBeAppliedRequestProcessor</code> 提交给 <code>FinalRequestProcessor</code>；对于 Follower 和 Observer，事务由 <code>CommitProcessor</code>  提交给 <code>FinalRequestProcessor</code>。</p>
+<ol>
+<li><p>有效性检查</p>
+<p><code>FinalRequestProcessor</code> 处理器检查 <code>outstandingChanges</code> 队列中请求的有效性，如果发现这些请求已经落后于当前正在处理的请求，那么直接从 <code>outstandingChanges</code> 队列中移除。</p>
+</li>
+<li><p>事务应用</p>
+<p>之前的请求处理仅仅是将事务请求记录到了事务日志中去，而内存数据库中的状态尚未变更。因此，在这个环节，需要将事务变更应用到内存数据库中。</p>
+<p><code>org.apache.zookeeper.server.ZooKeeperServer#processTxn</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> ProcessTxnResult <span class="title">processTxn</span><span class="params">(TxnHeader hdr, Record txn)</span> </span>&#123;</span><br><span class="line">    ProcessTxnResult rc;</span><br><span class="line">    <span class="keyword">int</span> opCode = hdr.getType();</span><br><span class="line">    <span class="keyword">long</span> sessionId = hdr.getClientId();</span><br><span class="line">    rc = getZKDatabase().processTxn(hdr, txn);</span><br><span class="line">    <span class="keyword">if</span> (opCode == OpCode.createSession) &#123;</span><br><span class="line">        <span class="keyword">if</span> (txn <span class="keyword">instanceof</span> CreateSessionTxn) &#123;</span><br><span class="line">            CreateSessionTxn cst = (CreateSessionTxn) txn;</span><br><span class="line">            sessionTracker.addSession(sessionId, cst.getTimeOut());</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            LOG.warn(<span class="string">"*****&gt;&gt;&gt;&gt;&gt; Got "</span> + txn.getClass() + <span class="string">" "</span> + txn.toString());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (opCode == OpCode.closeSession) &#123;</span><br><span class="line">        sessionTracker.removeSession(sessionId);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> rc;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>对于会话创建这类事务请求，需要向 <code>SessionTracker</code> 进行会话注册。此时，一个客户端的会话被保存到了集群中的所有服务器上（但是注意，Leader 和 Learner 的 <code>SessionTracker</code> 具有不同实现）。</p>
+</li>
+<li><p>将事务放入 <code>commitProposal</code> 队列</p>
+<p>一旦完成事务请求的内存数据库应用，就可以将该请求放入 <code>commitProposal</code> 队列中。 <code>commitProposal</code> 队列用来保存最近被提交的事务请求，以便集群间机器进行数据的快速同步。</p>
+</li>
+</ol>
+<h3 id="1-6-会话响应"><a href="#1-6-会话响应" class="headerlink" title="1.6 会话响应"></a>1.6 会话响应</h3><p><code>FinalRequestProcessor</code> 继续处理对会话请求的响应。</p>
+<ol>
+<li><p>统计处理</p>
+<p>ZooKeeper 计算请求在服务端处理所花费的时间，统计客户端连接的基本信息，如 <code>lastZxid</code>（最新的 ZXID）、<code>lastOp</code>（最后一次和服务端的操作）和 <code>lastLatency</code>（最后一次请求处理所花费的时间）等。</p>
+</li>
+<li><p>创建响应 <code>ConnectResponse</code></p>
+<p><code>ConnectResponse</code> 就是一个会话创建成功后的响应，包含了当前客户端与服务端之间的通信协议版本号 <code>protocolVersion</code>、会话超时时间、<code>sessionId</code> 和会话密码。</p>
+</li>
+</ol>
+<ol start="3">
+<li>序列化 <code>ConnectResponse</code></li>
+<li>I/O 层发送响应给客户端</li>
+</ol>
+<h3 id="1-7-客户端处理请求响应"><a href="#1-7-客户端处理请求响应" class="headerlink" title="1.7 客户端处理请求响应"></a>1.7 客户端处理请求响应</h3><p>对于会话创建请求，客户端会调用 <code>org.apache.zookeeper.ClientCnxn.SendThread#onConnected</code> 方法，生成一个 <code>None-SyncConnected</code> 事件，交由 <code>EventThread</code> 处理：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">onConnected</span><span class="params">(<span class="keyword">int</span> _negotiatedSessionTimeout, <span class="keyword">long</span> _sessionId,</span></span></span><br><span class="line"><span class="function"><span class="params">        <span class="keyword">byte</span>[] _sessionPasswd, <span class="keyword">boolean</span> isRO)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    negotiatedSessionTimeout = _negotiatedSessionTimeout;</span><br><span class="line">    <span class="keyword">if</span> (negotiatedSessionTimeout &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">        state = States.CLOSED;</span><br><span class="line"></span><br><span class="line">        eventThread.queueEvent(<span class="keyword">new</span> WatchedEvent(</span><br><span class="line">                Watcher.Event.EventType.None,</span><br><span class="line">                Watcher.Event.KeeperState.Expired, <span class="keyword">null</span>));</span><br><span class="line">        eventThread.queueEventOfDeath();</span><br><span class="line"></span><br><span class="line">        String warnInfo;</span><br><span class="line">        warnInfo = <span class="string">"Unable to reconnect to ZooKeeper service, session 0x"</span></span><br><span class="line">            + Long.toHexString(sessionId) + <span class="string">" has expired"</span>;</span><br><span class="line">        LOG.warn(warnInfo);</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> SessionExpiredException(warnInfo);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (!readOnly &amp;&amp; isRO) &#123;</span><br><span class="line">        LOG.error(<span class="string">"Read/write client got connected to read-only server"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    readTimeout = negotiatedSessionTimeout * <span class="number">2</span> / <span class="number">3</span>;</span><br><span class="line">    connectTimeout = negotiatedSessionTimeout / hostProvider.size();</span><br><span class="line">    hostProvider.onConnected();</span><br><span class="line">    sessionId = _sessionId;</span><br><span class="line">    sessionPasswd = _sessionPasswd;</span><br><span class="line">    state = (isRO) ? States.CONNECTEDREADONLY : States.CONNECTED;</span><br><span class="line">    seenRwServerBefore |= !isRO;</span><br><span class="line">    KeeperState eventState = (isRO) ?</span><br><span class="line">            KeeperState.ConnectedReadOnly : KeeperState.SyncConnected;</span><br><span class="line">    eventThread.queueEvent(<span class="keyword">new</span> WatchedEvent(</span><br><span class="line">            Watcher.Event.EventType.None,</span><br><span class="line">            eventState, <span class="keyword">null</span>));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="2-SetData-请求"><a href="#2-SetData-请求" class="headerlink" title="2. SetData 请求"></a>2. SetData 请求</h2><p>服务端对于 SetData 请求的处理大致可以分为 4 步，分别是请求的预处理、事务处理、事务应用和请求响应。</p>
+<h3 id="2-1-预处理"><a href="#2-1-预处理" class="headerlink" title="2.1 预处理"></a>2.1 预处理</h3><ol>
+<li><p>I/O 层接收来自客户端的请求。</p>
+</li>
+<li><p>判断是否是客户端会话创建请求。对于 SetData 请求，由于已经完成了会话创建，因此按照正常事务请求进行处理。</p>
+</li>
+<li><p>将请求交给 <code>PrepRequestProcessor</code> 处理器进行处理。</p>
+<p><code>org.apache.zookeeper.server.PrepRequestProcessor#pRequest2Txn</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ... </span></span><br><span class="line">request.hdr = <span class="keyword">new</span> TxnHeader(request.sessionId, request.cxid, zxid, Time.currentWallTime(), type);        </span><br><span class="line"><span class="keyword">switch</span> (type) &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">    <span class="keyword">case</span> OpCode.setData:</span><br><span class="line">        zks.sessionTracker.checkSession(request.sessionId, request.getOwner());</span><br><span class="line">        SetDataRequest setDataRequest = (SetDataRequest)record;</span><br><span class="line">        <span class="keyword">if</span>(deserialize)</span><br><span class="line">            ByteBufferInputStream.byteBuffer2Record(request.request, setDataRequest);</span><br><span class="line">        path = setDataRequest.getPath();</span><br><span class="line">        validatePath(path, request.sessionId);</span><br><span class="line">        nodeRecord = getRecordForPath(path);</span><br><span class="line">        checkACL(zks, nodeRecord.acl, ZooDefs.Perms.WRITE,</span><br><span class="line">                request.authInfo);</span><br><span class="line">        version = setDataRequest.getVersion();</span><br><span class="line">        <span class="keyword">int</span> currentVersion = nodeRecord.stat.getVersion();</span><br><span class="line">        <span class="keyword">if</span> (version != -<span class="number">1</span> &amp;&amp; version != currentVersion) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> KeeperException.BadVersionException(path);</span><br><span class="line">        &#125;</span><br><span class="line">        version = currentVersion + <span class="number">1</span>;</span><br><span class="line">        request.txn = <span class="keyword">new</span> SetDataTxn(path, setDataRequest.getData(), version);</span><br><span class="line">        nodeRecord = nodeRecord.duplicate(request.hdr.getZxid());</span><br><span class="line">        nodeRecord.stat.setVersion(version);</span><br><span class="line">        addChangeRecord(nodeRecord);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// ...</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>创建请求事务头。</p>
+</li>
+<li><p>会话检查。</p>
+<p>检查该会话是否有效，即是否已经超时。</p>
+</li>
+<li><p>反序列化请求，并创建 <code>ChangeRecord</code> 记录。</p>
+<p>ZooKeeper 首先会对请求反序列化并生成特定的 <code>SetDataRequest</code> 请求，请求中包含了数据节点路径 path、更新的内容 data 和期望的数据节点版本 version。同时根据请求对应的 path，Zookeeper 会生成一个 <code>ChangeRecord</code> 记录。</p>
+</li>
+<li><p>ACL检查。检查客户端是否具有数据更新的权限。</p>
+</li>
+<li><p>数据版本检查。</p>
+<p>ZooKeeper 通过 version 属性来实现乐观锁机制的写入校验。</p>
+</li>
+<li><p>创建请求事务体 <code>SetDataTxn</code>。</p>
+</li>
+<li><p>保存 <code>ChangeRecord</code> 记录到 <code>outstandingChanges</code> 队列中。</p>
+</li>
+</ol>
+<h3 id="2-2-事务处理"><a href="#2-2-事务处理" class="headerlink" title="2.2 事务处理"></a>2.2 事务处理</h3><p>参见会话创建的事务处理阶段。</p>
+<h3 id="2-3-事务应用"><a href="#2-3-事务应用" class="headerlink" title="2.3 事务应用"></a>2.3 事务应用</h3><ol>
+<li><p>交付给 <code>FinalRequestProcessor</code> 处理器。</p>
+</li>
+<li><p>事务应用。</p>
+<p>将请求事务头和事务体直接交给内存数据库 <code>ZKDatabase</code> 进行事务应用，同时返回 <code>ProcessTxnResult</code> 对象，包含了数据节点内容更新后的 stat。</p>
+</li>
+<li><p>将事务请求放入 <code>commitProposal</code> 队列。</p>
+</li>
+</ol>
+<h3 id="2-4-请求响应"><a href="#2-4-请求响应" class="headerlink" title="2.4 请求响应"></a>2.4 请求响应</h3><ol>
+<li><p>统计处理。</p>
+</li>
+<li><p>创建响应体 <code>SetDataResponse</code>。</p>
+<p>其包含了当前数据节点的最新状态 stat。</p>
+</li>
+<li><p>创建响应头。</p>
+<p>包含当前响应对应的事务 ZXID 和请求处理是否成功的标识。</p>
+</li>
+<li><p>序列化响应。</p>
+</li>
+<li><p>I/O层发送响应给客户端。</p>
+</li>
+</ol>
+<h2 id="3-GetData-请求"><a href="#3-GetData-请求" class="headerlink" title="3. GetData 请求"></a>3. GetData 请求</h2><p>服务端对于 <code>GetData</code> 请求的处理，大致分为 3 步，分别是请求的预处理、非事务处理和请求响应。</p>
+<h3 id="3-1-预处理"><a href="#3-1-预处理" class="headerlink" title="3.1 预处理"></a>3.1 预处理</h3><ol>
+<li>I/O 层接收来自客户端的请求。</li>
+<li>判断是否是客户端会话创建请求。</li>
+<li>会话检查。</li>
+<li>将请求提交给 <code>firstProcessor</code>。<ul>
+<li>对于 Leader，<code>PreRequestProcessor</code> 再次检查会话，然后交给 <code>ProposalRequestProcessor</code>。由于这种情况下请求事务头为 null，Leader 将提交请求给 <code>CommitProcessor</code> 并忽略 Proposal 和 Sync 阶段。</li>
+<li>对于 Learner，提交请求给 <code>CommitProcessor</code>。</li>
+</ul>
+</li>
+</ol>
+<h3 id="3-2-非事务处理"><a href="#3-2-非事务处理" class="headerlink" title="3.2 非事务处理"></a>3.2 非事务处理</h3><ol>
+<li>反序列化 <code>GetDataRequest</code> 请求。</li>
+<li>获取数据节点。</li>
+<li>ACL检查。</li>
+<li>获取数据内容和 stat，注册 <code>Watcher</code>。</li>
+</ol>
+<h3 id="3-3-请求响应"><a href="#3-3-请求响应" class="headerlink" title="3.3 请求响应"></a>3.3 请求响应</h3><ol>
+<li>创建响应体 <code>GetDataResponse</code>。响应体包含当前数据节点的内容和状态 stat。</li>
+<li>创建响应头。</li>
+<li>统计处理。</li>
+<li>序列化响应。</li>
+<li>I/O层发送响应给客户端。</li>
+</ol>
+<h2 id="4-自问自答"><a href="#4-自问自答" class="headerlink" title="4. 自问自答"></a>4. 自问自答</h2><h3 id="4-1-Learner-如何处理事务请求？"><a href="#4-1-Learner-如何处理事务请求？" class="headerlink" title="4.1  Learner 如何处理事务请求？"></a>4.1  Learner 如何处理事务请求？</h3><p>当一个 Learner 收到客户端的事务请求时，会通过 REQUEST 消息转发给 Leader。Leader 的 <code>LearnerHandler</code> 收到消息后，会提交给 <code>PreRequestProcessor</code>，进入预处理阶段。由于该请求不是来自于与 Leader 相连的客户端的，因此相比于完整流程，跳过了前面的会话创建阶段。</p>
+<h3 id="4-2-在事务处理的过程中，Follower-会收到哪些消息？"><a href="#4-2-在事务处理的过程中，Follower-会收到哪些消息？" class="headerlink" title="4.2 在事务处理的过程中，Follower 会收到哪些消息？"></a>4.2 在事务处理的过程中，Follower 会收到哪些消息？</h3><p>如何客户端连接的是一个 Follower，整个流程中该 Follower 会收到：</p>
+<ul>
+<li>来自客户端的事务请求。由 <code>FollowerRequestProcessor</code> 处理，发送 REQUEST 消息给 Leader，并添加到 <code>CommitProcessor</code> 的 <code>queuedRequests</code> 队列。</li>
+</ul>
+<p>不论客户端是向哪台服务器提交的事务请求，所有 Follower 都会收到：</p>
+<ol>
+<li>来自 Leader 的事务提案。由 <code>FollowerZooKeeperServer</code> 交给 <code>SyncRequestProcessor</code> 处理，提交到 <code>SendAckRequestProcessor</code>，向 Leader 回复 ACK。</li>
+<li>来自 Leader 的 <code>COMMIT</code> 消息。由 <code>FollowerZooKeeperServer</code> 添加事务请求到 <code>CommitProcesser</code> 的 <code>committedRequests</code> 队列，并在接下来提交到 <code>FinalRequestProcessor</code>。</li>
+</ol>
+<h3 id="4-2-在事务处理的过程中，Observer-会收到哪些消息？"><a href="#4-2-在事务处理的过程中，Observer-会收到哪些消息？" class="headerlink" title="4.2 在事务处理的过程中，Observer 会收到哪些消息？"></a>4.2 在事务处理的过程中，Observer 会收到哪些消息？</h3><p>如何客户端连接的是一个 Observer，整个流程中该 Observer 会收到：</p>
+<ul>
+<li>来自客户端的事务请求。由 <code>ObserverRequestProcessor</code> 处理，发送 REQUEST 消息给 Leader，并记录到 <code>CommitProcessor</code> 的 <code>queuedRequests</code> 队列。</li>
+</ul>
+<p>不论客户端是向哪台服务器提交的事务请求，所有 Observer 都会收到：</p>
+<ul>
+<li>来自 Leader 的 <code>INFORM</code> 消息。由 <code>ObserverZooKeeperServer</code> 添加事务请求到 <code>CommitProcesser</code> 的 <code>committedRequests</code> 队列，并在接下来提交到 <code>FinalRequestProcessor</code>。</li>
+</ul>
+<h3 id="4-3-Leader-是否回复来自-Learner-的-REQUEST-消息？"><a href="#4-3-Leader-是否回复来自-Learner-的-REQUEST-消息？" class="headerlink" title="4.3 Leader 是否回复来自 Learner 的 REQUEST 消息？"></a>4.3 Leader 是否回复来自 Learner 的 REQUEST 消息？</h3><p>Leader 不会对 Learner 的 REQUEST 消息做回复。请求处理结果由 Leader 向所有 Learner 发送确认信息（<code>COMMIT</code> 或 <code>INFORM</code>）传达。</p>
+<h3 id="4-4-如何保证只由接收客户端事务请求的那台服务器来对客户端发送响应？"><a href="#4-4-如何保证只由接收客户端事务请求的那台服务器来对客户端发送响应？" class="headerlink" title="4.4 如何保证只由接收客户端事务请求的那台服务器来对客户端发送响应？"></a>4.4 如何保证只由接收客户端事务请求的那台服务器来对客户端发送响应？</h3><ol>
+<li><p>对于接收客户端事务请求的服务器，在流程中流转时，会创建一个 <code>Request</code> 对象，其 <code>cnxn</code> 属性被设置为处理该客户端请求的 <code>NIOServerCnxn</code> 实例。这个对象最终被添加到 <code>CommitProcessor</code> 的 <code>queuedRequests</code> 队列中，等待 Leader 确认事务处理结果。其他服务器不会执行这一个步骤。</p>
+</li>
+<li><p>对于 Leader：</p>
+<ol>
+<li><p>如果客户端请求是直接发送给 Leader 的，如前所述，Leader 会创建一个 <code>Request</code> 对象，其 <code>cnxn</code> 属性被设置为处理该客户端请求的 <code>NIOServerCnxn</code> 实例，然后调用 <code>org.apache.zookeeper.server.ZooKeeperServer#submitRequest(org.apache.zookeeper.server.Request)</code>。</p>
+</li>
+<li><p>如果客户端请求不是直接发送给 Leader 的，那么 Leader 会收到来自某一个 Learner 的 REQUEST 请求。Leader 会创建一个 <code>Request</code> 对象，其 <code>cnxn</code> 属性为 null，然后调用 <code>org.apache.zookeeper.server.ZooKeeperServer#submitRequest(org.apache.zookeeper.server.Request)</code>。</p>
+<p><code>org.apache.zookeeper.server.quorum.LearnerHandler#run</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">    <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">        <span class="keyword">switch</span> (qp.getType()) &#123;</span><br><span class="line">            <span class="keyword">case</span> Leader.REQUEST:                    </span><br><span class="line">                bb = ByteBuffer.wrap(qp.getData());</span><br><span class="line">                sessionId = bb.getLong();</span><br><span class="line">                cxid = bb.getInt();</span><br><span class="line">                type = bb.getInt();</span><br><span class="line">                bb = bb.slice();</span><br><span class="line">                Request si;</span><br><span class="line">                <span class="keyword">if</span>(type == OpCode.sync)&#123;</span><br><span class="line">                    si = <span class="keyword">new</span> LearnerSyncRequest(<span class="keyword">this</span>, sessionId, cxid, type, bb, qp.getAuthinfo());</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    si = <span class="keyword">new</span> Request(<span class="keyword">null</span>, sessionId, cxid, type, bb, qp.getAuthinfo());</span><br><span class="line">                &#125;</span><br><span class="line">                si.setOwner(<span class="keyword">this</span>);</span><br><span class="line">                leader.zk.submitRequest(si);</span><br><span class="line">                <span class="keyword">break</span>;  </span><br><span class="line">         &#125;</span><br><span class="line">     &#125;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>无论哪种情况，这个 <code>Request</code> 将在 Leader 的 Commit 流程中被 Leader 添加到 <code>CommitProcessor</code> 的 <code>queuedRequests</code> 队列中，等待集群投票结果。</p>
+</li>
+<li><p>无论哪种情况，这个 <code>Request</code> 将在 Leader 的 Proposal 流程中被 Leader 添加到 <code>CommitProcessor</code> 的 <code>committedRequests</code> 队列中，等待事务应用。</p>
+</li>
+</ol>
+</li>
+<li><p>对于 Follower：</p>
+<ol>
+<li>在 Leader 向 Follower 提交事务提案后，也会创建一个  <code>Request</code> 对象，但其 <code>cnxn</code> 属性被设置为 null，然后将其添加到 <code>FollowerZooKeeperServer</code> 的 <code>pendingTxn</code> 队列中。</li>
+<li>在 Leader 向 Follower 正式提交事务（COMMIT）后，会从 <code>pendingTxn</code> 队列取出该 <code>Request</code> 对象，放入 <code>CommitProcesser</code> 的 <code>committedRequests</code> 队列中。</li>
+</ol>
+</li>
+<li><p>对于 Observer：</p>
+<ul>
+<li>在 Leader 向 Follower 正式提交事务（INFORM）后，会创建一个  <code>Request</code> 对象，但其 <code>cnxn</code> 属性被设置为 null，放入 <code>CommitProcesser</code> 的 <code>committedRequests</code> 队列中。</li>
+</ul>
+</li>
+<li><p>综上所述，对于服务器：</p>
+<ul>
+<li>如果自己是收到客户端请求的那个服务器，那么自己的 <code>CommitProcesser</code> 的 <code>queuedRequests</code> 队列中都会包含一个待提交的事务请求，其 <code>cnxn</code> 属性为客户端连接对应的 <code>NIOServerCnxn</code> 实例。</li>
+<li>如果自己不是收到客户端请求的那个服务器，那么自己的 <code>CommitProcesser</code> 的 <code>committedRequests</code> 队列中都会包含一个待提交的事务请求，其 <code>cnxn</code> 属性为 null。</li>
+</ul>
+</li>
+<li><p>在 <code>CommitProcesser</code> 整理请求信息的过程中，会优先考虑 <code>queuedRequests</code> 队列中的 <code>Request</code> 对象。因此，如果自己是收到客户端请求的那个服务器，那么提交给 <code>FinalRequestProcessor</code> 的 <code>Requet</code> 对象的 <code>cnxn</code> 属性不为 null；反之则为 null。</p>
+</li>
+<li><p>在 <code>FinalRequestProcessor</code> 的处理过程中，各服务器首先完成事务应用。这是将做一次判断，只有当传入的 <code>Request</code> 对象的 <code>cnxn</code> 参数不为 null 时，才会继续进行后续的会话响应操作。</p>
+</li>
+<li><p>最终，集群中的所有服务器都提交并应用了事务，但只有客户端所连接的那个服务器才会对客户端进行响应。</p>
+</li>
+</ol>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/ZooKeeper/" rel="tag"># ZooKeeper</a>
+          
+            <a href="/tags/源码阅读/" rel="tag"># 源码阅读</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/12/13/《从 Paxos 到 ZooKeeper：分布式一致性原理与实践》：客户端/" rel="next" title="《从 Paxos 到 ZooKeeper：分布式一致性原理与实践》：客户端">
+                <i class="fa fa-chevron-left"></i> 《从 Paxos 到 ZooKeeper：分布式一致性原理与实践》：客户端
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/12/25/《从 Paxos 到 ZooKeeper：分布式一致性原理与实践》：数据与存储/" rel="prev" title="《从 Paxos 到 ZooKeeper：分布式一致性原理与实践》：数据与存储">
+                《从 Paxos 到 ZooKeeper：分布式一致性原理与实践》：数据与存储 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="Yongqiang Xiang" />
+          <p class="site-author-name" itemprop="name">Yongqiang Xiang</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">66</span>
+                <span class="site-state-item-name">posts</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">28</span>
+                <span class="site-state-item-name">categories</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">28</span>
+                <span class="site-state-item-name">tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/xiangyq000" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                    
+                      GitHub
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://stackoverflow.com/users/4945225/xiangyq000" target="_blank" title="StackOverflow">
+                  
+                    <i class="fa fa-fw fa-stack-overflow"></i>
+                  
+                    
+                      StackOverflow
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-会话创建请求"><span class="nav-number">1.</span> <span class="nav-text">1. 会话创建请求</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-请求接收"><span class="nav-number">1.1.</span> <span class="nav-text">1.1     请求接收</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-1-1-I-O-层接收来自客户端的请求"><span class="nav-number">1.1.1.</span> <span class="nav-text">1.1.1 I/O 层接收来自客户端的请求</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-1-2-判断是否是客户端会话创建请求"><span class="nav-number">1.1.2.</span> <span class="nav-text">1.1.2 判断是否是客户端会话创建请求</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-1-3-反序列化-ConnectRequest-请求"><span class="nav-number">1.1.3.</span> <span class="nav-text">1.1.3 反序列化 ConnectRequest 请求</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-1-4-判断是否-ReadOnly-客户端"><span class="nav-number">1.1.4.</span> <span class="nav-text">1.1.4 判断是否 ReadOnly 客户端</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-1-5-检查客户端-ZXID"><span class="nav-number">1.1.5.</span> <span class="nav-text">1.1.5 检查客户端 ZXID</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-1-6-协商-sessionTimeout"><span class="nav-number">1.1.6.</span> <span class="nav-text">1.1.6 协商 sessionTimeout</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-1-7-判断是否需要重新创建会话"><span class="nav-number">1.1.7.</span> <span class="nav-text">1.1.7 判断是否需要重新创建会话</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-会话创建"><span class="nav-number">1.2.</span> <span class="nav-text">1.2 会话创建</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-1-为客户端生成-sessionId"><span class="nav-number">1.2.1.</span> <span class="nav-text">1.2.1 为客户端生成 sessionId</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-2-注册会话"><span class="nav-number">1.2.2.</span> <span class="nav-text">1.2.2 注册会话</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-3-激活会话"><span class="nav-number">1.2.3.</span> <span class="nav-text">1.2.3 激活会话</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-4-生成会话密钥"><span class="nav-number">1.2.4.</span> <span class="nav-text">1.2.4 生成会话密钥</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-5-将请求交给-firstProcessor"><span class="nav-number">1.2.5.</span> <span class="nav-text">1.2.5 将请求交给 firstProcessor</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-事务预处理"><span class="nav-number">1.3.</span> <span class="nav-text">1.3 事务预处理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-3-1-异步处理请求"><span class="nav-number">1.3.1.</span> <span class="nav-text">1.3.1 异步处理请求</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-3-2-创建请求事务头"><span class="nav-number">1.3.2.</span> <span class="nav-text">1.3.2 创建请求事务头</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-3-3-创建请求事务体"><span class="nav-number">1.3.3.</span> <span class="nav-text">1.3.3 创建请求事务体</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-3-4-注册与激活会话"><span class="nav-number">1.3.4.</span> <span class="nav-text">1.3.4 注册与激活会话</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-4-事务处理"><span class="nav-number">1.4.</span> <span class="nav-text">1.4 事务处理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-4-1-Proposal-流程"><span class="nav-number">1.4.1.</span> <span class="nav-text">1.4.1 Proposal 流程</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-4-1-1-发起投票"><span class="nav-number">1.4.1.1.</span> <span class="nav-text">1.4.1.1 发起投票</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#1-4-1-2-生成提案-Proposal"><span class="nav-number">1.4.1.2.</span> <span class="nav-text">1.4.1.2 生成提案 Proposal</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#1-4-1-3-广播提案"><span class="nav-number">1.4.1.3.</span> <span class="nav-text">1.4.1.3 广播提案</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#1-4-1-4-Follower-接收提案（Follower-Sync-流程）"><span class="nav-number">1.4.1.4.</span> <span class="nav-text">1.4.1.4 Follower 接收提案（Follower Sync 流程）</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#1-4-1-5-Leader-统计投票"><span class="nav-number">1.4.1.5.</span> <span class="nav-text">1.4.1.5 Leader 统计投票</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#1-4-1-6-处理通过的提案"><span class="nav-number">1.4.1.6.</span> <span class="nav-text">1.4.1.6 处理通过的提案</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-4-2-Sync-流程"><span class="nav-number">1.4.2.</span> <span class="nav-text">1.4.2 Sync 流程</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-4-2-1-Leader-的-Sync-流程"><span class="nav-number">1.4.2.1.</span> <span class="nav-text">1.4.2.1 Leader 的 Sync 流程</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#1-4-2-2-Follower-的-Sync-流程"><span class="nav-number">1.4.2.2.</span> <span class="nav-text">1.4.2.2 Follower 的 Sync 流程</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#1-4-2-3-Observer-的-Sync-流程"><span class="nav-number">1.4.2.3.</span> <span class="nav-text">1.4.2.3 Observer 的 Sync 流程</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-4-3-Commit-流程"><span class="nav-number">1.4.3.</span> <span class="nav-text">1.4.3 Commit 流程</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-4-3-1-Leader-的-Commit-流程"><span class="nav-number">1.4.3.1.</span> <span class="nav-text">1.4.3.1 Leader 的 Commit 流程</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#1-4-3-2-Follower-的-Commit-流程"><span class="nav-number">1.4.3.2.</span> <span class="nav-text">1.4.3.2 Follower 的 Commit 流程</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#1-4-3-3-Observer-的-Commit-流程"><span class="nav-number">1.4.3.3.</span> <span class="nav-text">1.4.3.3 Observer 的 Commit 流程</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-5-事务应用"><span class="nav-number">1.5.</span> <span class="nav-text">1.5 事务应用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-6-会话响应"><span class="nav-number">1.6.</span> <span class="nav-text">1.6 会话响应</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-7-客户端处理请求响应"><span class="nav-number">1.7.</span> <span class="nav-text">1.7 客户端处理请求响应</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-SetData-请求"><span class="nav-number">2.</span> <span class="nav-text">2. SetData 请求</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-预处理"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 预处理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-事务处理"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 事务处理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-事务应用"><span class="nav-number">2.3.</span> <span class="nav-text">2.3 事务应用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-4-请求响应"><span class="nav-number">2.4.</span> <span class="nav-text">2.4 请求响应</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-GetData-请求"><span class="nav-number">3.</span> <span class="nav-text">3. GetData 请求</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-预处理"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 预处理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-非事务处理"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 非事务处理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-请求响应"><span class="nav-number">3.3.</span> <span class="nav-text">3.3 请求响应</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-自问自答"><span class="nav-number">4.</span> <span class="nav-text">4. 自问自答</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-Learner-如何处理事务请求？"><span class="nav-number">4.1.</span> <span class="nav-text">4.1  Learner 如何处理事务请求？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-在事务处理的过程中，Follower-会收到哪些消息？"><span class="nav-number">4.2.</span> <span class="nav-text">4.2 在事务处理的过程中，Follower 会收到哪些消息？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-在事务处理的过程中，Observer-会收到哪些消息？"><span class="nav-number">4.3.</span> <span class="nav-text">4.2 在事务处理的过程中，Observer 会收到哪些消息？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-3-Leader-是否回复来自-Learner-的-REQUEST-消息？"><span class="nav-number">4.4.</span> <span class="nav-text">4.3 Leader 是否回复来自 Learner 的 REQUEST 消息？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-4-如何保证只由接收客户端事务请求的那台服务器来对客户端发送响应？"><span class="nav-number">4.5.</span> <span class="nav-text">4.4 如何保证只由接收客户端事务请求的那台服务器来对客户端发送响应？</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yongqiang Xiang</span>
+</div>
+
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script><!-- hexo-inject:begin --><!-- Begin: Injected MathJax -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config("");
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+      all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+  });
+</script>
+
+<script type="text/javascript" src="custom_mathjax_source">
+</script>
+<!-- End: Injected MathJax -->
+<!-- hexo-inject:end -->
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

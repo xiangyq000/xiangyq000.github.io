@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-cn">
+<head>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Redis,Database," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="Redis 的发布与订阅功能由 PUBLISH、SUBSCRIBE、PSUBSCRIBE 等命令组成。 通过执行 SUBSCRIBE 命令，客户端可以订阅一个或多个频道从而成为这些频道的订阅者（subscriber）：每当有其它客户端向被订阅的频道发送消息（message）时，频道的所有订阅者都会收到这条消息。 除了订阅频道之外，客户端还可以通过执行 PSUBSCRIBE 命令订阅一个或多个模式，">
+<meta name="keywords" content="Redis,Database">
+<meta property="og:type" content="article">
+<meta property="og:title" content="《Redis 设计与实现：发布与订阅》">
+<meta property="og:url" content="http://yoursite.com/2017/10/16/《Redis-设计与实现：发布与订阅》/index.html">
+<meta property="og:site_name" content="天歌のBlog">
+<meta property="og:description" content="Redis 的发布与订阅功能由 PUBLISH、SUBSCRIBE、PSUBSCRIBE 等命令组成。 通过执行 SUBSCRIBE 命令，客户端可以订阅一个或多个频道从而成为这些频道的订阅者（subscriber）：每当有其它客户端向被订阅的频道发送消息（message）时，频道的所有订阅者都会收到这条消息。 除了订阅频道之外，客户端还可以通过执行 PSUBSCRIBE 命令订阅一个或多个模式，">
+<meta property="og:locale" content="zh-cn">
+<meta property="og:updated_time" content="2018-01-05T08:30:24.809Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="《Redis 设计与实现：发布与订阅》">
+<meta name="twitter:description" content="Redis 的发布与订阅功能由 PUBLISH、SUBSCRIBE、PSUBSCRIBE 等命令组成。 通过执行 SUBSCRIBE 命令，客户端可以订阅一个或多个频道从而成为这些频道的订阅者（subscriber）：每当有其它客户端向被订阅的频道发送消息（message）时，频道的所有订阅者都会收到这条消息。 除了订阅频道之外，客户端还可以通过执行 PSUBSCRIBE 命令订阅一个或多个模式，">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/10/16/《Redis-设计与实现：发布与订阅》/"/>
+
+
+
+
+
+  <title>《Redis 设计与实现：发布与订阅》 | 天歌のBlog</title><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-cn">
+
+  
+  
+    
+  
+
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">天歌のBlog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/10/16/《Redis-设计与实现：发布与订阅》/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Yongqiang Xiang">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天歌のBlog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">《Redis 设计与实现：发布与订阅》</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-10-16T19:13:50+08:00">
+                2017-10-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/读书笔记/" itemprop="url" rel="index">
+                    <span itemprop="name">读书笔记</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/读书笔记/Redis/" itemprop="url" rel="index">
+                    <span itemprop="name">Redis</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>Redis 的发布与订阅功能由 <code>PUBLISH</code>、<code>SUBSCRIBE</code>、<code>PSUBSCRIBE</code> 等命令组成。</p>
+<p>通过执行 <code>SUBSCRIBE</code> 命令，客户端可以订阅一个或多个频道从而成为这些频道的订阅者（subscriber）：每当有其它客户端向被订阅的频道发送消息（message）时，频道的所有订阅者都会收到这条消息。</p>
+<p>除了订阅频道之外，客户端还可以通过执行 <code>PSUBSCRIBE</code> 命令订阅一个或多个模式，从而成为这些模式的订阅者：每当有其他客户端向某个频道发送消息时，消息不仅会被发送给这个频道的所有订阅者，它还会被发送给所有与这个频道相匹配的模式的订阅者。</p>
+<a id="more"></a>
+<h2 id="1-频道的订阅与退订"><a href="#1-频道的订阅与退订" class="headerlink" title="1. 频道的订阅与退订"></a>1. 频道的订阅与退订</h2><p>当一个客户端执行 <code>SUBSCRIBE</code> 命令订阅某个或某些频道的时候，这个客户端与被订阅频道之间就建立起了一种订阅关系。</p>
+<p>Redis 将所有频道的订阅关系都保存在服务器状态的 <code>pubsub_channels</code> 字典里面，这个字典的键是某个被订阅的频道，而键的值是一个链表，链表里面记录了所有订阅这个频道的客户端。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">struct redisServer &#123;</span><br><span class="line"> </span><br><span class="line">	// ...</span><br><span class="line"></span><br><span class="line">	// 保存所有频道的订阅关系</span><br><span class="line">	dict *pubsub_channels;  /* Map channels to list of subscribed clients */</span><br><span class="line"> </span><br><span class="line">	// ...</span><br><span class="line"> </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h3 id="1-1-订阅频道"><a href="#1-1-订阅频道" class="headerlink" title="1.1 订阅频道"></a>1.1 订阅频道</h3><p>每当客户端执行 <code>SUBSCRIBE</code> 命令订阅某个或某些频道的时候，服务器都会将客户端与被订阅的频道在 <code>pubsub_channels</code> 字典中进行关联。</p>
+<p>根据频道是否已经有其他订阅者，关联操作分为两种情况执行：</p>
+<ol>
+<li>如果频道已经有其他订阅者，那么它在 <code>pubsub_channels</code> 字典中必然有相应的订阅者链表，程序唯一要做的就是将客户端添加到订阅者链表的末尾。</li>
+<li>如果频道还未有任何订阅者，那么它必然不存在于 <code>pubsub_channels</code> 字典，程序首先要在 <code>pubsub_channels</code> 字典中为频道创建一个键，并将这个键的值设置为空链表，然后再将客户端添加到链表，成为链表的第一个元素。</li>
+</ol>
+<p><code>SUBSCRIBE</code> 命令的实现可以⽤以下伪代码来描述：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">def subscribe(*all_input_channels):</span><br><span class="line"></span><br><span class="line">	# 遍历输⼊的所有频道</span><br><span class="line">	for channel in all_input_channels:</span><br><span class="line">		</span><br><span class="line">		# 如果 channel 不存在于 pubsub_channels 字典（没有任何订阅者）</span><br><span class="line">		# 那么在字典中添加 channel 键，并设置它的值为空链表</span><br><span class="line">		if channel not in server.pubsub_channels:</span><br><span class="line">			server.pubsub_channels[channel] = []</span><br><span class="line">		</span><br><span class="line">		# 将订阅者添加到频道所对应的链表的末尾</span><br><span class="line">		server.pubsub_channels[channel].append(client)</span><br></pre></td></tr></table></figure>
+<h3 id="1-2-退订频道"><a href="#1-2-退订频道" class="headerlink" title="1.2 退订频道"></a>1.2 退订频道</h3><p><code>UNSUBSCRIBE</code> 命令的⾏为和 <code>SUBSCRIBE</code> 命令的⾏为正好相反 —— 当⼀个客户端退订某个或某些频道的时候，服务器将从 <code>pubsub_channels</code> 中解除客户端与被退订频道之间的关联：</p>
+<ul>
+<li>程序会根据被退订频道的名字，在 <code>pubsub_channels</code> 字典中找到频道对应的订阅者链表，然后从订阅者链表中删除退订客户端的信息。</li>
+<li>如果删除退订客户端之后，频道的订阅者链表变成了空链表，那么说明这个频道已经没有任何订阅者了，程序将从 <code>pubsub_channels</code> 字典中删除频道对应的键。</li>
+</ul>
+<p><code>UNSUBSCRIBE</code> 命令的实现可以⽤以下伪代码来描述：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">def unsubscribe(*all_input_channels):</span><br><span class="line"></span><br><span class="line">	# 遍历要退订的所有频道</span><br><span class="line">	for channel in all_input_channels:</span><br><span class="line">	</span><br><span class="line">		# 在订阅者链表中删除退订的客户端</span><br><span class="line">		server.pubsub_channels[channel].remove(client)</span><br><span class="line">		</span><br><span class="line">		# 如果频道已经没有任何订阅者了（订阅者链表为空）</span><br><span class="line">		# 那么将频道从字典中删除</span><br><span class="line">		</span><br><span class="line">		if len(server.pubsub_channels[channel]) == 0:</span><br><span class="line">			server.pubsub_channels.remove(channel)</span><br></pre></td></tr></table></figure>
+<h2 id="2-模式的订阅与退订"><a href="#2-模式的订阅与退订" class="headerlink" title="2. 模式的订阅与退订"></a>2. 模式的订阅与退订</h2><p>服务器也将所有模式的订阅关系都保存在服务器状态的 <code>pubsub_patterns</code> 属性里面：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">struct redisServer &#123;</span><br><span class="line">    </span><br><span class="line">	// ...</span><br><span class="line">    </span><br><span class="line">	// 保存所有模式订阅关系</span><br><span class="line">	list *pubsub_patterns;</span><br><span class="line">    </span><br><span class="line">	// ...</span><br><span class="line">	</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>pubsub_patterns</code> 属性是一个链表，链表中的每个节点都包含着一个 <code>pubsubPattern</code> 结构，这个结构的 <code>pattern</code> 属性记录了被订阅的模式，而 <code>client</code>属性则记录了订阅模式的客户端：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">typedef struct pubsubPattern &#123;</span><br><span class="line"></span><br><span class="line">	// 订阅模式的客户端</span><br><span class="line">	redisClient *client;</span><br><span class="line">    </span><br><span class="line">	// 被订阅的模式</span><br><span class="line">	robj * pattern;</span><br><span class="line">    </span><br><span class="line">&#125; pubsubPattern;</span><br></pre></td></tr></table></figure>
+<h3 id="2-1-订阅模式"><a href="#2-1-订阅模式" class="headerlink" title="2.1 订阅模式"></a>2.1 订阅模式</h3><p>每当客户端执行 <code>PSUBSCRIBE</code> 命令订阅某个或某些模式的时候，服务器会对每个被订阅的模式执行以下两个操作：</p>
+<ol>
+<li>新建一个 <code>pubsubPattern</code> 结构，将结构的 <code>pattern</code> 属性设置为被订阅的模式，<code>client</code> 属性设置为订阅模式的客户端。</li>
+<li>将 <code>pubsubPattern</code> 结构添加到 <code>pubsub_patterns</code> 链表的表尾。</li>
+</ol>
+<p><code>PSBUSCRIBE</code> 命令的实现原理可以用以下的伪代码来描述：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">def psubscribe(*all_input_patterns):</span><br><span class="line">	</span><br><span class="line">	# 遍历输入的所有模式</span><br><span class="line">	for pattern in all_input_patterns:</span><br><span class="line">		</span><br><span class="line">		# 创建新的 pubsubPattern 结构</span><br><span class="line">		# 记录被订阅的模式，以及订阅模式的客户端</span><br><span class="line">		pubsubPattern = create_new_pubsubPattern()</span><br><span class="line">		pubsubPattern.client = client</span><br><span class="line">		pubsubPattern.pattern = pattern</span><br><span class="line">		</span><br><span class="line">		# 将新的 pubsubPattern 追加到 pubsub_patterns 链表末尾</span><br><span class="line">		server.pubsub_patterns.append(pubsubPattern)</span><br></pre></td></tr></table></figure>
+<h3 id="2-2-退订模式"><a href="#2-2-退订模式" class="headerlink" title="2.2 退订模式"></a>2.2 退订模式</h3><p>模式的退订命令 <code>PUNSUBSCRIBE</code> 是 <code>PSUBSCRIBE</code> 命令的反操作。当一个客户端退订某个或某些模式的时候，服务器将在 <code>pubsub_patterns</code> 链表中查找并删除那些 <code>pattern</code> 属性为退订模式并且 <code>client</code> 属性为执行退订命令的客户端的 <code>pubsubPattern</code> 结构。</p>
+<p><code>PUNSUBSCRIBE</code> 命令的实现原理可以用以下伪代码来描述：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">def punsubscribe(*all_input_patterns):</span><br><span class="line">	</span><br><span class="line">	# 遍历所有要退订的模式</span><br><span class="line">	for pattern in all_input_patterns:</span><br><span class="line">		</span><br><span class="line">		# 遍历 pubsub_patterns 链表中的所有 pubsubPattern 结构</span><br><span class="line">		for pubsubPattern in server.pubsub_patterns:</span><br><span class="line">		</span><br><span class="line">			# 如果当前客户端和 pubsubPattern 记录的客户端相同</span><br><span class="line">			# 并且要退订的模式也和 pubsubPattern 记录的模式相同</span><br><span class="line">			if client == pubsubPattern.client and pattern == pubsubPattern.pattern</span><br><span class="line">			</span><br><span class="line">			# 那么将这个 pubsubPattern 从链表中删除</span><br><span class="line">			server.pubsub_patterns.remove(pubsubPattern)</span><br></pre></td></tr></table></figure>
+<h2 id="3-发送消息"><a href="#3-发送消息" class="headerlink" title="3. 发送消息"></a>3. 发送消息</h2><p>当一个 Redis 客户端执行 <code>PUBLISH &lt;channel&gt; &lt;message&gt;</code> 命令将消息 <code>message</code> 发送给频道 <code>channel</code>的时候，服务器需要执行以下两个操作：</p>
+<ol>
+<li>将消息 <code>message</code> 发送给频道 <code>channel</code> 的所有订阅者。</li>
+<li>如果有一个或多个模式 <code>pattern</code> 与频道 <code>channel</code> 相匹配。那么将消息 <code>message</code> 发送给 <code>pattern</code> 模式的订阅者。</li>
+</ol>
+<h3 id="3-1-将消息发送给频道订阅者"><a href="#3-1-将消息发送给频道订阅者" class="headerlink" title="3.1 将消息发送给频道订阅者"></a>3.1 将消息发送给频道订阅者</h3><p>因为服务器状态中的 <code>pubsub_channels</code> 字典记录了所有频道的订阅关系，所以为了将消息发送给 <code>channel</code> 频道的所有订阅者，<code>PUBLISH</code> 命令要做的就是在 <code>pubsub_channels</code> 字典里找到频道 <code>channel</code> 的订阅者名单（一个链表），然后将消息发送给名单上的所有客户端。</p>
+<p><code>PUBLISH</code> 命令将消息发送给频道订阅者的方法可以用以下伪代码来描述：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">def channel_publish(channel,message):</span><br><span class="line"></span><br><span class="line">	# 如果 channel 键不存在于 pubsub_channels 字典中</span><br><span class="line">	# 那么说明 channel 频道没有任何订阅者</span><br><span class="line">	# 程序不做发送动作，直接返回</span><br><span class="line">	if channel not in server.pubsub_channels:</span><br><span class="line">		return</span><br><span class="line">    </span><br><span class="line">	# 运行到这里，说明 channel 频道至少有一个订阅者</span><br><span class="line">	# 程序遍历 channel 频道的订阅者列表</span><br><span class="line">	# 将消息发送给所有订阅者</span><br><span class="line">	for subscriber in server.pubsub_channels[channel]:</span><br><span class="line">		send_message(subscriber, message)</span><br></pre></td></tr></table></figure>
+<h3 id="3-2-将消息发送给模式订阅者"><a href="#3-2-将消息发送给模式订阅者" class="headerlink" title="3.2 将消息发送给模式订阅者"></a>3.2 将消息发送给模式订阅者</h3><p>因为服务器状态中的 <code>pubsub_patterns</code>链表记录了所有模式的订阅关系，所以为了将消息发送给所有与 <code>channel</code> 频道相匹配的模式的订阅者，<code>PUBLISH</code> 命令要做的就是遍历整个 <code>pubsub_patterns</code> 链表，查找那些与 <code>channel</code> 频道相匹配的模式，并将消息发送给订阅了这些模式的客户端。</p>
+<p><code>PUBLISH</code> 命令将消息发送给模式订阅者的方法可以用以下伪代码来描述：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">def pattern_publish(channel, message):</span><br><span class="line">    </span><br><span class="line">	# 遍历所有模式订阅消息</span><br><span class="line">	for pubsubPattern in server.pubsub_patterns:</span><br><span class="line">    </span><br><span class="line">		# 如果频道和模式相匹配</span><br><span class="line">		if(match(channel, pubsubPatter.pattern)):</span><br><span class="line">        </span><br><span class="line">		# 那么将消息发送给订阅该模式的客户端</span><br><span class="line">			send_message(pubsubPattern.client, message)</span><br></pre></td></tr></table></figure>
+<p>最后，<code>PUBLISH</code> 命令的实现可以用以下伪代码来描述：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">def publish(channel, message):</span><br><span class="line"></span><br><span class="line">    # 将消息发送给 channel 频道的所有订阅者</span><br><span class="line">    channel_publish(channel, message)</span><br><span class="line">    </span><br><span class="line">    # 将消息发送给所有和 channel 频道相匹配的模式的订阅者</span><br><span class="line">    pattern_publish(channel, message)</span><br></pre></td></tr></table></figure>
+<h2 id="4-查看订阅信息"><a href="#4-查看订阅信息" class="headerlink" title="4. 查看订阅信息"></a>4. 查看订阅信息</h2><h3 id="4-1-PUBSUB-CHANNELS"><a href="#4-1-PUBSUB-CHANNELS" class="headerlink" title="4.1 PUBSUB CHANNELS"></a>4.1 PUBSUB CHANNELS</h3><p><code>PUBSUB CHANNELS [pattern]</code> 子命令用于返回服务器当前被订阅的频道。其中 <code>pattern</code> 参数是可选的：</p>
+<ul>
+<li>如果不给定 <code>pattern</code> 参数，那么命令返回服务器当前被订阅的所有频道。</li>
+<li>如果给定 <code>pattern</code> 参数，那么命令返回服务器当前被订阅的频道中那些与 <code>pattern</code> 模式相匹配的频道。</li>
+</ul>
+<p>这个子命令是通过遍历服务器 <code>pubsub_channels</code> 字典中的所有键（每个键都是一个被订阅的频道），然后记录并返回所有符合条件的频道来实现的，这个过程可以用以下伪代码来描述：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">def pubsub_channels(pattern=None):</span><br><span class="line"></span><br><span class="line">	# 一个列表，用于记录所有符合条件的频道</span><br><span class="line">	channel_list = []</span><br><span class="line">	</span><br><span class="line">	# 遍历服务器中的所有频道</span><br><span class="line">	# (也即是 pubsub_channels 字典的所有键)</span><br><span class="line">	for channel in server.pubsub_channels:</span><br><span class="line">	</span><br><span class="line">		# 当以下两个条件的任意一个满足时，将频道添加到链表里面：</span><br><span class="line">		# 1）用户没有指定 pattern 参数</span><br><span class="line">		# 2）用户指定了 pattern 参数，并且 channel 和 pattern 匹配</span><br><span class="line">		if (pattern is None) or match(channel, pattern):</span><br><span class="line">			channel_list.append(channel)</span><br><span class="line">	</span><br><span class="line">	# 向客户端返回频道列表</span><br><span class="line">	return channel_list</span><br></pre></td></tr></table></figure>
+<h3 id="4-2-PUBSUB-NUMSUB"><a href="#4-2-PUBSUB-NUMSUB" class="headerlink" title="4.2 PUBSUB NUMSUB"></a>4.2 PUBSUB NUMSUB</h3><p><code>PUBSUB NUMSUB [channel1-1 channel-2 ... channel-n]</code> 子命令接受任意多个频道作为输入参数，并返回这些频道的订阅者数量。这个命令是通过在 <code>pubsub_channels</code> 字典中找到频道对应的订阅者链表，这个过程可以用以下伪代码来描述：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">def pubsub_numsub(*all_input_channels):</span><br><span class="line"></span><br><span class="line">	# 遍历输入的所有频道</span><br><span class="line">	for channel in all_input_channels:</span><br><span class="line">	</span><br><span class="line">		# 如果 pubsub_channels 字典中没有 channel 这个键</span><br><span class="line">		# 那么说明 channel 频道没有任何订阅者</span><br><span class="line">		if channel not in server.pubsub_channels:</span><br><span class="line">			# 返回频道名</span><br><span class="line">			reply_channel_name(channel)</span><br><span class="line">			# 订阅者数量为 0</span><br><span class="line">			reply_subscribe_count(0)</span><br><span class="line">			</span><br><span class="line">		# 如果 pubsub_channels 字典中存在 channel 键</span><br><span class="line">		# 那么说明 channel 频道至少有一个订阅者</span><br><span class="line">		else:</span><br><span class="line">			# 返回频道名</span><br><span class="line">			reply_channel_name(channel)</span><br><span class="line">			# 订阅者数量为0</span><br><span class="line">			reply_subscribe_count(len(server.pubsub_channels[channel]))</span><br></pre></td></tr></table></figure>
+<h3 id="4-3-PUBSUB-NUMPAT"><a href="#4-3-PUBSUB-NUMPAT" class="headerlink" title="4.3 PUBSUB NUMPAT"></a>4.3 PUBSUB NUMPAT</h3><p><code>PUBSUB NUMPAT</code> 命令用于返回服务器当前被订阅模式的数量。</p>
+<p>这个命令是通过返回 <code>pubsub_patterns</code> 链表的长度来实现的，因为这个链表的长度就是服务器被订阅模式的数量，这个过程可以用以下伪代码来描述：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">def pubsub_numpat():</span><br><span class="line">	</span><br><span class="line">	# pubsub_patterns 链表的长度就是被订阅模式的数量</span><br><span class="line">	reply_pattern_count(len(server.pubsub_patterns))</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Redis/" rel="tag"># Redis</a>
+          
+            <a href="/tags/Database/" rel="tag"># Database</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/10/14/《Redis-设计与实现：AOF-持久化》/" rel="next" title="《Redis 设计与实现：AOF 持久化》">
+                <i class="fa fa-chevron-left"></i> 《Redis 设计与实现：AOF 持久化》
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/10/20/《Redis-设计与实现：Sentinel》/" rel="prev" title="《Redis 设计与实现：Sentinel》">
+                《Redis 设计与实现：Sentinel》 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="Yongqiang Xiang" />
+          <p class="site-author-name" itemprop="name">Yongqiang Xiang</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">66</span>
+                <span class="site-state-item-name">posts</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">28</span>
+                <span class="site-state-item-name">categories</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">28</span>
+                <span class="site-state-item-name">tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/xiangyq000" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                    
+                      GitHub
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://stackoverflow.com/users/4945225/xiangyq000" target="_blank" title="StackOverflow">
+                  
+                    <i class="fa fa-fw fa-stack-overflow"></i>
+                  
+                    
+                      StackOverflow
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-频道的订阅与退订"><span class="nav-number">1.</span> <span class="nav-text">1. 频道的订阅与退订</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-订阅频道"><span class="nav-number">1.1.</span> <span class="nav-text">1.1 订阅频道</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-退订频道"><span class="nav-number">1.2.</span> <span class="nav-text">1.2 退订频道</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-模式的订阅与退订"><span class="nav-number">2.</span> <span class="nav-text">2. 模式的订阅与退订</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-订阅模式"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 订阅模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-退订模式"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 退订模式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-发送消息"><span class="nav-number">3.</span> <span class="nav-text">3. 发送消息</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-将消息发送给频道订阅者"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 将消息发送给频道订阅者</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-将消息发送给模式订阅者"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 将消息发送给模式订阅者</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-查看订阅信息"><span class="nav-number">4.</span> <span class="nav-text">4. 查看订阅信息</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-PUBSUB-CHANNELS"><span class="nav-number">4.1.</span> <span class="nav-text">4.1 PUBSUB CHANNELS</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-PUBSUB-NUMSUB"><span class="nav-number">4.2.</span> <span class="nav-text">4.2 PUBSUB NUMSUB</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-3-PUBSUB-NUMPAT"><span class="nav-number">4.3.</span> <span class="nav-text">4.3 PUBSUB NUMPAT</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yongqiang Xiang</span>
+</div>
+
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script><!-- hexo-inject:begin --><!-- Begin: Injected MathJax -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config("");
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+      all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+  });
+</script>
+
+<script type="text/javascript" src="custom_mathjax_source">
+</script>
+<!-- End: Injected MathJax -->
+<!-- hexo-inject:end -->
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

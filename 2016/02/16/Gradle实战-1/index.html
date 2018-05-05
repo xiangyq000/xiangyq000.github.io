@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-cn">
+<head>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Gradle," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="1. 使用Gradle创建Java项目目录结构创建目录LearnGradle，并执行1234567$ gradle init:wrapper:initBUILD SUCCESSFULTotal time: 0.707 secs">
+<meta name="keywords" content="Gradle">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Gradle实战-1">
+<meta property="og:url" content="http://yoursite.com/2016/02/16/Gradle实战-1/index.html">
+<meta property="og:site_name" content="天歌のBlog">
+<meta property="og:description" content="1. 使用Gradle创建Java项目目录结构创建目录LearnGradle，并执行1234567$ gradle init:wrapper:initBUILD SUCCESSFULTotal time: 0.707 secs">
+<meta property="og:locale" content="zh-cn">
+<meta property="og:updated_time" content="2018-01-05T08:16:55.150Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Gradle实战-1">
+<meta name="twitter:description" content="1. 使用Gradle创建Java项目目录结构创建目录LearnGradle，并执行1234567$ gradle init:wrapper:initBUILD SUCCESSFULTotal time: 0.707 secs">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2016/02/16/Gradle实战-1/"/>
+
+
+
+
+
+  <title>Gradle实战-1 | 天歌のBlog</title><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-cn">
+
+  
+  
+    
+  
+
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">天歌のBlog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/02/16/Gradle实战-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Yongqiang Xiang">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天歌のBlog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Gradle实战-1</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-02-16T23:47:58+08:00">
+                2016-02-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Programming/" itemprop="url" rel="index">
+                    <span itemprop="name">Programming</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h4 id="1-使用Gradle创建Java项目目录结构"><a href="#1-使用Gradle创建Java项目目录结构" class="headerlink" title="1. 使用Gradle创建Java项目目录结构"></a>1. 使用Gradle创建Java项目目录结构</h4><p>创建目录<code>LearnGradle</code>，并执行<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ gradle init</span><br><span class="line">:wrapper</span><br><span class="line">:init</span><br><span class="line"></span><br><span class="line">BUILD SUCCESSFUL</span><br><span class="line"></span><br><span class="line">Total time: 0.707 secs</span><br></pre></td></tr></table></figure></p>
+<a id="more"></a>
+<h4 id="2-Gradle中的task"><a href="#2-Gradle中的task" class="headerlink" title="2. Gradle中的task"></a>2. Gradle中的task</h4><p>在<code>build.gradle</code>中添加</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">/*hellow gradle*/</span><br><span class="line">task helloGradle &#123;</span><br><span class="line">    doLast&#123;</span><br><span class="line">        println <span class="string">'Hello Gradle'</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在项目根目录下运行</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ gradle helloGradle</span><br><span class="line">:helloGradle</span><br><span class="line">Hello Gradle</span><br><span class="line"></span><br><span class="line">BUILD SUCCESSFUL</span><br><span class="line"></span><br><span class="line">Total time: 0.667 secs</span><br></pre></td></tr></table></figure>
+<h4 id="3-高级特性示例"><a href="#3-高级特性示例" class="headerlink" title="3. 高级特性示例"></a>3. 高级特性示例</h4><figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*task chain sample*/</span></span><br><span class="line">task startChain &#123;</span><br><span class="line">    doLast &#123;</span><br><span class="line">        chainMessage()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//隐含对Ant任务的使用</span></span><br><span class="line"><span class="keyword">def</span> chainMessage() &#123;</span><br><span class="line">    ant.echo(<span class="string">message:</span> <span class="string">'Repeat from here...'</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//循环定义任务，使用隐式变量it</span></span><br><span class="line"><span class="number">3.</span>times &#123;</span><br><span class="line">    task <span class="string">"repeatTasks$it"</span> &#123;</span><br><span class="line">        doLast &#123;</span><br><span class="line">            println <span class="string">"do repeatTask$it"</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//定义任务依赖</span></span><br><span class="line">repeatTasks0.dependsOn startChain</span><br><span class="line">repeatTasks1.dependsOn repeatTasks0</span><br><span class="line">repeatTasks2.dependsOn repeatTasks1</span><br><span class="line"></span><br><span class="line">task taskChainSample (<span class="string">dependsOn:</span> repeatTasks2)</span><br></pre></td></tr></table></figure>
+<p>在项目根目录下运行</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">$ gradle taskChainSample</span><br><span class="line">:startChain</span><br><span class="line">[ant:<span class="built_in">echo</span>] Repeat from here...</span><br><span class="line">:repeatTasks0</span><br><span class="line"><span class="keyword">do</span> repeatTasktask <span class="string">':repeatTasks0'</span></span><br><span class="line">:repeatTasks1</span><br><span class="line"><span class="keyword">do</span> repeatTasktask <span class="string">':repeatTasks1'</span></span><br><span class="line">:repeatTasks2</span><br><span class="line"><span class="keyword">do</span> repeatTasktask <span class="string">':repeatTasks2'</span></span><br><span class="line">:taskChainSample</span><br><span class="line"></span><br><span class="line">BUILD SUCCESSFUL</span><br><span class="line"></span><br><span class="line">Total time: 0.752 secs</span><br></pre></td></tr></table></figure>
+<h4 id="4-Gradle-Help"><a href="#4-Gradle-Help" class="headerlink" title="4. Gradle Help"></a>4. Gradle Help</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">$ gradle --<span class="built_in">help</span></span><br><span class="line"></span><br><span class="line">USAGE: gradle [option...] [task...]</span><br><span class="line"></span><br><span class="line">-?, -h, --<span class="built_in">help</span>          Shows this <span class="built_in">help</span> message.</span><br><span class="line">-a, --no-rebuild        Do not rebuild project dependencies.</span><br><span class="line">-b, --build-file        Specifies the build file.</span><br><span class="line">-c, --settings-file     Specifies the settings file.</span><br><span class="line">--configure-on-demand   Only relevant projects are configured <span class="keyword">in</span> this build run. This means faster build <span class="keyword">for</span> large multi-project builds. [incubating]</span><br><span class="line">--console               Specifies <span class="built_in">which</span> <span class="built_in">type</span> of console output to generate. Values are <span class="string">'plain'</span>, <span class="string">'auto'</span> (default) or <span class="string">'rich'</span>.</span><br><span class="line">--<span class="built_in">continue</span>              Continues task execution after a task failure.</span><br><span class="line">-D, --system-prop       Set system property of the JVM (e.g. -Dmyprop=myvalue).</span><br><span class="line">-d, --debug             Log <span class="keyword">in</span> debug mode (includes normal stacktrace).</span><br><span class="line">--daemon                Uses the Gradle Daemon to run the build. Starts the Daemon <span class="keyword">if</span> not running.</span><br><span class="line">--foreground            Starts the Gradle Daemon <span class="keyword">in</span> the foreground. [incubating]</span><br><span class="line">-g, --gradle-user-home  Specifies the gradle user home directory.</span><br><span class="line">--gui                   Launches the Gradle GUI.</span><br><span class="line">-I, --init-script       Specifies an initialization script.</span><br><span class="line">-i, --info              Set <span class="built_in">log</span> level to info.</span><br><span class="line">--include-build         Includes the specified build <span class="keyword">in</span> the composite. [incubating]</span><br><span class="line">-m, --dry-run           Runs the builds with all task actions disabled.</span><br><span class="line">--max-workers           Configure the number of concurrent workers Gradle is allowed to use. [incubating]</span><br><span class="line">--no-daemon             Do not use the Gradle Daemon to run the build.</span><br><span class="line">--offline               The build should operate without accessing network resources.</span><br><span class="line">-P, --project-prop      Set project property <span class="keyword">for</span> the build script (e.g. -Pmyprop=myvalue).</span><br><span class="line">-p, --project-dir       Specifies the start directory <span class="keyword">for</span> Gradle. Defaults to current directory.</span><br><span class="line">--parallel              Build projects <span class="keyword">in</span> parallel. Gradle will attempt to determine the optimal number of executor threads to use. [incubating]</span><br><span class="line">--profile               Profiles build execution time and generates a report <span class="keyword">in</span> the &lt;build_dir&gt;/reports/profile directory.</span><br><span class="line">--project-cache-dir     Specifies the project-specific cache directory. Defaults to .gradle <span class="keyword">in</span> the root project directory.</span><br><span class="line">-q, --quiet             Log errors only.</span><br><span class="line">--recompile-scripts     Force build script recompiling.</span><br><span class="line">--refresh-dependencies  Refresh the state of dependencies.</span><br><span class="line">--rerun-tasks           Ignore previously cached task results.</span><br><span class="line">-S, --full-stacktrace   Print out the full (very verbose) stacktrace <span class="keyword">for</span> all exceptions.</span><br><span class="line">-s, --stacktrace        Print out the stacktrace <span class="keyword">for</span> all exceptions.</span><br><span class="line">--status                Shows status of running and recently stopped Gradle Daemon(s).</span><br><span class="line">--stop                  Stops the Gradle Daemon <span class="keyword">if</span> it is running.</span><br><span class="line">-t, --continuous        Enables continuous build. Gradle does not <span class="built_in">exit</span> and will re-execute tasks when task file inputs change. [incubating]</span><br><span class="line">-u, --no-search-upward  Don<span class="string">'t search in parent folders for a settings.gradle file.</span></span><br><span class="line"><span class="string">-v, --version           Print version info.</span></span><br><span class="line"><span class="string">-x, --exclude-task      Specify a task to be excluded from execution.</span></span><br></pre></td></tr></table></figure>
+<h4 id="5-列出项目所有tasks"><a href="#5-列出项目所有tasks" class="headerlink" title="5. 列出项目所有tasks"></a>5. 列出项目所有tasks</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br></pre></td><td class="code"><pre><span class="line">$ gradle -q tasks --all</span><br><span class="line"></span><br><span class="line">------------------------------------------------------------</span><br><span class="line">All tasks runnable from root project</span><br><span class="line">------------------------------------------------------------</span><br><span class="line"></span><br><span class="line">Build tasks</span><br><span class="line">-----------</span><br><span class="line">assemble - Assembles the outputs of this project.</span><br><span class="line">build - Assembles and tests this project.</span><br><span class="line">buildDependents - Assembles and tests this project and all projects that depend on it.</span><br><span class="line">buildNeeded - Assembles and tests this project and all projects it depends on.</span><br><span class="line">classes - Assembles main classes.</span><br><span class="line">clean - Deletes the build directory.</span><br><span class="line">jar - Assembles a jar archive containing the main classes.</span><br><span class="line">testClasses - Assembles <span class="built_in">test</span> classes.</span><br><span class="line"></span><br><span class="line">Build Setup tasks</span><br><span class="line">-----------------</span><br><span class="line">init - Initializes a new Gradle build. [incubating]</span><br><span class="line">wrapper - Generates Gradle wrapper files. [incubating]</span><br><span class="line"></span><br><span class="line">Documentation tasks</span><br><span class="line">-------------------</span><br><span class="line">javadoc - Generates Javadoc API documentation <span class="keyword">for</span> the main <span class="built_in">source</span> code.</span><br><span class="line"></span><br><span class="line">Help tasks</span><br><span class="line">----------</span><br><span class="line">buildEnvironment - Displays all buildscript dependencies declared <span class="keyword">in</span> root project <span class="string">'LearnGradle'</span>.</span><br><span class="line">components - Displays the components produced by root project <span class="string">'LearnGradle'</span>. [incubating]</span><br><span class="line">dependencies - Displays all dependencies declared <span class="keyword">in</span> root project <span class="string">'LearnGradle'</span>.</span><br><span class="line">dependencyInsight - Displays the insight into a specific dependency <span class="keyword">in</span> root project <span class="string">'LearnGradle'</span>.</span><br><span class="line">dependentComponents - Displays the dependent components of components <span class="keyword">in</span> root project <span class="string">'LearnGradle'</span>. [incubating]</span><br><span class="line"><span class="built_in">help</span> - Displays a <span class="built_in">help</span> message.</span><br><span class="line">model - Displays the configuration model of root project <span class="string">'LearnGradle'</span>. [incubating]</span><br><span class="line">projects - Displays the sub-projects of root project <span class="string">'LearnGradle'</span>.</span><br><span class="line">properties - Displays the properties of root project <span class="string">'LearnGradle'</span>.</span><br><span class="line">tasks - Displays the tasks runnable from root project <span class="string">'LearnGradle'</span>.</span><br><span class="line"></span><br><span class="line">IDE tasks</span><br><span class="line">---------</span><br><span class="line">cleanEclipse - Cleans all Eclipse files.</span><br><span class="line">eclipse - Generates all Eclipse files.</span><br><span class="line"></span><br><span class="line">Verification tasks</span><br><span class="line">------------------</span><br><span class="line">check - Runs all checks.</span><br><span class="line"><span class="built_in">test</span> - Runs the unit tests.</span><br><span class="line"></span><br><span class="line">Other tasks</span><br><span class="line">-----------</span><br><span class="line">cleanEclipseClasspath</span><br><span class="line">cleanEclipseJdt</span><br><span class="line">cleanEclipseProject</span><br><span class="line">compileJava - Compiles main Java <span class="built_in">source</span>.</span><br><span class="line">compileTestJava - Compiles <span class="built_in">test</span> Java <span class="built_in">source</span>.</span><br><span class="line">eclipseClasspath - Generates the Eclipse classpath file.</span><br><span class="line">eclipseJdt - Generates the Eclipse JDT settings file.</span><br><span class="line">eclipseProject - Generates the Eclipse project file.</span><br><span class="line">helloGradle</span><br><span class="line">processResources - Processes main resources.</span><br><span class="line">processTestResources - Processes <span class="built_in">test</span> resources.</span><br><span class="line">repeatTasks0</span><br><span class="line">repeatTasks1</span><br><span class="line">repeatTasks2</span><br><span class="line">startChain</span><br><span class="line">taskChainSample</span><br><span class="line"></span><br><span class="line">Rules</span><br><span class="line">-----</span><br><span class="line">Pattern: clean&lt;TaskName&gt;: Cleans the output files of a task.</span><br><span class="line">Pattern: build&lt;ConfigurationName&gt;: Assembles the artifacts of a configuration.</span><br><span class="line">Pattern: upload&lt;ConfigurationName&gt;: Assembles and uploads the artifacts belonging to a configuration.</span><br></pre></td></tr></table></figure>
+<h4 id="6-查看某个task的详细信息"><a href="#6-查看某个task的详细信息" class="headerlink" title="6. 查看某个task的详细信息"></a>6. 查看某个task的详细信息</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">$ gradle -q <span class="built_in">help</span> --task build</span><br><span class="line">Detailed task information <span class="keyword">for</span> build</span><br><span class="line"></span><br><span class="line">Path</span><br><span class="line">     :build</span><br><span class="line"></span><br><span class="line">Type</span><br><span class="line">     Task (org.gradle.api.Task)</span><br><span class="line"></span><br><span class="line">Description</span><br><span class="line">     Assembles and tests this project.</span><br><span class="line"></span><br><span class="line">Group</span><br><span class="line">     build</span><br></pre></td></tr></table></figure>
+<h4 id="7-列出项目所有properties"><a href="#7-列出项目所有properties" class="headerlink" title="7. 列出项目所有properties"></a>7. 列出项目所有properties</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br></pre></td><td class="code"><pre><span class="line">$ gradle -q properties</span><br><span class="line"></span><br><span class="line">------------------------------------------------------------</span><br><span class="line">Root project</span><br><span class="line">------------------------------------------------------------</span><br><span class="line"></span><br><span class="line">allprojects: [root project <span class="string">'LearnGradle'</span>]</span><br><span class="line">ant: org.gradle.api.internal.project.DefaultAntBuilder@1f8f3840</span><br><span class="line">antBuilderFactory: org.gradle.api.internal.project.DefaultAntBuilderFactory@1fbffe05</span><br><span class="line">archivesBaseName: LearnGradle</span><br><span class="line">artifacts: org.gradle.api.internal.artifacts.dsl.DefaultArtifactHandler_Decorated@4c645666</span><br><span class="line">asDynamicObject: DynamicObject <span class="keyword">for</span> root project <span class="string">'LearnGradle'</span></span><br><span class="line">assemble: task <span class="string">':assemble'</span></span><br><span class="line">attributesSchema: org.gradle.api.internal.attributes.DefaultAttributesSchema_Decorated@2170586e</span><br><span class="line">baseClassLoaderScope: org.gradle.api.internal.initialization.DefaultClassLoaderScope@475b3938</span><br><span class="line">buildDependents: task <span class="string">':buildDependents'</span></span><br><span class="line">buildDir: /Users/xyq/workspace/LearnGradle/build</span><br><span class="line">buildFile: /Users/xyq/workspace/LearnGradle/build.gradle</span><br><span class="line">buildNeeded: task <span class="string">':buildNeeded'</span></span><br><span class="line">buildScriptSource: org.gradle.groovy.scripts.UriScriptSource@2774b800</span><br><span class="line">buildscript: org.gradle.api.internal.initialization.DefaultScriptHandler@494d1dee</span><br><span class="line">check: task <span class="string">':check'</span></span><br><span class="line">childProjects: &#123;&#125;</span><br><span class="line">class: class org.gradle.api.internal.project.DefaultProject_Decorated</span><br><span class="line">classLoaderScope: org.gradle.api.internal.initialization.DefaultClassLoaderScope@6add8f81</span><br><span class="line">classes: task <span class="string">':classes'</span></span><br><span class="line">cleanEclipse: task <span class="string">':cleanEclipse'</span></span><br><span class="line">cleanEclipseClasspath: task <span class="string">':cleanEclipseClasspath'</span></span><br><span class="line">cleanEclipseJdt: task <span class="string">':cleanEclipseJdt'</span></span><br><span class="line">cleanEclipseProject: task <span class="string">':cleanEclipseProject'</span></span><br><span class="line">compileJava: task <span class="string">':compileJava'</span></span><br><span class="line">compileTestJava: task <span class="string">':compileTestJava'</span></span><br><span class="line">components: [org.gradle.api.internal.java.JavaLibrary@7451e91b]</span><br><span class="line">configurationActions: org.gradle.configuration.project.DefaultProjectConfigurationActionContainer@76e7eb29</span><br><span class="line">configurations: [configuration <span class="string">':archives'</span>, configuration <span class="string">':compile'</span>, configuration <span class="string">':compileClasspath'</span>, configuration <span class="string">':compileOnly'</span>, configuration <span class="string">':default'</span>, configuration <span class="string">':runtime'</span>, configuration <span class="string">':testCompile'</span>, configuration <span class="string">':testCompileClasspath'</span>, configuration <span class="string">':testCompileOnly'</span>, configuration <span class="string">':testRuntime'</span>]</span><br><span class="line">convention: org.gradle.api.internal.plugins.DefaultConvention@57642a76</span><br><span class="line">defaultArtifacts: org.gradle.api.internal.plugins.DefaultArtifactPublicationSet_Decorated@5143069c</span><br><span class="line">defaultTasks: []</span><br><span class="line">deferredProjectConfiguration: org.gradle.api.internal.project.DeferredProjectConfiguration@2aa1349e</span><br><span class="line">dependencies: org.gradle.api.internal.artifacts.dsl.dependencies.DefaultDependencyHandler_Decorated@63562c40</span><br><span class="line">dependencyCacheDir: /Users/xyq/workspace/LearnGradle/build/dependency-cache</span><br><span class="line">dependencyCacheDirName: dependency-cache</span><br><span class="line">depth: 0</span><br><span class="line">description: null</span><br><span class="line">displayName: root project <span class="string">'LearnGradle'</span></span><br><span class="line">distsDir: /Users/xyq/workspace/LearnGradle/build/distributions</span><br><span class="line">distsDirName: distributions</span><br><span class="line">docsDir: /Users/xyq/workspace/LearnGradle/build/docs</span><br><span class="line">docsDirName: docs</span><br><span class="line">eclipse: org.gradle.plugins.ide.eclipse.model.EclipseModel_Decorated@15178dc6</span><br><span class="line">eclipseClasspath: task <span class="string">':eclipseClasspath'</span></span><br><span class="line">eclipseJdt: task <span class="string">':eclipseJdt'</span></span><br><span class="line">eclipseProject: task <span class="string">':eclipseProject'</span></span><br><span class="line">ext: org.gradle.api.internal.plugins.DefaultExtraPropertiesExtension@5ca91e1e</span><br><span class="line">extensions: org.gradle.api.internal.plugins.DefaultConvention@57642a76</span><br><span class="line">fileOperations: org.gradle.api.internal.file.DefaultFileOperations@7f8fc4d1</span><br><span class="line">fileResolver: org.gradle.api.internal.file.BaseDirFileResolver@2d69c34c</span><br><span class="line">gradle: build <span class="string">'LearnGradle'</span></span><br><span class="line">group:</span><br><span class="line">helloGradle: task <span class="string">':helloGradle'</span></span><br><span class="line">identityPath: :</span><br><span class="line">inheritedScope: org.gradle.api.internal.ExtensibleDynamicObject<span class="variable">$InheritedDynamicObject</span>@4b9029a</span><br><span class="line">jar: task <span class="string">':jar'</span></span><br><span class="line">javadoc: task <span class="string">':javadoc'</span></span><br><span class="line">libsDir: /Users/xyq/workspace/LearnGradle/build/libs</span><br><span class="line">libsDirName: libs</span><br><span class="line">logger: org.gradle.internal.logging.slf4j.OutputEventListenerBackedLogger@5dd205df</span><br><span class="line">logging: org.gradle.internal.logging.services.DefaultLoggingManager@1074a5fd</span><br><span class="line">modelRegistry: org.gradle.model.internal.registry.DefaultModelRegistry@115c426e</span><br><span class="line">modelSchemaStore: org.gradle.model.internal.manage.schema.extract.DefaultModelSchemaStore@2dfbc134</span><br><span class="line">module: org.gradle.api.internal.artifacts.ProjectBackedModule@44f77247</span><br><span class="line">name: LearnGradle</span><br><span class="line">org.gradle.eclipse.postprocess.applied: <span class="literal">true</span></span><br><span class="line">parent: null</span><br><span class="line">parentIdentifier: null</span><br><span class="line">path: :</span><br><span class="line">pluginManager: org.gradle.api.internal.plugins.DefaultPluginManager_Decorated@724c80aa</span><br><span class="line">plugins: [org.gradle.api.plugins.HelpTasksPlugin@42a20621, org.gradle.language.base.plugins.LifecycleBasePlugin@482e65be, org.gradle.api.plugins.BasePlugin@4590f8ff, org.gradle.api.plugins.ReportingBasePlugin@33edb140, org.gradle.platform.base.plugins.ComponentBasePlugin@2d705ad3, org.gradle.language.base.plugins.LanguageBasePlugin@73c9898c, org.gradle.platform.base.plugins.BinaryBasePlugin@338c4dea, org.gradle.api.plugins.JavaBasePlugin@3a1924a5, org.gradle.api.plugins.JavaPlugin@759dc13f, org.gradle.plugins.ide.eclipse.EclipsePlugin@7673da29]</span><br><span class="line">processOperations: org.gradle.api.internal.file.DefaultFileOperations@7f8fc4d1</span><br><span class="line">processResources: task <span class="string">':processResources'</span></span><br><span class="line">processTestResources: task <span class="string">':processTestResources'</span></span><br><span class="line">project: root project <span class="string">'LearnGradle'</span></span><br><span class="line">projectDir: /Users/xyq/workspace/LearnGradle</span><br><span class="line">projectEvaluationBroadcaster: ProjectEvaluationListener broadcast</span><br><span class="line">projectEvaluator: org.gradle.configuration.project.LifecycleProjectEvaluator@3eade1ab</span><br><span class="line">projectPath: :</span><br><span class="line">projectRegistry: org.gradle.api.internal.project.DefaultProjectRegistry@b43e0ce</span><br><span class="line">properties: &#123;...&#125;</span><br><span class="line">repeatTasks0: task <span class="string">':repeatTasks0'</span></span><br><span class="line">repeatTasks1: task <span class="string">':repeatTasks1'</span></span><br><span class="line">repeatTasks2: task <span class="string">':repeatTasks2'</span></span><br><span class="line">reporting: org.gradle.api.reporting.ReportingExtension_Decorated@787f9cfa</span><br><span class="line">reportsDir: /Users/xyq/workspace/LearnGradle/build/reports</span><br><span class="line">repositories: [org.gradle.api.internal.artifacts.repositories.DefaultMavenArtifactRepository_Decorated@6ea00a8f]</span><br><span class="line">resources: org.gradle.api.internal.resources.DefaultResourceHandler@3fd10e49</span><br><span class="line">rootDir: /Users/xyq/workspace/LearnGradle</span><br><span class="line">rootProject: root project <span class="string">'LearnGradle'</span></span><br><span class="line">scriptHandlerFactory: org.gradle.api.internal.initialization.DefaultScriptHandlerFactory@2b80dced</span><br><span class="line">scriptPluginFactory: org.gradle.configuration.ScriptPluginFactorySelector@2f9c0d2b</span><br><span class="line">serviceRegistryFactory: org.gradle.internal.service.scopes.ProjectScopeServices<span class="variable">$4</span>@41869e25</span><br><span class="line">services: ProjectScopeServices</span><br><span class="line">sourceCompatibility: 1.8</span><br><span class="line">sourceSets: [<span class="built_in">source</span> <span class="built_in">set</span> <span class="string">'main'</span>, <span class="built_in">source</span> <span class="built_in">set</span> <span class="string">'test'</span>]</span><br><span class="line">standardOutputCapture: org.gradle.internal.logging.services.DefaultLoggingManager@1074a5fd</span><br><span class="line">startChain: task <span class="string">':startChain'</span></span><br><span class="line">state: project state <span class="string">'EXECUTED'</span></span><br><span class="line">status: integration</span><br><span class="line">subprojects: []</span><br><span class="line">targetCompatibility: 1.8</span><br><span class="line">taskChainSample: task <span class="string">':taskChainSample'</span></span><br><span class="line">tasks: [task <span class="string">':assemble'</span>, task <span class="string">':buildDependents'</span>, task <span class="string">':buildNeeded'</span>, task <span class="string">':check'</span>, task <span class="string">':classes'</span>, task <span class="string">':cleanEclipse'</span>, task <span class="string">':cleanEclipseClasspath'</span>, task <span class="string">':cleanEclipseJdt'</span>, task <span class="string">':cleanEclipseProject'</span>, task <span class="string">':compileJava'</span>, task <span class="string">':compileTestJava'</span>, task <span class="string">':eclipse'</span>, task <span class="string">':eclipseClasspath'</span>, task <span class="string">':eclipseJdt'</span>, task <span class="string">':eclipseProject'</span>, task <span class="string">':helloGradle'</span>, task <span class="string">':jar'</span>, task <span class="string">':javadoc'</span>, task <span class="string">':processResources'</span>, task <span class="string">':processTestResources'</span>, task <span class="string">':properties'</span>, task <span class="string">':repeatTasks0'</span>, task <span class="string">':repeatTasks1'</span>, task <span class="string">':repeatTasks2'</span>, task <span class="string">':startChain'</span>, task <span class="string">':taskChainSample'</span>, task <span class="string">':test'</span>, task <span class="string">':testClasses'</span>]</span><br><span class="line"><span class="built_in">test</span>: task <span class="string">':test'</span></span><br><span class="line">testClasses: task <span class="string">':testClasses'</span></span><br><span class="line">testReportDir: /Users/xyq/workspace/LearnGradle/build/reports/tests</span><br><span class="line">testReportDirName: tests</span><br><span class="line">testResultsDir: /Users/xyq/workspace/LearnGradle/build/<span class="built_in">test</span>-results</span><br><span class="line">testResultsDirName: <span class="built_in">test</span>-results</span><br><span class="line">version: unspecified</span><br></pre></td></tr></table></figure>
+<h4 id="8-Gradle守护进程"><a href="#8-Gradle守护进程" class="headerlink" title="8. Gradle守护进程"></a>8. Gradle守护进程</h4><ul>
+<li>开启守护进程</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">$ gradle taskChainSample --daemon</span><br><span class="line">:startChain</span><br><span class="line">[ant:<span class="built_in">echo</span>] Repeat from here...</span><br><span class="line">:repeatTasks0</span><br><span class="line"><span class="keyword">do</span> repeatTasktask <span class="string">':repeatTasks0'</span></span><br><span class="line">:repeatTasks1</span><br><span class="line"><span class="keyword">do</span> repeatTasktask <span class="string">':repeatTasks1'</span></span><br><span class="line">:repeatTasks2</span><br><span class="line"><span class="keyword">do</span> repeatTasktask <span class="string">':repeatTasks2'</span></span><br><span class="line">:taskChainSample</span><br><span class="line"></span><br><span class="line">BUILD SUCCESSFUL</span><br><span class="line"></span><br><span class="line">Total time: 0.735 secs</span><br></pre></td></tr></table></figure>
+<p>后续触发的<code>gradle &lt;task&gt; --daemon</code>会重用gradle守护进程<br>使用<code>gradle &lt;task&gt; --no-daemon</code>选择不重用守护进程</p>
+<ul>
+<li>查看守护进程</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ ps | grep gradle</span><br><span class="line">69403 ttys002    0:00.00 grep gradle</span><br></pre></td></tr></table></figure>
+<ul>
+<li>关闭守护进程</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ gradle --stop</span><br><span class="line">Stopping Daemon(s)</span><br><span class="line">1 Daemon stopped</span><br></pre></td></tr></table></figure>
+<p>守护进程会在3小时候自动过期</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Gradle/" rel="tag"># Gradle</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/02/13/Spring AOP/" rel="next" title="Spring AOP">
+                <i class="fa fa-chevron-left"></i> Spring AOP
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/02/18/Gradle实战-2/" rel="prev" title="Gradle实战-2">
+                Gradle实战-2 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="Yongqiang Xiang" />
+          <p class="site-author-name" itemprop="name">Yongqiang Xiang</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">66</span>
+                <span class="site-state-item-name">posts</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">28</span>
+                <span class="site-state-item-name">categories</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">28</span>
+                <span class="site-state-item-name">tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/xiangyq000" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                    
+                      GitHub
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://stackoverflow.com/users/4945225/xiangyq000" target="_blank" title="StackOverflow">
+                  
+                    <i class="fa fa-fw fa-stack-overflow"></i>
+                  
+                    
+                      StackOverflow
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-使用Gradle创建Java项目目录结构"><span class="nav-number">1.</span> <span class="nav-text">1. 使用Gradle创建Java项目目录结构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-Gradle中的task"><span class="nav-number">2.</span> <span class="nav-text">2. Gradle中的task</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-高级特性示例"><span class="nav-number">3.</span> <span class="nav-text">3. 高级特性示例</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-Gradle-Help"><span class="nav-number">4.</span> <span class="nav-text">4. Gradle Help</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-列出项目所有tasks"><span class="nav-number">5.</span> <span class="nav-text">5. 列出项目所有tasks</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#6-查看某个task的详细信息"><span class="nav-number">6.</span> <span class="nav-text">6. 查看某个task的详细信息</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#7-列出项目所有properties"><span class="nav-number">7.</span> <span class="nav-text">7. 列出项目所有properties</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#8-Gradle守护进程"><span class="nav-number">8.</span> <span class="nav-text">8. Gradle守护进程</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yongqiang Xiang</span>
+</div>
+
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script><!-- hexo-inject:begin --><!-- Begin: Injected MathJax -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config("");
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+      all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+  });
+</script>
+
+<script type="text/javascript" src="custom_mathjax_source">
+</script>
+<!-- End: Injected MathJax -->
+<!-- hexo-inject:end -->
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-cn">
+<head>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Redis,Database," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="1. 事务的实现一个事务从开始到结束通常会经历以下三个阶段：  事务开始。 命令入队。 事务执行。">
+<meta name="keywords" content="Redis,Database">
+<meta property="og:type" content="article">
+<meta property="og:title" content="《Redis 设计与实现：事务》">
+<meta property="og:url" content="http://yoursite.com/2017/10/05/《Redis-设计与实现：事务》/index.html">
+<meta property="og:site_name" content="天歌のBlog">
+<meta property="og:description" content="1. 事务的实现一个事务从开始到结束通常会经历以下三个阶段：  事务开始。 命令入队。 事务执行。">
+<meta property="og:locale" content="zh-cn">
+<meta property="og:updated_time" content="2018-01-05T08:29:40.577Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="《Redis 设计与实现：事务》">
+<meta name="twitter:description" content="1. 事务的实现一个事务从开始到结束通常会经历以下三个阶段：  事务开始。 命令入队。 事务执行。">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/10/05/《Redis-设计与实现：事务》/"/>
+
+
+
+
+
+  <title>《Redis 设计与实现：事务》 | 天歌のBlog</title><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-cn">
+
+  
+  
+    
+  
+
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">天歌のBlog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/10/05/《Redis-设计与实现：事务》/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Yongqiang Xiang">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天歌のBlog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">《Redis 设计与实现：事务》</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-10-05T01:36:01+08:00">
+                2017-10-05
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/读书笔记/" itemprop="url" rel="index">
+                    <span itemprop="name">读书笔记</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/读书笔记/Redis/" itemprop="url" rel="index">
+                    <span itemprop="name">Redis</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="1-事务的实现"><a href="#1-事务的实现" class="headerlink" title="1. 事务的实现"></a>1. 事务的实现</h3><p>一个事务从开始到结束通常会经历以下三个阶段：</p>
+<ul>
+<li>事务开始。</li>
+<li>命令入队。</li>
+<li>事务执行。</li>
+</ul>
+<a id="more"></a>
+<h4 id="1-1-事务开始"><a href="#1-1-事务开始" class="headerlink" title="1.1 事务开始"></a>1.1 事务开始</h4><p><code>MULTI</code> 命令的执行标志着事务的开始：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">redis&gt; MULTI</span><br><span class="line">OK</span><br></pre></td></tr></table></figure>
+<p><code>MULTI</code> 命令可以将执行该命令的客户端从非事务状态切换至事务状态，这一切换是通过在客户端状态的 <code>flags</code> 属性中打开 <code>REDIS_MULTI</code> 标识来完成的，<code>MULTI</code> 命令的实现可以用以下伪代码来表示：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">def MULTI():</span><br><span class="line"></span><br><span class="line">    # 打开事务标识</span><br><span class="line">    client.flags |= REDIS_MULTI</span><br><span class="line"></span><br><span class="line">    # 返回 OK 回复</span><br><span class="line">    replyOK()</span><br></pre></td></tr></table></figure>
+<h3 id="1-2-命令入队"><a href="#1-2-命令入队" class="headerlink" title="1.2 命令入队"></a>1.2 命令入队</h3><p>当一个客户端处于非事务状态时，这个客户端发送的命令会立即被服务器执行。与此不同的是，当一个客户端切换到事务状态之后，服务器会根据这个客户端发来的不同命令执行不同的操作：</p>
+<ul>
+<li>如果客户端发送的命令为 <code>EXEC</code>、 <code>DISCARD</code>、 <code>WATCH</code>、 <code>MULTI</code> 四个命令的其中一个，那么服务器立即执行这个命令。</li>
+<li>与此相反，如果客户端发送的命令是 <code>EXEC</code>、<code>DISCARD</code>、<code>WATCH</code>、<code>MULTI</code> 四个命令以外的其他命令，那么服务器并不立即执行这个命令，而是将这个命令放入一个事务队列里面，然后向客户端返回 <code>QUEUED</code> 回复。</li>
+</ul>
+<h3 id="1-3-事务队列"><a href="#1-3-事务队列" class="headerlink" title="1.3 事务队列"></a>1.3 事务队列</h3><p>每个 Redis 客户端都有自己的事务状态，这个事务状态保存在客户端状态的 <code>mstate</code> 属性里面：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">redisClient</span> &#123;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 事务状态</span></span><br><span class="line">    multiState mstate;      <span class="comment">/* MULTI/EXEC state */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">&#125; redisClient;</span><br></pre></td></tr></table></figure>
+<p>事务状态包含一个事务队列，以及一个已入队命令的计数器（也可以说是事务队列的长度）：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">multiState</span> &#123;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 事务队列，FIFO 顺序</span></span><br><span class="line">    multiCmd *commands;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 已入队命令计数</span></span><br><span class="line">    <span class="keyword">int</span> count;</span><br><span class="line"></span><br><span class="line">&#125; multiState;</span><br></pre></td></tr></table></figure>
+<p>事务队列是一个 <code>multiCmd</code> 类型的数组，数组中的每个 <code>multiCmd</code> 结构都保存了一个已入队命令的相关信息，包括指向命令实现函数的指针，命令的参数，以及参数的数量：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">typedef struct multiCmd &#123;</span><br><span class="line"></span><br><span class="line">    // 参数</span><br><span class="line">    robj **argv;</span><br><span class="line"></span><br><span class="line">    // 参数数量</span><br><span class="line">    int argc;</span><br><span class="line"></span><br><span class="line">    // 命令指针</span><br><span class="line">    struct redisCommand *cmd;</span><br><span class="line"></span><br><span class="line">&#125; multiCmd;</span><br></pre></td></tr></table></figure>
+<p>事务队列以先进先出（FIFO）的方式保存入队的命令：较先入队的命令会被放到数组的前面，而较后入队的命令则会被放到数组的后面。</p>
+<h3 id="1-4-执行事务"><a href="#1-4-执行事务" class="headerlink" title="1.4 执行事务"></a>1.4 执行事务</h3><p>当一个处于事务状态的客户端向服务器发送 <code>EXEC</code> 命令时，这个 <code>EXEC</code> 命令将立即被服务器执行： 服务器会遍历这个客户端的事务队列，执行队列中保存的所有命令，最后将执行命令所得的结果全部返回给客户端。</p>
+<p><code>EXEC</code> 命令的实现原理可以用以下伪代码来描述：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">def EXEC():</span><br><span class="line"></span><br><span class="line">    # 创建空白的回复队列</span><br><span class="line">    reply_queue = []</span><br><span class="line"></span><br><span class="line">    # 遍历事务队列中的每个项</span><br><span class="line">    # 读取命令的参数，参数的个数，以及要执行的命令</span><br><span class="line">    for argv, argc, cmd in client.mstate.commands:</span><br><span class="line"></span><br><span class="line">        # 执行命令，并取得命令的返回值</span><br><span class="line">        reply = execute_command(cmd, argv, argc)</span><br><span class="line"></span><br><span class="line">        # 将返回值追加到回复队列末尾</span><br><span class="line">        reply_queue.append(reply)</span><br><span class="line"></span><br><span class="line">    # 移除 REDIS_MULTI 标识，让客户端回到非事务状态</span><br><span class="line">    client.flags &amp;= ~REDIS_MULTI</span><br><span class="line"></span><br><span class="line">    # 清空客户端的事务状态，包括：</span><br><span class="line">    # 1）清零入队命令计数器</span><br><span class="line">    # 2）释放事务队列</span><br><span class="line">    client.mstate.count = 0</span><br><span class="line">    release_transaction_queue(client.mstate.commands)</span><br><span class="line"></span><br><span class="line">    # 将事务的执行结果返回给客户端</span><br><span class="line">    send_reply_to_client(client, reply_queue)</span><br></pre></td></tr></table></figure>
+<h3 id="2-WATCH-命令的实现"><a href="#2-WATCH-命令的实现" class="headerlink" title="2. WATCH 命令的实现"></a>2. WATCH 命令的实现</h3><p><code>WATCH</code> 命令是一个乐观锁（optimistic locking），它可以在 <code>EXEC</code> 命令执行之前，监视任意数量的数据库键，并在 <code>EXEC</code> 命令执行时，检查被监视的键是否至少有一个已经被修改过了，如果是的话，服务器将拒绝执行事务，并向客户端返回代表事务执行失败的空回复（nil）。 <code>WATCH</code> 命令总是返回 OK。</p>
+<h4 id="2-1-使用-WATCH-命令监视数据库键"><a href="#2-1-使用-WATCH-命令监视数据库键" class="headerlink" title="2.1 使用 WATCH 命令监视数据库键"></a>2.1 使用 WATCH 命令监视数据库键</h4><p>每个 Redis 数据库都保存着一个 <code>watched_keys</code> 字典，这个字典的键是某个被 <code>WATCH</code> 命令监视的数据库键，而字典的值则是一个链表，链表中记录了所有监视相应数据库键的客户端：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">redisDb</span> &#123;</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">    dict *watched_keys;</span><br><span class="line">  </span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">  </span><br><span class="line">&#125; redisDb;</span><br></pre></td></tr></table></figure>
+<p>通过 <code>watched_keys</code> 字典，服务器可以清楚地知道哪些数据库键正在被监视，以及哪些客户端正在监视这些数据库键。</p>
+<p>通过执行 <code>WATCH</code> 命令，客户端可以在 <code>watched_keys</code> 字典中与被监视的键进行关联。</p>
+<h3 id="2-2-监视机制的触发"><a href="#2-2-监视机制的触发" class="headerlink" title="2.2 监视机制的触发"></a>2.2 监视机制的触发</h3><p>所有对数据库进行修改的命令，比如 <code>SET</code>、<code>LPUSH</code>、<code>SADD</code>、<code>ZREM</code>、<code>DEL</code>、<code>FLUSHDB</code> 等等，在执行之后都会调用 <code>multi.c/touchWatchKey</code> 函数对 <code>watched_keys</code> 字典进行检查，查看是否有客户端正在监视刚刚被命令修改过的数据库键，如果有的话，那么 <code>touchWatchKey</code> 函数就会将监视被修改键的客户端的 <code>REDIS_DIRTY_CAS</code> 标识打开，表示该客户端的事务安全性已经被破坏。</p>
+<p><code>touchWatchKey</code> 函数的定义可以用以下伪代码来描述：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">def touchWatchKey(db, key):</span><br><span class="line"></span><br><span class="line">	# 如果键 key 存在于数据库的 watched_keys 字典中</span><br><span class="line">	# 那么说明至少有一个客户端在监视这个 key</span><br><span class="line">	if key in db.watched_keys:</span><br><span class="line">	</span><br><span class="line">		# 遍历所有监视键 key 的客户端</span><br><span class="line">		for client in db.watched_keys[key]:</span><br><span class="line">		</span><br><span class="line">			# 打开标识</span><br><span class="line">			client.flags |= REDIS_DIRTY_CAS</span><br></pre></td></tr></table></figure>
+<h3 id="2-3-判断事务是否安全"><a href="#2-3-判断事务是否安全" class="headerlink" title="2.3 判断事务是否安全"></a>2.3 判断事务是否安全</h3><p>当服务器接收到一个客户端发来的 <code>EXEC</code> 命令时，服务器会根据这个客户端是否打开了 <code>REDIS_DIRTY_CAS</code> 标识来决定是否执行事务：</p>
+<ul>
+<li>如果客户端的 <code>REDIS_DIRTY_CAS</code> 标识已经被打开，那么说明客户端所监视的键当中，至少有 一个键已经被修改过了，在这种情况下，客户端提交的事务已经不再安全，所以服务器会拒绝执行客户端提交的事务。</li>
+<li>如果客户端的 <code>REDIS_DIRTY_CAS</code> 标识没有被打开，那么说明客户端监视的所有键都没有被修改过（或者客户端没有监视任何键），事务仍然是安全的，服务器将执行客户端提交的这个事务。</li>
+</ul>
+<h2 id="3-事务的-ACID-性质"><a href="#3-事务的-ACID-性质" class="headerlink" title="3. 事务的 ACID 性质"></a>3. 事务的 ACID 性质</h2><p>在传统的关系式数据库中，常常用 ACID 性质来检验事务功能的可靠性和安全性。</p>
+<p>在 Redis 中，事务总是具有原子性（Atomicity）， 一致性（Consistency）和隔离性（Isolation），并且当 Redis 运行在某种特定的持久化模式下时，事务也具有耐久性（Durability）。</p>
+<h3 id="3-1-原子性"><a href="#3-1-原子性" class="headerlink" title="3.1 原子性"></a>3.1 原子性</h3><p>事务具有原子性指的是，数据库将事务中的多个操作当作一个整体来执行，服务器要么就执行事务中的所有操作，要么就一个操作也不执行。 </p>
+<p>对于 Redis 的事务功能来说，事务队列中的命令要么就全部执行，要么就一个都不执行，因此，Redis 的事务是具有原子性的。</p>
+<p>Redis 的事务和传统的关系型数据库事务的最大区别在于，Redis 不支持事务的回滚机制（rollback），即使事务队列中的某个命令在执行期间出现了错误，整个事务也会<br>继续执行下去，直到将事务队列中的所有命令都执行完毕为止。</p>
+<h3 id="3-2-一致性"><a href="#3-2-一致性" class="headerlink" title="3.2 一致性"></a>3.2 一致性</h3><p>事务具有一致性指的是，如果数据库在执行事务之前是一致的，那么在事务执行之后，无论事务是否执行成功，数据库也应该仍然是一致的。</p>
+<p>”一致“ 指的是数据符合数据库本身的定义和要求，没有包含非法或者无效的错误数据。</p>
+<p>Redis 通过谨慎的错误检测和简单的设计来保证事务一致性。</p>
+<h4 id="3-2-1-入队错误"><a href="#3-2-1-入队错误" class="headerlink" title="3.2.1 入队错误"></a>3.2.1 入队错误</h4><p>一个事务在入队命令的过程中，出现了命令不存在或者命令格式不正确等情况，那么 Redis 将拒绝执行这个事务，因此 Redis 事务的一致性不会被带有入队错误的事务影响。</p>
+<h4 id="3-2-2-执行错误"><a href="#3-2-2-执行错误" class="headerlink" title="3.2.2 执行错误"></a>3.2.2 执行错误</h4><p>因为在事务执行的过程中，出错的命令会被服务器识别出来，并进行相应的错误处理，所以这些出错命令不会对数据库做任何修改，也不会对事务的一致性产生任何影响。</p>
+<h4 id="3-2-3-服务器停机"><a href="#3-2-3-服务器停机" class="headerlink" title="3.2.3 服务器停机"></a>3.2.3 服务器停机</h4><p>如果 Redis 服务器在执行事务的过程中停机，那么根据服务器所使用的持久化模式，可能有以下情况出现：</p>
+<ul>
+<li>如果服务器运行在无持久化的内存模式下，那么重启之后的数据库将是空白的，因此数据总是一致的。</li>
+<li>如果服务器运行在 RDB 模式下，那么在事务中途停机不会导致不一致性，因为服务器可以根据现有的 RDB 文件来恢复数据，从而将数据库还原到一个一致的状态。如果找不到可供使用的 RDB 文件，那么重启之后的数据库将是空白的，而空白数据库总是一致的。</li>
+<li>如果服务器运行在 AOF 模式下，那么在事务中途停机不会导致不一致性，因为服务器可以根据现有的 AOF 文件来恢复数据，从而将数据库还原到一个一致的状态。如果找不到可供使用的 AOF 文件，那么重启之后的数据库将是空白的，而空白数据库总是一致的。</li>
+</ul>
+<p>综上所述，无论 Redis 服务器运行在哪种持久化模式下，事务执行中途发生的停机都不会影响数据库的一致性。</p>
+<h3 id="3-3-隔离性"><a href="#3-3-隔离性" class="headerlink" title="3.3 隔离性"></a>3.3 隔离性</h3><p>事务的隔离性指的是，即使数据库中有多个事务并发地执行，各个事务之间也不会互相影响，并且在并发状态下执行的事务和串行执行的事务产生的结果完全 相同。 </p>
+<p>因为 Redis 使用单线程的方式来执行事务（以及事务队列中的命令），并且服务器保证，在执行事务期间不会对事物进行中断，因此，Redis 的事务总是以串行的方式运行的，并且事务也总是具有隔离性的。</p>
+<h3 id="3-4-耐久性"><a href="#3-4-耐久性" class="headerlink" title="3.4 耐久性"></a>3.4 耐久性</h3><p>事务的耐久性指的是，当一个事务执行完毕时，执行这个事务所得的结果已经被保持到永久存储介质（比如硬盘）里面，即使服务器在事务执行完毕之后停机，执行事务所得的结果也不会丢失。 </p>
+<p>因为 Redis 事务不过是简单的用队列包裹起了一组 Redis 命令，Redis 并没有为事务提供任何额外的持久化功能，所以 Redis 事务的耐久性由 Redis 所使用的持久化模式决定： </p>
+<ul>
+<li>当服务器在无持久化的内存模式下运作时，事务不具有耐久性：一旦服务器停机，包括事务数据在内的所有服务器数据都将丢失。</li>
+<li>当服务器在 RDB 持久化模式下运作时，服务器只会在特定的保存条件被满足时，才会执行 <code>BGSAVE</code> 命令，对数据库进行保存操作，并且异步执行的 <code>BGSAVE</code> 不能保证事务数据被第一时间保存到硬盘里面，因此 RDB 持久化模式下的事务也不具有耐久性。</li>
+<li>当服务器运行在 AOF 持久化模式下，并且 <code>appedfsync</code> 选项的值为 <code>always</code> 时，程序总会在执行命令之后调用同步（sync）函数，将命令数据真正地保存到硬盘里面，因此这种配置下的事务是具有耐久性的。 </li>
+<li>当服务器运行在 AOF 持久化模式下，并且 <code>appedfsync</code> 的选项的值为 <code>everysec</code> 时，程序会每秒同步一次命令数据到磁盘。因为停机可能会恰好发生在等待同步的那一秒钟之内，这可能会造成事务数据丢失，所以这种配置下的事务不具有耐久性。</li>
+<li>当服务器运行在 AOF 持久化模式下，并且 <code>appedfsync</code> 的选项的值为 <code>no</code> 时，程序会交由操作系统来决定何时将命令数据同步到硬盘。因为事务数据可能在等待同步的过程中丢失，所以这种配置下的事务不具有耐久性。</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Redis/" rel="tag"># Redis</a>
+          
+            <a href="/tags/Database/" rel="tag"># Database</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/10/04/《Redis-设计与实现：事件》/" rel="next" title="《Redis 设计与实现：事件》">
+                <i class="fa fa-chevron-left"></i> 《Redis 设计与实现：事件》
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/10/06/《Redis-设计与实现：服务器》/" rel="prev" title="《Redis 设计与实现：服务器》">
+                《Redis 设计与实现：服务器》 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="Yongqiang Xiang" />
+          <p class="site-author-name" itemprop="name">Yongqiang Xiang</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">66</span>
+                <span class="site-state-item-name">posts</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">28</span>
+                <span class="site-state-item-name">categories</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">28</span>
+                <span class="site-state-item-name">tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/xiangyq000" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                    
+                      GitHub
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://stackoverflow.com/users/4945225/xiangyq000" target="_blank" title="StackOverflow">
+                  
+                    <i class="fa fa-fw fa-stack-overflow"></i>
+                  
+                    
+                      StackOverflow
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-事务的实现"><span class="nav-number">1.</span> <span class="nav-text">1. 事务的实现</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-1-事务开始"><span class="nav-number">1.1.</span> <span class="nav-text">1.1 事务开始</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-命令入队"><span class="nav-number">2.</span> <span class="nav-text">1.2 命令入队</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-事务队列"><span class="nav-number">3.</span> <span class="nav-text">1.3 事务队列</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-4-执行事务"><span class="nav-number">4.</span> <span class="nav-text">1.4 执行事务</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-WATCH-命令的实现"><span class="nav-number">5.</span> <span class="nav-text">2. WATCH 命令的实现</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#2-1-使用-WATCH-命令监视数据库键"><span class="nav-number">5.1.</span> <span class="nav-text">2.1 使用 WATCH 命令监视数据库键</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-监视机制的触发"><span class="nav-number">6.</span> <span class="nav-text">2.2 监视机制的触发</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-判断事务是否安全"><span class="nav-number">7.</span> <span class="nav-text">2.3 判断事务是否安全</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-事务的-ACID-性质"><span class="nav-number"></span> <span class="nav-text">3. 事务的 ACID 性质</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-原子性"><span class="nav-number">1.</span> <span class="nav-text">3.1 原子性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-一致性"><span class="nav-number">2.</span> <span class="nav-text">3.2 一致性</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-1-入队错误"><span class="nav-number">2.1.</span> <span class="nav-text">3.2.1 入队错误</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-2-执行错误"><span class="nav-number">2.2.</span> <span class="nav-text">3.2.2 执行错误</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-3-服务器停机"><span class="nav-number">2.3.</span> <span class="nav-text">3.2.3 服务器停机</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-隔离性"><span class="nav-number">3.</span> <span class="nav-text">3.3 隔离性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4-耐久性"><span class="nav-number">4.</span> <span class="nav-text">3.4 耐久性</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yongqiang Xiang</span>
+</div>
+
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script><!-- hexo-inject:begin --><!-- Begin: Injected MathJax -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config("");
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+      all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+  });
+</script>
+
+<script type="text/javascript" src="custom_mathjax_source">
+</script>
+<!-- End: Injected MathJax -->
+<!-- hexo-inject:end -->
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

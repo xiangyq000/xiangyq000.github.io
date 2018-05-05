@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-cn">
+<head>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="ZooKeeper,源码阅读," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="使用方式：  telnet 1234567891011121314$ telnet localhost 2181Trying ::1...Connected to localhost.Escape character is &apos;^]&apos;.confclientPort=2181dataDir=/usr/local/var/lib/zookeeper/version-2dataLogDir=/usr/lo">
+<meta name="keywords" content="ZooKeeper,源码阅读">
+<meta property="og:type" content="article">
+<meta property="og:title" content="《从 Paxos 到 ZooKeeper：分布式一致性原理与实践》：四字命令">
+<meta property="og:url" content="http://yoursite.com/2017/12/09/《从 Paxos 到 ZooKeeper：分布式一致性原理与实践》：四字命令/index.html">
+<meta property="og:site_name" content="天歌のBlog">
+<meta property="og:description" content="使用方式：  telnet 1234567891011121314$ telnet localhost 2181Trying ::1...Connected to localhost.Escape character is &apos;^]&apos;.confclientPort=2181dataDir=/usr/local/var/lib/zookeeper/version-2dataLogDir=/usr/lo">
+<meta property="og:locale" content="zh-cn">
+<meta property="og:updated_time" content="2018-01-05T08:41:47.644Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="《从 Paxos 到 ZooKeeper：分布式一致性原理与实践》：四字命令">
+<meta name="twitter:description" content="使用方式：  telnet 1234567891011121314$ telnet localhost 2181Trying ::1...Connected to localhost.Escape character is &apos;^]&apos;.confclientPort=2181dataDir=/usr/local/var/lib/zookeeper/version-2dataLogDir=/usr/lo">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/12/09/《从 Paxos 到 ZooKeeper：分布式一致性原理与实践》：四字命令/"/>
+
+
+
+
+
+  <title>《从 Paxos 到 ZooKeeper：分布式一致性原理与实践》：四字命令 | 天歌のBlog</title><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-cn">
+
+  
+  
+    
+  
+
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">天歌のBlog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/12/09/《从 Paxos 到 ZooKeeper：分布式一致性原理与实践》：四字命令/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Yongqiang Xiang">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天歌のBlog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">《从 Paxos 到 ZooKeeper：分布式一致性原理与实践》：四字命令</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-12-09T11:27:25+08:00">
+                2017-12-09
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ZooKeeper/" itemprop="url" rel="index">
+                    <span itemprop="name">ZooKeeper</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ZooKeeper/读书笔记/" itemprop="url" rel="index">
+                    <span itemprop="name">读书笔记</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>使用方式：</p>
+<ul>
+<li><p>telnet</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> telnet localhost 2181</span></span><br><span class="line">Trying ::1...</span><br><span class="line">Connected to localhost.</span><br><span class="line">Escape character is '^]'.</span><br><span class="line">conf</span><br><span class="line">clientPort=2181</span><br><span class="line">dataDir=/usr/local/var/lib/zookeeper/version-2</span><br><span class="line">dataLogDir=/usr/local/var/lib/zookeeper/version-2</span><br><span class="line">tickTime=3000</span><br><span class="line">maxClientCnxns=0</span><br><span class="line">minSessionTimeout=6000</span><br><span class="line">maxSessionTimeout=60000</span><br><span class="line">serverId=0</span><br><span class="line">Connection closed by foreign host.</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>nc</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">echo</span> conf | nc localhost 2181</span></span><br><span class="line">clientPort=2181</span><br><span class="line">dataDir=/usr/local/var/lib/zookeeper/version-2</span><br><span class="line">dataLogDir=/usr/local/var/lib/zookeeper/version-2</span><br><span class="line">tickTime=3000</span><br><span class="line">maxClientCnxns=0</span><br><span class="line">minSessionTimeout=6000</span><br><span class="line">maxSessionTimeout=60000</span><br><span class="line">serverId=0</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<a id="more"></a>
+<p>以下示例基于在本地以默认配置起单实例ZooKeeper和Kafka，Kafka连接到ZooKeeper。Mac系统下ZooKeeper配置文件目录为<code>/usr/local/etc/zookeeper</code>。</p>
+<h4 id="1-conf"><a href="#1-conf" class="headerlink" title="1. conf"></a>1. conf</h4><p>conf命令用于输出ZooKeeper服务器运行时使用的基本配置信息，包括clientPort，dataDir和tickTime等。</p>
+<p>conf会根据当前的运行模式来决定打印输出的服务器配置信息，如果是单机模式(standalone)，不会输出 initLimit、syncLimit、electionAlg以及electionPort等集群配置信息。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">echo</span> conf | nc localhost 2181</span></span><br><span class="line">clientPort=2181</span><br><span class="line">dataDir=/usr/local/var/lib/zookeeper/version-2</span><br><span class="line">dataLogDir=/usr/local/var/lib/zookeeper/version-2</span><br><span class="line">tickTime=3000</span><br><span class="line">maxClientCnxns=0</span><br><span class="line">minSessionTimeout=6000</span><br><span class="line">maxSessionTimeout=60000</span><br><span class="line">serverId=0</span><br></pre></td></tr></table></figure>
+<h4 id="2-cons"><a href="#2-cons" class="headerlink" title="2. cons"></a>2. cons</h4><p>cons命令用于输出当前这台服务器上所有客户端连接的详细信息，包括每个客户端的客户端IP、会话ID和最后一次与服务器交互的操作类型等。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">echo</span> cons | nc localhost 2181</span></span><br><span class="line"> /127.0.0.1:51436[1](queued=0,recved=493,sent=495,sid=0x15e983124a00000,lop=PING,est=1505792940222,to=6000,lcxid=0x17c,lzxid=0x478,lresp=1505793166428,llat=0,minlat=0,avglat=0,maxlat=129)</span><br><span class="line"> /0:0:0:0:0:0:0:1:51550[0](queued=0,recved=1,sent=0)</span><br></pre></td></tr></table></figure>
+<h4 id="3-crst"><a href="#3-crst" class="headerlink" title="3. crst"></a>3. crst</h4><p>crst命令用于重置所有客户端的连接统计信息。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">echo</span> crst | nc localhost 2181</span></span><br><span class="line">Connection stats reset.</span><br></pre></td></tr></table></figure>
+<h4 id="4-dump"><a href="#4-dump" class="headerlink" title="4. dump"></a>4. dump</h4><p>dump命令用于输出当前集群的所有会话信息，包括这些会话的会话ID，以及每个会话创建的临时节点等信息。另外，如果在Leader服务器上执行该命令的话，还能够看到每个会话的超时时间。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">echo</span> dump | nc localhost 2181</span></span><br><span class="line">SessionTracker dump:</span><br><span class="line">Session Sets (3):</span><br><span class="line">0 expire at Tue Sep 19 11:55:51 CST 2017:</span><br><span class="line">0 expire at Tue Sep 19 11:55:54 CST 2017:</span><br><span class="line">1 expire at Tue Sep 19 11:55:57 CST 2017:</span><br><span class="line">	0x15e983124a00000</span><br><span class="line">ephemeral nodes dump:</span><br><span class="line">Sessions with Ephemerals (1):</span><br><span class="line">0x15e983124a00000:</span><br><span class="line">	/controller</span><br><span class="line">	/brokers/ids/0</span><br></pre></td></tr></table></figure>
+<h4 id="5-envi"><a href="#5-envi" class="headerlink" title="5. envi"></a>5. envi</h4><p>envi命令用于输出ZooKeeper所在服务器运行时的环境信息，包括os.version，java.version和user.home等。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">echo</span> envi | nc localhost 2181</span></span><br><span class="line">Environment:</span><br><span class="line">zookeeper.version=3.4.10-39d3a4f269333c922ed3db283be479f9deacaa0f, built on 03/23/2017 10:13 GMT</span><br><span class="line">host.name=bogon</span><br><span class="line">java.version=1.8.0_91</span><br><span class="line">java.vendor=Oracle Corporation</span><br><span class="line">java.home=/Library/Java/JavaVirtualMachines/jdk1.8.0_91.jdk/Contents/Home/jre</span><br><span class="line">java.class.path=</span><br><span class="line">java.library.path=/Users/xyq/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:.</span><br><span class="line">java.io.tmpdir=/var/folders/yq/d0v9dm456zd_xzc1lhllw19m0000gn/T/</span><br><span class="line">java.compiler=&lt;NA&gt;</span><br><span class="line">os.name=Mac OS X</span><br><span class="line">os.arch=x86_64</span><br><span class="line">os.version=10.12.6</span><br><span class="line">user.name=xyq</span><br><span class="line">user.home=/Users/xyq</span><br><span class="line">user.dir=/Users/xyq</span><br></pre></td></tr></table></figure>
+<h4 id="6-ruok"><a href="#6-ruok" class="headerlink" title="6. ruok"></a>6. ruok</h4><p>ruok命令即“are you ok”，用于输出当前ZooKeeper服务器是否正在运行。执行该命令后，如果当前ZooKeeper服务器正在运行，那么返回“imok”，否则没有任何响应输出。</p>
+<p>ruok命令的输出仅仅只能表明当前服务器是否正在运行，准确地讲，只能说明2181端口打开着，同时四字命令执行流程正常，但是不能代表ZooKeeper服务器是否运行正常。在很多时候，如果当前服务器无法正常处理客户端的读写请求，甚至已经无法和集群中的其他机器通信，ruok命令依然返回“imok”。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">echo</span> ruok | nc localhost 2181</span></span><br><span class="line">imok</span><br></pre></td></tr></table></figure>
+<h4 id="7-stat"><a href="#7-stat" class="headerlink" title="7. stat"></a>7. stat</h4><p>stat命令用于获取ZooKeeper服务器的运行时状态信息，包括基本的ZooKeeper版本，打包信息，运行时角色，集群数据节点个数等信息，另外还会将当前服务器的客户端连接信息打印出来。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">echo</span> <span class="built_in">stat</span> | nc localhost 2181</span></span><br><span class="line">Zookeeper version: 3.4.10-39d3a4f269333c922ed3db283be479f9deacaa0f, built on 03/23/2017 10:13 GMT</span><br><span class="line">Clients:</span><br><span class="line"> /0:0:0:0:0:0:0:1:51369[0](queued=0,recved=1,sent=0)</span><br><span class="line">	</span><br><span class="line">Latency min/avg/max: 0/0/0</span><br><span class="line">Received: 4</span><br><span class="line">Sent: 3</span><br><span class="line">Connections: 1</span><br><span class="line">Outstanding: 0</span><br><span class="line">Zxid: 0x43c</span><br><span class="line">Mode: standalone</span><br><span class="line">Node count: 140</span><br></pre></td></tr></table></figure>
+<h4 id="8-srvr"><a href="#8-srvr" class="headerlink" title="8. srvr"></a>8. srvr</h4><p>srvr命令和stat命令的功能一致，唯一的区别是srvr不会将客户端的连接情况输出，仅仅输出服务器的自身信息。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">echo</span> srvr | nc localhost 2181</span></span><br><span class="line">Zookeeper version: 3.4.10-39d3a4f269333c922ed3db283be479f9deacaa0f, built on 03/23/2017 10:13 GMT</span><br><span class="line">Latency min/avg/max: 0/0/129</span><br><span class="line">Received: 1979</span><br><span class="line">Sent: 1980</span><br><span class="line">Connections: 2</span><br><span class="line">Outstanding: 0</span><br><span class="line">Zxid: 0x478</span><br><span class="line">Mode: standalone</span><br><span class="line">Node count: 142</span><br></pre></td></tr></table></figure>
+<h4 id="9-wchs"><a href="#9-wchs" class="headerlink" title="9. wchs"></a>9. wchs</h4><p>wchs命令用于输出当前服务器上管理的Watchers的概要信息。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">echo</span> wchs | nc localhost 2181</span></span><br><span class="line">1 connections watching 11 paths</span><br><span class="line">Total watches:11</span><br></pre></td></tr></table></figure>
+<h4 id="10-wchc"><a href="#10-wchc" class="headerlink" title="10. wchc"></a>10. wchc</h4><p>wchc命令用于输出当前服务器上管理的Watchers的详细信息，以会话为单位进行归组，同时列出被该会话注册了Watcher的节点路径。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">echo</span> wchc | nc localhost 2181</span></span><br><span class="line">0x15e9aac69320000</span><br><span class="line">	/controller</span><br><span class="line">	/isr_change_notification</span><br><span class="line">	/admin/preferred_replica_election</span><br><span class="line">	/admin/reassign_partitions</span><br><span class="line">	/brokers/ids</span><br><span class="line">	/admin/delete_topics</span><br><span class="line">	/brokers/topics/springCloudBus</span><br><span class="line">	/config/changes</span><br><span class="line">	/brokers/topics/sleuth</span><br><span class="line">	/brokers/topics/__consumer_offsets</span><br><span class="line">	/brokers/topics</span><br></pre></td></tr></table></figure>
+<h4 id="10-wchp"><a href="#10-wchp" class="headerlink" title="10. wchp"></a>10. wchp</h4><p>wchp命令和wchc命令非常类似，也是用于输出当前服务器上管理的Watchers的详细信息，不同点在于wchp命令的输出信息以节点路径为单位进行归组。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">echo</span> wchp | nc localhost 2181</span></span><br><span class="line">/controller</span><br><span class="line">	0x15e9aac69320000</span><br><span class="line">/isr_change_notification</span><br><span class="line">	0x15e9aac69320000</span><br><span class="line">/admin/preferred_replica_election</span><br><span class="line">	0x15e9aac69320000</span><br><span class="line">/admin/reassign_partitions</span><br><span class="line">	0x15e9aac69320000</span><br><span class="line">/brokers/ids</span><br><span class="line">	0x15e9aac69320000</span><br><span class="line">/admin/delete_topics</span><br><span class="line">	0x15e9aac69320000</span><br><span class="line">/brokers/topics/springCloudBus</span><br><span class="line">	0x15e9aac69320000</span><br><span class="line">/config/changes</span><br><span class="line">	0x15e9aac69320000</span><br><span class="line">/brokers/topics/sleuth</span><br><span class="line">	0x15e9aac69320000</span><br><span class="line">/brokers/topics/__consumer_offsets</span><br><span class="line">	0x15e9aac69320000</span><br><span class="line">/brokers/topics</span><br><span class="line">	0x15e9aac69320000</span><br></pre></td></tr></table></figure>
+<h4 id="11-mntr"><a href="#11-mntr" class="headerlink" title="11. mntr"></a>11. mntr</h4><p>mntr命令用于输出比stat命令更为详尽的服务器统计信息，包括请求处理的延迟情况、服务器内存数据库大小和集群的数据同步情况。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">echo</span> mntr | nc localhost 2181</span></span><br><span class="line">zk_version	3.4.10-39d3a4f269333c922ed3db283be479f9deacaa0f, built on 03/23/2017 10:13 GMT</span><br><span class="line">zk_avg_latency	0</span><br><span class="line">zk_max_latency	129</span><br><span class="line">zk_min_latency	0</span><br><span class="line">zk_packets_received	2060</span><br><span class="line">zk_packets_sent	2061</span><br><span class="line">zk_num_alive_connections	2</span><br><span class="line">zk_outstanding_requests	0</span><br><span class="line">zk_server_state	standalone</span><br><span class="line">zk_znode_count	142</span><br><span class="line">zk_watch_count	16</span><br><span class="line">zk_ephemerals_count	2</span><br><span class="line">zk_approximate_data_size	10973</span><br><span class="line">zk_open_file_descriptor_count	97</span><br><span class="line">zk_max_file_descriptor_count	10240</span><br></pre></td></tr></table></figure>
+<h4 id="12-isro"><a href="#12-isro" class="headerlink" title="12. isro"></a>12. isro</h4><p>New in 3.4.0: Tests if server is running in read-only mode. The server will respond with “ro” if in read-only mode or “rw” if not in read-only mode.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">echo</span> isro | nc localhost 2181</span></span><br><span class="line">rw</span><br></pre></td></tr></table></figure>
+<h4 id="13-gtmk"><a href="#13-gtmk" class="headerlink" title="13. gtmk"></a>13. gtmk</h4><p>Gets the current trace mask as a 64-bit signed long value in decimal format.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> <span class="built_in">echo</span> gtmk | nc localhost 2181</span></span><br><span class="line">306</span><br></pre></td></tr></table></figure>
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/ZooKeeper/" rel="tag"># ZooKeeper</a>
+          
+            <a href="/tags/源码阅读/" rel="tag"># 源码阅读</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/12/07/《从 Paxos 到 ZooKeeper：分布式一致性原理与实践》：Watcher/" rel="next" title="《从 Paxos 到 ZooKeeper：分布式一致性原理与实践》：Watcher">
+                <i class="fa fa-chevron-left"></i> 《从 Paxos 到 ZooKeeper：分布式一致性原理与实践》：Watcher
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/12/13/《从 Paxos 到 ZooKeeper：分布式一致性原理与实践》：客户端/" rel="prev" title="《从 Paxos 到 ZooKeeper：分布式一致性原理与实践》：客户端">
+                《从 Paxos 到 ZooKeeper：分布式一致性原理与实践》：客户端 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="Yongqiang Xiang" />
+          <p class="site-author-name" itemprop="name">Yongqiang Xiang</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">66</span>
+                <span class="site-state-item-name">posts</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">28</span>
+                <span class="site-state-item-name">categories</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">28</span>
+                <span class="site-state-item-name">tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/xiangyq000" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                    
+                      GitHub
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://stackoverflow.com/users/4945225/xiangyq000" target="_blank" title="StackOverflow">
+                  
+                    <i class="fa fa-fw fa-stack-overflow"></i>
+                  
+                    
+                      StackOverflow
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-conf"><span class="nav-number">1.</span> <span class="nav-text">1. conf</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-cons"><span class="nav-number">2.</span> <span class="nav-text">2. cons</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-crst"><span class="nav-number">3.</span> <span class="nav-text">3. crst</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-dump"><span class="nav-number">4.</span> <span class="nav-text">4. dump</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-envi"><span class="nav-number">5.</span> <span class="nav-text">5. envi</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#6-ruok"><span class="nav-number">6.</span> <span class="nav-text">6. ruok</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#7-stat"><span class="nav-number">7.</span> <span class="nav-text">7. stat</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#8-srvr"><span class="nav-number">8.</span> <span class="nav-text">8. srvr</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#9-wchs"><span class="nav-number">9.</span> <span class="nav-text">9. wchs</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#10-wchc"><span class="nav-number">10.</span> <span class="nav-text">10. wchc</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#10-wchp"><span class="nav-number">11.</span> <span class="nav-text">10. wchp</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#11-mntr"><span class="nav-number">12.</span> <span class="nav-text">11. mntr</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#12-isro"><span class="nav-number">13.</span> <span class="nav-text">12. isro</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#13-gtmk"><span class="nav-number">14.</span> <span class="nav-text">13. gtmk</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yongqiang Xiang</span>
+</div>
+
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script><!-- hexo-inject:begin --><!-- Begin: Injected MathJax -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config("");
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+      all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+  });
+</script>
+
+<script type="text/javascript" src="custom_mathjax_source">
+</script>
+<!-- End: Injected MathJax -->
+<!-- hexo-inject:end -->
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,1470 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-cn">
+<head>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Spring," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="1. 术语 连接点（JointPoint）：代码中具有边界性质特定点；Spring仅支持方法的连接点，包含方法和方位两方面信息 切点（Pointcut）：定位到某个方法 增强（Advice）：织入到目标连接点上的代码 目标对象（Target）：增强逻辑的目标织入类 引介（Introduction）：特殊的增强，为类添加一些属性和方法 织入（Weaving）：将增强添加到目标连接点上的过程：编译期织">
+<meta name="keywords" content="Spring">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring AOP">
+<meta property="og:url" content="http://yoursite.com/2016/02/13/Spring AOP/index.html">
+<meta property="og:site_name" content="天歌のBlog">
+<meta property="og:description" content="1. 术语 连接点（JointPoint）：代码中具有边界性质特定点；Spring仅支持方法的连接点，包含方法和方位两方面信息 切点（Pointcut）：定位到某个方法 增强（Advice）：织入到目标连接点上的代码 目标对象（Target）：增强逻辑的目标织入类 引介（Introduction）：特殊的增强，为类添加一些属性和方法 织入（Weaving）：将增强添加到目标连接点上的过程：编译期织">
+<meta property="og:locale" content="zh-cn">
+<meta property="og:updated_time" content="2018-01-05T08:16:45.011Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spring AOP">
+<meta name="twitter:description" content="1. 术语 连接点（JointPoint）：代码中具有边界性质特定点；Spring仅支持方法的连接点，包含方法和方位两方面信息 切点（Pointcut）：定位到某个方法 增强（Advice）：织入到目标连接点上的代码 目标对象（Target）：增强逻辑的目标织入类 引介（Introduction）：特殊的增强，为类添加一些属性和方法 织入（Weaving）：将增强添加到目标连接点上的过程：编译期织">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2016/02/13/Spring AOP/"/>
+
+
+
+
+
+  <title>Spring AOP | 天歌のBlog</title><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-cn">
+
+  
+  
+    
+  
+
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">天歌のBlog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/02/13/Spring AOP/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Yongqiang Xiang">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天歌のBlog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Spring AOP</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-02-13T15:53:38+08:00">
+                2016-02-13
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Spring/" itemprop="url" rel="index">
+                    <span itemprop="name">Spring</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="1-术语"><a href="#1-术语" class="headerlink" title="1. 术语"></a>1. 术语</h3><ul>
+<li>连接点（JointPoint）：代码中具有边界性质特定点；Spring仅支持方法的连接点，包含方法和方位两方面信息</li>
+<li>切点（Pointcut）：定位到某个方法</li>
+<li>增强（Advice）：织入到目标连接点上的代码</li>
+<li>目标对象（Target）：增强逻辑的目标织入类</li>
+<li>引介（Introduction）：特殊的增强，为类添加一些属性和方法</li>
+<li>织入（Weaving）：将增强添加到目标连接点上的过程：编译期织入、类装载期织入、动态代理织入（Spring的方案）</li>
+<li>代理（Proxy）：被AOP织入增强后的结果类</li>
+<li>切面（Aspect）：切点+增强</li>
+</ul>
+<a id="more"></a>
+<h3 id="2-动态代理的两种实现：JDK和CGLib"><a href="#2-动态代理的两种实现：JDK和CGLib" class="headerlink" title="2. 动态代理的两种实现：JDK和CGLib"></a>2. 动态代理的两种实现：JDK和CGLib</h3><ul>
+<li>JDK动态代理动态创建一个符合某一接口的实力，生成目标类的代理对象，缺点是需要提供接口；方法必须是<code>public</code>或<code>public final</code>的</li>
+<li>CGLib采用底层的字节码技术，在子类中对父类的方法进行拦截，织入横切逻辑；不能为<code>final</code>和<code>private</code>方法代理</li>
+<li>样例</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> test;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.InvocationHandler;</span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.Method;</span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.Proxy;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> net.sf.cglib.proxy.Enhancer;</span><br><span class="line"><span class="keyword">import</span> net.sf.cglib.proxy.MethodInterceptor;</span><br><span class="line"><span class="keyword">import</span> net.sf.cglib.proxy.MethodProxy;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ProxyTest</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        ServiceImpl jdkTarget = <span class="keyword">new</span> ServiceImpl();</span><br><span class="line">        ProxyHandler handler = <span class="keyword">new</span> ProxyHandler(jdkTarget);</span><br><span class="line">        Service jdkProxy = (Service)Proxy.newProxyInstance(</span><br><span class="line">            jdkTarget.getClass().getClassLoader(),</span><br><span class="line">            jdkTarget.getClass().getInterfaces(),</span><br><span class="line">            handler);</span><br><span class="line">        jdkProxy.process(<span class="string">"jdk proxy"</span>);</span><br><span class="line"></span><br><span class="line">        System.out.println();</span><br><span class="line"></span><br><span class="line">        CglibProxy cglibProxy = <span class="keyword">new</span> CglibProxy();</span><br><span class="line">        ServiceImpl cglibTarget = (ServiceImpl)cglibProxy.getProxy(ServiceImpl.class);</span><br><span class="line">        cglibTarget.process(<span class="string">"cglib proxy"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Service</span> </span>&#123;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">process</span><span class="params">(String arg)</span></span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">ServiceImpl</span> <span class="keyword">implements</span> <span class="title">Service</span> </span>&#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">process</span><span class="params">(String arg)</span> </span>&#123;</span><br><span class="line">            System.out.println(<span class="string">"do something with "</span> + arg);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//jdk proxy</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">ProxyHandler</span> <span class="keyword">implements</span> <span class="title">InvocationHandler</span> </span>&#123;</span><br><span class="line">        <span class="keyword">private</span> Object target;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="title">ProxyHandler</span><span class="params">(Object target)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">this</span>.target = target;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> Object <span class="title">invoke</span><span class="params">(Object proxy, Method method, Object[] args)</span></span></span><br><span class="line"><span class="function">            <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">            System.out.println(<span class="string">"before process jdk proxy"</span>);</span><br><span class="line">            Object obj = method.invoke(target, args);</span><br><span class="line">            System.out.println(<span class="string">"after process jdk proxy"</span>);</span><br><span class="line">            <span class="keyword">return</span> obj;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//cglib proxy</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">CglibProxy</span> <span class="keyword">implements</span> <span class="title">MethodInterceptor</span> </span>&#123;</span><br><span class="line">        <span class="keyword">private</span> Enhancer enhancer = <span class="keyword">new</span> Enhancer();</span><br><span class="line">        <span class="function"><span class="keyword">public</span> Object <span class="title">getProxy</span><span class="params">(Class clazz)</span> </span>&#123;</span><br><span class="line">            enhancer.setSuperclass(clazz);</span><br><span class="line">            enhancer.setCallback(<span class="keyword">this</span>);</span><br><span class="line">            <span class="keyword">return</span> enhancer.create();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> Object <span class="title">intercept</span><span class="params">(Object obj, Method method, Object[] args, MethodProxy proxy)</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">            System.out.println(<span class="string">"before process cglib proxy"</span>);</span><br><span class="line">            Object result = proxy.invokeSuper(obj, args);</span><br><span class="line">            System.out.println(<span class="string">"after process cglib proxy"</span>);</span><br><span class="line">            <span class="keyword">return</span> result;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>结果</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">before process jdk proxy</span><br><span class="line">do something with jdk proxy</span><br><span class="line">after process jdk proxy</span><br><span class="line"></span><br><span class="line">before process cglib proxy</span><br><span class="line">do something with cglib proxy</span><br><span class="line">after process cglib proxy</span><br></pre></td></tr></table></figure>
+<ul>
+<li>性能：CGLib所创建的动态代理对象性能比JDK方式高（约10倍），但CGLib在创建代理对象时所花费的时间比JDK方式多（约8倍）；CGLib适合Spring里singleton模式的bean管理</li>
+</ul>
+<h3 id="3-ProxyFactory"><a href="#3-ProxyFactory" class="headerlink" title="3. ProxyFactory"></a>3. ProxyFactory</h3><ul>
+<li>Spring定义了<code>org.springframework.aop.framework.AopProxy</code>接口及<code>Cglib2AopProxy</code>和<code>JdkDynamicAopProxy</code>两个<code>final</code>实现类</li>
+<li>如果通过<code>ProxyFactory</code>的<code>setInterfaces(Class[] interfaces)</code>指定针对接口代理，则使用<code>JdkDynamicAopProxy</code>；如果使用<code>setOptimize(true)</code>，使用<code>Cglib2AopProxy</code></li>
+<li><code>ProxyFacotry</code>通过<code>addAdvice(Advice)</code>形成增强链</li>
+</ul>
+<h3 id="4-增强类型"><a href="#4-增强类型" class="headerlink" title="4. 增强类型"></a>4. 增强类型</h3><h4 id="4-1-前置增强"><a href="#4-1-前置增强" class="headerlink" title="4.1 前置增强"></a>4.1 前置增强</h4><ul>
+<li>接口：<code>org.springframework.aop.BeforeAdvice</code></li>
+<li>样例</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.aop;</span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.Method;</span><br><span class="line"><span class="keyword">import</span> org.springframework.aop.MethodBeforeAdvice;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BeforeAdvice</span> <span class="keyword">implements</span> <span class="title">MethodBeforeAdvice</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">before</span><span class="params">(Method arg0, Object[] arg1, Object arg2)</span></span></span><br><span class="line"><span class="function">        <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">        String arg = (String)arg1[<span class="number">0</span>];</span><br><span class="line">        System.out.println(<span class="string">"before advice "</span> + arg);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="4-2-后置增强"><a href="#4-2-后置增强" class="headerlink" title="4.2  后置增强"></a>4.2  后置增强</h4><ul>
+<li>接口：<code>org.springframework.aop.AfterReturninigAdvice</code></li>
+<li>样例</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.aop;</span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.Method;</span><br><span class="line"><span class="keyword">import</span> org.springframework.aop.AfterReturningAdvice;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AfterAdvice</span> <span class="keyword">implements</span> <span class="title">AfterReturningAdvice</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">afterReturning</span><span class="params">(Object returnValue, Method method, Object[] args, Object target)</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">        String arg = (String)args[<span class="number">0</span>];</span><br><span class="line">        System.out.println(<span class="string">"after advice "</span> + arg);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="4-3-环绕增强"><a href="#4-3-环绕增强" class="headerlink" title="4.3 环绕增强"></a>4.3 环绕增强</h4><ul>
+<li>接口：<code>org.aopalliance.intercept.MethodInterceptor</code></li>
+<li>样例</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.aop;</span><br><span class="line"><span class="keyword">import</span> org.aopalliance.intercept.MethodInterceptor;</span><br><span class="line"><span class="keyword">import</span> org.aopalliance.intercept.MethodInvocation;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AroundAdvice</span> <span class="keyword">implements</span> <span class="title">MethodInterceptor</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Object <span class="title">invoke</span><span class="params">(MethodInvocation invocation)</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">        Object[] args = invocation.getArguments();</span><br><span class="line">        String arg = (String)args[<span class="number">0</span>];</span><br><span class="line">        System.out.println(<span class="string">"around advice: before "</span> + arg);</span><br><span class="line">        Object obj = invocation.proceed();</span><br><span class="line">        System.out.println(<span class="string">"around advice: after "</span> + arg);</span><br><span class="line">        <span class="keyword">return</span> obj;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="4-4-异常抛出增强"><a href="#4-4-异常抛出增强" class="headerlink" title="4.4 异常抛出增强"></a>4.4 异常抛出增强</h4><ul>
+<li>接口：<code>org.springframework.aop.ThrowsAdvice</code></li>
+<li>样例</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.aop;</span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.Method;</span><br><span class="line"><span class="keyword">import</span> org.springframework.aop.ThrowsAdvice;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ExceptionAdvice</span> <span class="keyword">implements</span> <span class="title">ThrowsAdvice</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">afterThrowing</span><span class="params">(Method method, Object[] args, Object target, Exception ex)</span></span></span><br><span class="line"><span class="function">        <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"------"</span>);</span><br><span class="line">        System.out.println(<span class="string">"throws exception, method="</span> + method.getName());</span><br><span class="line">        System.out.println(<span class="string">"throws exception, message="</span> + ex.getMessage());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="4-5-测试"><a href="#4-5-测试" class="headerlink" title="4.5 测试"></a>4.5 测试</h4><h5 id="4-5-1-基于代码的测试"><a href="#4-5-1-基于代码的测试" class="headerlink" title="4.5.1 基于代码的测试"></a>4.5.1 基于代码的测试</h5><ul>
+<li><code>TestAopAdvice</code></li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.aop;</span><br><span class="line"><span class="keyword">import</span> org.springframework.aop.ThrowsAdvice;</span><br><span class="line"><span class="keyword">import</span> org.springframework.aop.framework.ProxyFactory;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TestAopAdvice</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        AopExample example = <span class="keyword">new</span> AopExample();</span><br><span class="line">        BeforeAdvice beforeAdvice = <span class="keyword">new</span> BeforeAdvice();</span><br><span class="line">        AfterAdvice afterAdvice = <span class="keyword">new</span> AfterAdvice();</span><br><span class="line">        AroundAdvice aroundAdvice = <span class="keyword">new</span> AroundAdvice();</span><br><span class="line">        ThrowsAdvice throwsAdvice = <span class="keyword">new</span> ExceptionAdvice();</span><br><span class="line"></span><br><span class="line">        ProxyFactory pf = <span class="keyword">new</span> ProxyFactory();</span><br><span class="line">        pf.setTarget(example);</span><br><span class="line">        pf.addAdvice(beforeAdvice);</span><br><span class="line">        pf.addAdvice(afterAdvice);</span><br><span class="line">        pf.addAdvice(aroundAdvice);</span><br><span class="line">        pf.addAdvice(throwsAdvice);</span><br><span class="line">        AopExample proxy = (AopExample)pf.getProxy();</span><br><span class="line"></span><br><span class="line">        proxy.handle(<span class="string">"blabla"</span>);</span><br><span class="line">        System.out.println();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">try</span>&#123;</span><br><span class="line">            proxy.throwExp(<span class="string">"blabla"</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span>(Exception e) &#123;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>输出</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">before advice blabla</span><br><span class="line">around advice: before blabla</span><br><span class="line">aop example blabla</span><br><span class="line">around advice: after blabla</span><br><span class="line">after advice blabla</span><br><span class="line"></span><br><span class="line">before advice blabla</span><br><span class="line">around advice: before blabla</span><br><span class="line">----after throwing----</span><br><span class="line">throws exception, method=throwExp</span><br><span class="line">throws exception, message=try throws advice</span><br></pre></td></tr></table></figure>
+<h5 id="4-5-2-基于Spring配置的测试"><a href="#4-5-2-基于Spring配置的测试" class="headerlink" title="4.5.2 基于Spring配置的测试"></a>4.5.2 基于Spring配置的测试</h5><ul>
+<li><code>springAop.xml</code></li>
+</ul>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span><br><span class="line"><span class="tag">&lt;<span class="name">beans</span> <span class="attr">xmlns</span>=<span class="string">"http://www.springframework.org/schema/beans"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">xmlns:xsi</span>=<span class="string">"http://www.w3.org/2001/XMLSchema-instance"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">xmlns:aop</span>=<span class="string">"http://www.springframework.org/schema/aop"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">xmlns:context</span>=<span class="string">"http://www.springframework.org/schema/context"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">xmlns:p</span>=<span class="string">"http://www.springframework.org/schema/p"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">xsi:schemaLocation</span>=<span class="string">"http://www.springframework.org/schema/beans</span></span></span><br><span class="line"><span class="tag"><span class="string">    http://www.springframework.org/schema/beans/spring-beans.xsd</span></span></span><br><span class="line"><span class="tag"><span class="string">    http://www.springframework.org/schema/context</span></span></span><br><span class="line"><span class="tag"><span class="string">    http://www.springframework.org/schema/context/spring-context.xsd</span></span></span><br><span class="line"><span class="tag"><span class="string">    http://www.springframework.org/schema/aop</span></span></span><br><span class="line"><span class="tag"><span class="string">    http://www.springframework.org/schema/aop/spring-aop.xsd"</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"aopExample"</span> <span class="attr">class</span>=<span class="string">"com.aop.AopExample"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"beforeAdvice"</span> <span class="attr">class</span>=<span class="string">"com.aop.BeforeAdvice"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"afterAdvice"</span> <span class="attr">class</span>=<span class="string">"com.aop.AfterAdvice"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"aroundAdvice"</span> <span class="attr">class</span>=<span class="string">"com.aop.AroundAdvice"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"exceptionAdvice"</span> <span class="attr">class</span>=<span class="string">"com.aop.ExceptionAdvice"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"aopTest"</span> <span class="attr">class</span>=<span class="string">"org.springframework.aop.framework.ProxyFactoryBean"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">p:proxyTargetClass</span>=<span class="string">"true"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">p:interceptorNames</span>=<span class="string">"beforeAdvice,afterAdvice,aroundAdvice,exceptionAdvice"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">p:target-ref</span>=<span class="string">"aopExample"</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">beans</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>TestAopAdvice2</code></li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.aop;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.springframework.context.ConfigurableApplicationContext;</span><br><span class="line"><span class="keyword">import</span> org.springframework.context.support.ClassPathXmlApplicationContext;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TestAopAdvice2</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        ConfigurableApplicationContext ctx = <span class="keyword">new</span> ClassPathXmlApplicationContext(<span class="string">"/springAop.xml"</span>);</span><br><span class="line">        AopExample aopExample = (AopExample)ctx.getBean(<span class="string">"aopTest"</span>);</span><br><span class="line">        aopExample.handle(<span class="string">"blabla"</span>);</span><br><span class="line">        System.out.println();</span><br><span class="line">        <span class="keyword">try</span>&#123;</span><br><span class="line">            aopExample.throwExp(<span class="string">"blabla"</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span>(Exception e) &#123;</span><br><span class="line">        &#125;</span><br><span class="line">        ctx.close();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>输出</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">二月 09, 2017 9:54:11 下午 org.springframework.context.support.ClassPathXmlApplicationContext prepareRefresh</span><br><span class="line">信息: Refreshing org.springframework.context.support.ClassPathXmlApplicationContext@69d0a921: startup date [Thu Feb 09 21:54:11 CST 2017]; root of context hierarchy</span><br><span class="line">二月 09, 2017 9:54:11 下午 org.springframework.beans.factory.xml.XmlBeanDefinitionReader loadBeanDefinitions</span><br><span class="line">信息: Loading XML bean definitions from class path resource [springAop.xml]</span><br><span class="line">before advice blabla</span><br><span class="line">around advice: before blabla</span><br><span class="line">aop example blabla</span><br><span class="line">around advice: after blabla</span><br><span class="line">after advice blabla</span><br><span class="line"></span><br><span class="line">before advice blabla</span><br><span class="line">around advice: before blabla</span><br><span class="line">----after throwing----</span><br><span class="line">throws exception, method=throwExp</span><br><span class="line">throws exception, message=try throws advice</span><br><span class="line">二月 09, 2017 9:54:11 下午 org.springframework.context.support.ClassPathXmlApplicationContext doClose</span><br><span class="line">信息: Closing org.springframework.context.support.ClassPathXmlApplicationContext@69d0a921: startup date [Thu Feb 09 21:54:11 CST 2017]; root of context hierarchy</span><br></pre></td></tr></table></figure>
+<h4 id="4-6-引介增强"><a href="#4-6-引介增强" class="headerlink" title="4.6 引介增强"></a>4.6 引介增强</h4><ul>
+<li>接口：<code>org.springframework.aop.IntroductionInterceptor</code></li>
+</ul>
+<h5 id="4-6-1-基于Spring配置的测试代码"><a href="#4-6-1-基于Spring配置的测试代码" class="headerlink" title="4.6.1 基于Spring配置的测试代码"></a>4.6.1 基于Spring配置的测试代码</h5><ul>
+<li><code>IntroductionAdvice</code></li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.aop;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">IntroductionAdvice</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setIntroductionActive</span><span class="params">(<span class="keyword">boolean</span> active)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>ConfigurableIntroduction</code></li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.aop;</span><br><span class="line"><span class="keyword">import</span> org.aopalliance.intercept.MethodInvocation;</span><br><span class="line"><span class="keyword">import</span> org.springframework.aop.support.DelegatingIntroductionInterceptor;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConfigurableIntroduction</span> <span class="keyword">extends</span> <span class="title">DelegatingIntroductionInterceptor</span> <span class="keyword">implements</span> <span class="title">IntroductionAdvice</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> ThreadLocal&lt;Boolean&gt; map = <span class="keyword">new</span> ThreadLocal&lt;Boolean&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setIntroductionActive</span><span class="params">(<span class="keyword">boolean</span> active)</span> </span>&#123;</span><br><span class="line">        map.set(active);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Object <span class="title">invoke</span><span class="params">(MethodInvocation invocation)</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">        Object obj = <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">if</span>(map.get() != <span class="keyword">null</span> &amp;&amp; map.get()) &#123;</span><br><span class="line">            System.out.println(<span class="string">"before monitor operation"</span>);</span><br><span class="line">            obj = <span class="keyword">super</span>.invoke(invocation);</span><br><span class="line">            System.out.println(<span class="string">"after monitor operation"</span>);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            obj = <span class="keyword">super</span>.invoke(invocation);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> obj;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>TestIntroductionAdvice</code></li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.aop;</span><br><span class="line"><span class="keyword">import</span> org.springframework.context.ConfigurableApplicationContext;</span><br><span class="line"><span class="keyword">import</span> org.springframework.context.support.ClassPathXmlApplicationContext;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TestIntroductionAdvice</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        ConfigurableApplicationContext ctx = <span class="keyword">new</span> ClassPathXmlApplicationContext(<span class="string">"/springAop.xml"</span>);</span><br><span class="line">        AopExample introductionAop = (AopExample)ctx.getBean(<span class="string">"introductionAop"</span>);</span><br><span class="line">        introductionAop.handle(<span class="string">"introduction advice"</span>);</span><br><span class="line">        IntroductionAdvice ci = (IntroductionAdvice)introductionAop;</span><br><span class="line">        ci.setIntroductionActive(<span class="keyword">true</span>);</span><br><span class="line">        introductionAop.handle(<span class="string">"introduction advice"</span>);</span><br><span class="line">        ctx.close();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>springAop.xml</code>添加</li>
+</ul>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"configurableIntroduction"</span> <span class="attr">class</span>=<span class="string">"com.aop.ConfigurableIntroduction"</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"introductionAop"</span> <span class="attr">class</span>=<span class="string">"org.springframework.aop.framework.ProxyFactoryBean"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">p:interfaces</span>=<span class="string">"com.aop.IntroductionAdvice"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">p:target-ref</span>=<span class="string">"aopExample"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">p:interceptorNames</span>=<span class="string">"configurableIntroduction"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">p:proxyTargetClass</span>=<span class="string">"true"</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>输出</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">二月 09, 2017 9:56:10 下午 org.springframework.context.support.ClassPathXmlApplicationContext prepareRefresh</span><br><span class="line">信息: Refreshing org.springframework.context.support.ClassPathXmlApplicationContext@69d0a921: startup date [Thu Feb 09 21:56:10 CST 2017]; root of context hierarchy</span><br><span class="line">二月 09, 2017 9:56:10 下午 org.springframework.beans.factory.xml.XmlBeanDefinitionReader loadBeanDefinitions</span><br><span class="line">信息: Loading XML bean definitions from class path resource [springAop.xml]</span><br><span class="line">aop example introduction advice</span><br><span class="line">----</span><br><span class="line">before monitor operation</span><br><span class="line">aop example introduction advice</span><br><span class="line">after monitor operation</span><br><span class="line">二月 09, 2017 9:56:11 下午 org.springframework.context.support.ClassPathXmlApplicationContext doClose</span><br><span class="line">信息: Closing org.springframework.context.support.ClassPathXmlApplicationContext@69d0a921: startup date [Thu Feb 09 21:56:10 CST 2017]; root of context hierarchy</span><br></pre></td></tr></table></figure>
+<h5 id="4-6-2-与其他增强在配置上的区别"><a href="#4-6-2-与其他增强在配置上的区别" class="headerlink" title="4.6.2 与其他增强在配置上的区别"></a>4.6.2 与其他增强在配置上的区别</h5><ul>
+<li>须指定引介增强所实现的接口</li>
+<li>只能通过为目标类创建子类的方式生成引介增强的代理，因此<code>proxyTargeClass</code>必须为<code>true</code></li>
+</ul>
+<h3 id="5-Spring中的配置"><a href="#5-Spring中的配置" class="headerlink" title="5. Spring中的配置"></a>5. Spring中的配置</h3><p>参数说明</p>
+<ul>
+<li><code>target</code>：代理的对象</li>
+<li><code>proxyInterfaces</code>：代理所要实现的接口</li>
+<li><code>interceptorNames</code>：需要织入目标对象的bean列表，这些bean必须是实现了<code>org.aopalliance.intercept.MethodInterceptor</code>或<code>org.springframework.aop.Advisor</code>的bean，配置中的顺序对应调用的顺序</li>
+<li><code>singleton</code>：返回的代理是否为单例，默认为<code>true</code></li>
+<li><code>optimize</code>：为<code>true</code>时使用CGLib代理</li>
+<li><code>proxyTargetClass</code>：为<code>true</code>时使用CGLib代理，并覆盖<code>proxyInterfaces</code>设置</li>
+</ul>
+<h3 id="6-Java注解"><a href="#6-Java注解" class="headerlink" title="6. Java注解"></a>6. Java注解</h3><ul>
+<li>一个例子</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.aspectj;</span><br><span class="line"><span class="keyword">import</span> java.lang.annotation.Retention;</span><br><span class="line"><span class="keyword">import</span> java.lang.annotation.Target;</span><br><span class="line"><span class="keyword">import</span> java.lang.annotation.ElementType;</span><br><span class="line"><span class="keyword">import</span> java.lang.annotation.RetentionPolicy;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Target</span>(ElementType.METHOD) <span class="comment">//声明可以使用该注解的目标类型</span></span><br><span class="line"><span class="meta">@Retention</span>(RetentionPolicy.RUNTIME)<span class="comment">//声明注解的保留期限</span></span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> Authority &#123;</span><br><span class="line">    <span class="function"><span class="keyword">boolean</span> <span class="title">value</span><span class="params">()</span> <span class="keyword">default</span> <span class="keyword">true</span></span>;<span class="comment">//声明注解成员</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>成员以无入参无抛出异常的方式声明</li>
+<li>可以通过<code>default</code>为成员指定一个默认值</li>
+<li>在方法上使用注解：<code>@Authority(value=true)</code></li>
+<li>如果注解只有一个成员，需命名为<code>value()</code>，使用时可以忽略成员名和赋值号(=)，如<code>@Authority(true)</code></li>
+<li>注解类拥有多个成员时，如果仅对<code>value</code>成员赋值，可以不适用赋值号；如果同时对多个成员赋值，则必须使用赋值号</li>
+<li>注解类可以没有成员，称为标识注解</li>
+<li>所有注解类隐式继承于<code>java.lang.annotation.Annotation</code>，注解不允许显式继承于其他接口</li>
+<li>如果成员是数组类型，可以通过{}赋值</li>
+</ul>
+<h3 id="7-基于AspectJ的AOP"><a href="#7-基于AspectJ的AOP" class="headerlink" title="7. 基于AspectJ的AOP"></a>7. 基于AspectJ的AOP</h3><h4 id="7-1-一个例子"><a href="#7-1-一个例子" class="headerlink" title="7.1 一个例子"></a>7.1 一个例子</h4><ul>
+<li>定义切面</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.aspectj;</span><br><span class="line"><span class="keyword">import</span> org.aspectj.lang.annotation.Aspect;</span><br><span class="line"><span class="keyword">import</span> org.aspectj.lang.annotation.Before;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Aspect</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">PreAspect</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Before</span>(<span class="string">"execution(*handle(..))"</span>)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">before</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"aspect: before processing"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>测试</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.aspectj;</span><br><span class="line"><span class="keyword">import</span> org.springframework.aop.aspectj.annotation.AspectJProxyFactory;</span><br><span class="line"><span class="keyword">import</span> com.aop.AopExample;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AspectJTest</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        AspectJProxyFactory factory = <span class="keyword">new</span> AspectJProxyFactory();</span><br><span class="line">        AopExample example = <span class="keyword">new</span> AopExample();</span><br><span class="line">        factory.setTarget(example);</span><br><span class="line">        factory.addAspect(PreAspect.class);</span><br><span class="line">        AopExample proxy = factory.getProxy();</span><br><span class="line">        proxy.handle(<span class="string">"pre aspect"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>结果</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">aspect: before processing</span><br><span class="line">aop example pre aspect</span><br></pre></td></tr></table></figure>
+<h4 id="7-2-通过配置使用切面"><a href="#7-2-通过配置使用切面" class="headerlink" title="7.2 通过配置使用切面"></a>7.2 通过配置使用切面</h4><h5 id="7-2-1-典型配置"><a href="#7-2-1-典型配置" class="headerlink" title="7.2.1 典型配置"></a>7.2.1 典型配置</h5><ul>
+<li><code>springAspectj.xml</code></li>
+</ul>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span><br><span class="line"><span class="tag">&lt;<span class="name">beans</span> <span class="attr">xmlns</span>=<span class="string">"http://www.springframework.org/schema/beans"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">xmlns:xsi</span>=<span class="string">"http://www.w3.org/2001/XMLSchema-instance"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">xmlns:aop</span>=<span class="string">"http://www.springframework.org/schema/aop"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">xmlns:context</span>=<span class="string">"http://www.springframework.org/schema/context"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">xmlns:p</span>=<span class="string">"http://www.springframework.org/schema/p"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">xsi:schemaLocation</span>=<span class="string">"http://www.springframework.org/schema/beans</span></span></span><br><span class="line"><span class="tag"><span class="string">    http://www.springframework.org/schema/beans/spring-beans.xsd</span></span></span><br><span class="line"><span class="tag"><span class="string">    http://www.springframework.org/schema/context</span></span></span><br><span class="line"><span class="tag"><span class="string">    http://www.springframework.org/schema/context/spring-context.xsd</span></span></span><br><span class="line"><span class="tag"><span class="string">    http://www.springframework.org/schema/aop</span></span></span><br><span class="line"><span class="tag"><span class="string">    http://www.springframework.org/schema/aop/spring-aop.xsd"</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"aopExample"</span> <span class="attr">class</span>=<span class="string">"com.aop.AopExample"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"preAspect"</span> <span class="attr">class</span>=<span class="string">"com.aspectj.PreAspect"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">bean</span> <span class="attr">class</span>=<span class="string">"org.springframework.aop.aspectj.annotation.AnnotationAwareAspectJAutoProxyCreator"</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">beans</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<h5 id="7-2-2-基于Schema的配置"><a href="#7-2-2-基于Schema的配置" class="headerlink" title="7.2.2 基于Schema的配置"></a>7.2.2 基于Schema的配置</h5><ul>
+<li><code>springAspectj.xml</code></li>
+</ul>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span><br><span class="line"><span class="tag">&lt;<span class="name">beans</span> <span class="attr">xmlns</span>=<span class="string">"http://www.springframework.org/schema/beans"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">xmlns:xsi</span>=<span class="string">"http://www.w3.org/2001/XMLSchema-instance"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">xmlns:aop</span>=<span class="string">"http://www.springframework.org/schema/aop"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">xmlns:context</span>=<span class="string">"http://www.springframework.org/schema/context"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">xmlns:p</span>=<span class="string">"http://www.springframework.org/schema/p"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">xsi:schemaLocation</span>=<span class="string">"http://www.springframework.org/schema/beans</span></span></span><br><span class="line"><span class="tag"><span class="string">    http://www.springframework.org/schema/beans/spring-beans.xsd</span></span></span><br><span class="line"><span class="tag"><span class="string">    http://www.springframework.org/schema/context</span></span></span><br><span class="line"><span class="tag"><span class="string">    http://www.springframework.org/schema/context/spring-context.xsd</span></span></span><br><span class="line"><span class="tag"><span class="string">    http://www.springframework.org/schema/aop</span></span></span><br><span class="line"><span class="tag"><span class="string">    http://www.springframework.org/schema/aop/spring-aop.xsd"</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">aop:aspectj-autoproxy</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"aopExample"</span> <span class="attr">class</span>=<span class="string">"com.aop.AopExample"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"preAspect"</span> <span class="attr">class</span>=<span class="string">"com.aspectj.PreAspect"</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">beans</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>AspectJTest2</code></li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.aspectj;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.springframework.context.ConfigurableApplicationContext;</span><br><span class="line"><span class="keyword">import</span> org.springframework.context.support.ClassPathXmlApplicationContext;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.aop.AopExample;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AspectJTest2</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        ConfigurableApplicationContext ctx = <span class="keyword">new</span> ClassPathXmlApplicationContext(<span class="string">"/springAspectj.xml"</span>);</span><br><span class="line">        AopExample aopExample = (AopExample)ctx.getBean(<span class="string">"aopExample"</span>);</span><br><span class="line">        aopExample.handle(<span class="string">"blabla"</span>);</span><br><span class="line">        ctx.close();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>输出</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">二月 09, 2017 10:13:56 下午 org.springframework.context.support.ClassPathXmlApplicationContext prepareRefresh</span><br><span class="line">信息: Refreshing org.springframework.context.support.ClassPathXmlApplicationContext@69d0a921: startup date [Thu Feb 09 22:13:56 CST 2017]; root of context hierarchy</span><br><span class="line">二月 09, 2017 10:13:56 下午 org.springframework.beans.factory.xml.XmlBeanDefinitionReader loadBeanDefinitions</span><br><span class="line">信息: Loading XML bean definitions from class path resource [springAspectj.xml]</span><br><span class="line">aspect: before processing</span><br><span class="line">aop example blabla</span><br><span class="line">二月 09, 2017 10:13:57 下午 org.springframework.context.support.ClassPathXmlApplicationContext doClose</span><br><span class="line">信息: Closing org.springframework.context.support.ClassPathXmlApplicationContext@69d0a921: startup date [Thu Feb 09 22:13:56 CST 2017]; root of context hierarchy</span><br></pre></td></tr></table></figure>
+<ul>
+<li>通过<code>&lt;aop:aspectj-autoproxy /&gt;</code>引入<code>aop</code>命名空间，自动为Spring容器中匹配<code>@AspectJ</code>切面的bean创建代理，完成切面织入，其内部实现仍为<code>AnnotationAwareAspectJAutoProxyCreator</code></li>
+<li><code>&lt;aop:aspectj-autoproxy /&gt;</code>的<code>proxy-target-class</code>属性为<code>false</code>时，采用JDK动态代理；为<code>true</code>时使用CGLib</li>
+</ul>
+<h3 id="8-AspectJ语法"><a href="#8-AspectJ语法" class="headerlink" title="8. AspectJ语法"></a>8. AspectJ语法</h3><h4 id="8-1-切点表达式函数"><a href="#8-1-切点表达式函数" class="headerlink" title="8.1 切点表达式函数"></a>8.1 切点表达式函数</h4><ul>
+<li>分类</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>说明</th>
+<th>举例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>方法切点函数</td>
+<td>通过描述目标类方法信息定义连接点</td>
+<td><code>execution()</code>，<code>@annotation()</code></td>
+</tr>
+<tr>
+<td>方法入参切点函数</td>
+<td>通过描述目标类方法入参的信息定义连接点</td>
+<td><code>args()</code>，<code>@args()</code></td>
+</tr>
+<tr>
+<td>目标类切点函数</td>
+<td>通过描述目标类类型信息定义连接点</td>
+<td><code>within()</code>，<code>target()</code>，<code>@within()</code>，<code>@target()</code></td>
+</tr>
+<tr>
+<td>代理类切点函数</td>
+<td>通过描述目标类的代理类的信息定义连接点</td>
+<td><code>this()</code></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>函数说明</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>入参</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>execution()</code></td>
+<td>方法匹配模式串</td>
+<td>表示满足某一匹配模式的所有目标类方法连接点，如<code>execution(* handle(..))</code>表示所有目标类中的<code>handle()</code>方法</td>
+</tr>
+<tr>
+<td><code>@annotation()</code></td>
+<td>方法注解类名</td>
+<td>表示标注了特定注解的目标方法连接点，如<code>@annotation(com.aspectj.Authority)</code>表示任何标注了<code>@Authority</code>注解的目标类方法</td>
+</tr>
+<tr>
+<td><code>args()</code></td>
+<td>类名</td>
+<td>通过判别目标类方法运行时入参对象的类型定义指定连接点，如<code>args(com.data.Car)</code>表示所有有且仅有一个按类型匹配于<code>Car</code>（含子类）入参的方法</td>
+</tr>
+<tr>
+<td><code>@args()</code></td>
+<td>类型注解类名</td>
+<td>通过判别目标方法运行时入参对象的类是否标注特定注解来制定连接点，如<code>@args(com.aspectj.Authority)</code>表示任何这样的一个目标方法：它有一个入参且入参对象的类标注<code>@Authority</code>注解。要使<code>@args()</code>生效，类继承树中，标注注解的类类型需要不高于入参类类型</td>
+</tr>
+<tr>
+<td><code>within</code></td>
+<td>类名匹配串</td>
+<td>表示特定域下的所有连接点，如<code>within(com.service.*)</code>，<code>within(com.service.*Service)</code>和<code>within(com.service..*)</code></td>
+</tr>
+<tr>
+<td><code>target()</code></td>
+<td>类名</td>
+<td>假如目标按类型匹配于指定类，则目标类的所有连接点匹配这个切点。如通过<code>target(com.data.Car)</code>定义的切点，<code>Car</code>及<code>Car</code>的子类中的所有连接点都匹配该切点，包括子类中扩展的方法</td>
+</tr>
+<tr>
+<td><code>@within()</code></td>
+<td>类型注解类名</td>
+<td>假如目标类按类型匹配于某个类<code>A</code>，且类<code>A</code>标注了特定注解，则目标类的所有连接点都匹配于这个切点。如<code>@within(com.aspectj.Authority)</code>定义的切点，假如<code>Car</code>类标注了<code>@Authority</code>注解，则<code>Car</code>以及<code>Car</code>的子类的所有连接点都匹配。<code>@within</code>标注接口类无效</td>
+</tr>
+<tr>
+<td><code>@target()</code></td>
+<td>类型注解类名</td>
+<td>目标类标注了特定注解，则目标类（不包括子类）所有连接点都匹配该切点。如通过<code>@target(com.aspectj.Authority)</code>定义的切点，若<code>BMWCar</code>标注了<code>@Authority</code>，则<code>BMWCar</code>所有连接点匹配该切点</td>
+</tr>
+<tr>
+<td><code>this()</code></td>
+<td>类名</td>
+<td>代理类按类型匹配于指定类，则被代理的目标类所有连接点匹配切点</td>
+</tr>
+</tbody>
+</table>
+<h4 id="8-2-通配符"><a href="#8-2-通配符" class="headerlink" title="8.2 通配符"></a>8.2 通配符</h4><h5 id="8-2-1-通配符类型"><a href="#8-2-1-通配符类型" class="headerlink" title="8.2.1 通配符类型"></a>8.2.1 通配符类型</h5><table>
+<thead>
+<tr>
+<th>类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>*</code></td>
+<td>匹配任意字符，但只能匹配上下文中的一个元素</td>
+</tr>
+<tr>
+<td><code>..</code></td>
+<td>匹配任意字符，可以匹配上下文中的多个元素。表示类时，和<code>*</code>联合使用；表示入参时单独使用</td>
+</tr>
+<tr>
+<td><code>+</code></td>
+<td>按类型匹配指定类的所有类（包括实现类和继承类），必须跟在类名后面</td>
+</tr>
+</tbody>
+</table>
+<h5 id="8-2-1-函数按通配符支持分类"><a href="#8-2-1-函数按通配符支持分类" class="headerlink" title="8.2.1 函数按通配符支持分类"></a>8.2.1 函数按通配符支持分类</h5><ul>
+<li>支持所有通配符：<code>execution()</code>，<code>within()</code></li>
+<li>仅支持<code>+</code>通配符：<code>args()</code>，<code>this()</code>，<code>target()</code></li>
+<li>不支持通配符：<code>@args</code>，<code>@within</code>，<code>@target</code>，<code>@annotation</code></li>
+</ul>
+<h4 id="8-3-增强类型"><a href="#8-3-增强类型" class="headerlink" title="8.3 增强类型"></a>8.3 增强类型</h4><ul>
+<li><code>@Before</code>：前置增强，相当于<code>BeforeAdvice</code></li>
+<li><code>@AfterReturning</code>：后置增强，相当于<code>AfterReturningAdvice</code></li>
+<li><code>@Around</code>：环绕增强，相当于<code>MethodInterceptor</code></li>
+<li><code>@AfterThrowing</code>：相当于<code>ThrowsAdvice</code></li>
+<li><code>@After</code>：Final增强，抛出异常或正常退出都会执行的增强</li>
+<li><code>@DeclareParents</code>：引介增强，相当于<code>IntroductionInterceptor</code></li>
+</ul>
+<h4 id="8-4-Execution"><a href="#8-4-Execution" class="headerlink" title="8.4 Execution()"></a>8.4 Execution()</h4><ul>
+<li>语法：<code>execution(&lt;修饰符模式&gt;? &lt;返回类型模式&gt; &lt;方法名模式&gt; (&lt;参数模式&gt;) &lt;异常模式&gt;?)</code></li>
+</ul>
+<h5 id="8-4-1-通过方法签名定义切点"><a href="#8-4-1-通过方法签名定义切点" class="headerlink" title="8.4.1 通过方法签名定义切点"></a>8.4.1 通过方法签名定义切点</h5><ul>
+<li><code>execution(pulic * *(..))</code>：匹配目标类的<code>public</code>方法，第一个<code>*</code>代表返回类型，第二个<code>*</code>代表方法名，<code>..</code>代表任意入参</li>
+<li><code>execution(* *To(..))</code>：匹配目标类所有以<code>To</code>结尾的方法，第一个<code>*</code>代表返回类型，<code>*To</code>代表任意以<code>To</code>结尾的方法</li>
+</ul>
+<h5 id="8-4-2-通过类定义切点"><a href="#8-4-2-通过类定义切点" class="headerlink" title="8.4.2 通过类定义切点"></a>8.4.2 通过类定义切点</h5><ul>
+<li><code>execution(* com.data.User.*(..))</code>：匹配<code>User</code>接口的所有方法</li>
+<li><code>execution(* com.data.User+.*(..))</code>：匹配<code>User</code>接口的所有方法，包括其实现类中不在<code>User</code>接口中定义的方法</li>
+</ul>
+<h5 id="8-4-3-通过类包定义切点"><a href="#8-4-3-通过类包定义切点" class="headerlink" title="8.4.3 通过类包定义切点"></a>8.4.3 通过类包定义切点</h5><ul>
+<li><code>execution(* com.data.*(..))</code>：匹配<code>data</code>包下所有类的所有方法</li>
+<li><code>execution(* com.data.User..*(..))</code>：匹配<code>data</code>包及其子孙包中的所有类的所有方法</li>
+<li><code>execution(* com..*Manager.get*(..))</code>：匹配<code>com</code>包及其子孙包中后缀为<code>Manager</code>的类里以<code>get</code>开头的方法</li>
+</ul>
+<h5 id="8-4-4-通过方法入参定义切点"><a href="#8-4-4-通过方法入参定义切点" class="headerlink" title="8.4.4 通过方法入参定义切点"></a>8.4.4 通过方法入参定义切点</h5><ul>
+<li><code>execution(* get(String, int))</code>：匹配<code>get(String, int)</code>方法</li>
+<li><code>execution(* get(String, *))</code>：匹配名为get且第一个入参类型为<code>String</code>、第二个入参类型任意的方法</li>
+<li><code>execution(* get(String, ..))</code>：匹配名为<code>get</code>且第一个入参为<code>String</code>类型的方法</li>
+<li><code>execution(* get(Object+))</code>：匹配名为<code>get</code>且唯一入参是<code>Object</code>或其子类的方法</li>
+</ul>
+<h4 id="8-5-进阶"><a href="#8-5-进阶" class="headerlink" title="8.5 进阶"></a>8.5 进阶</h4><h5 id="8-5-1-逻辑运算符"><a href="#8-5-1-逻辑运算符" class="headerlink" title="8.5.1 逻辑运算符"></a>8.5.1 逻辑运算符</h5><ul>
+<li>与<code>&amp;&amp;</code>，或<code>||</code>，非<code>!</code></li>
+</ul>
+<h5 id="8-5-2-切点复合运算"><a href="#8-5-2-切点复合运算" class="headerlink" title="8.5.2 切点复合运算"></a>8.5.2 切点复合运算</h5><ul>
+<li>例如：<code>@After(&quot;within(com.data.*) &amp;&amp; execution(* handle(..))&quot;)</code></li>
+</ul>
+<h5 id="8-5-3-命名切点"><a href="#8-5-3-命名切点" class="headerlink" title="8.5.3 命名切点"></a>8.5.3 命名切点</h5><ul>
+<li>使用<code>@Pointcut</code>命名切点</li>
+<li>使用方法名作为切点的名称，方法的访问控制符控制切点的可用性</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Pointcut</span>(<span class="string">"within(com.data.*)"</span>)</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">inPackage</span><span class="params">()</span></span>&#123;&#125; <span class="comment">//别名为inPackage</span></span><br></pre></td></tr></table></figure>
+<h5 id="8-5-4-增强织入的顺序"><a href="#8-5-4-增强织入的顺序" class="headerlink" title="8.5.4 增强织入的顺序"></a>8.5.4 增强织入的顺序</h5><ul>
+<li>如果增强在同一个切面类中声明，则依照增强在切面类中定义的顺序织入</li>
+<li>如果增强位于不同的增强类中，且都实现了<code>org.springframework.core.Ordered</code>接口，则由接口方法的顺序号决定（顺序号小的先织入）</li>
+<li>如果增强位于不同的增强类中，且没有实现<code>org.springframework.core.Ordered</code>接口，织入顺序不确定</li>
+</ul>
+<h5 id="8-5-5-访问连接点信息"><a href="#8-5-5-访问连接点信息" class="headerlink" title="8.5.5 访问连接点信息"></a>8.5.5 访问连接点信息</h5><ul>
+<li>AspectJ使用<code>org.aspectj.lang.JointPoint</code>接口表示目标类连接点对象。如果是环绕增强时，使用<code>org.aspectj.lang.ProceedingJointPoint</code>表示连接点对象，该类是<code>JointPoint</code>接口的子接口。任何一个增强方法都可以通过将第一个入参声明为<code>JointPoint</code>访问到连接点上下文的信息</li>
+</ul>
+<h5 id="8-5-6-绑定连接点方法入参"><a href="#8-5-6-绑定连接点方法入参" class="headerlink" title="8.5.6 绑定连接点方法入参"></a>8.5.6 绑定连接点方法入参</h5><ul>
+<li><code>args()</code>用于绑定连接点方法的入参，<code>@annotation()</code>用于绑定连接点方法的注解对象，<code>@args()</code>用于绑定连接点方法的入参注解。下例表示方法入参为<code>(String, int, ..)</code>的方法匹配该切点，并将<code>name</code>和<code>age</code>两个参数绑定到切面方法的入参中</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Before</span>(<span class="string">"args(name, age, ..)"</span>)</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">bindJointPointValues</span><span class="params">(String name, <span class="keyword">int</span> age)</span> </span>&#123;</span><br><span class="line">    <span class="comment">//do something</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="8-5-7-绑定代理对象"><a href="#8-5-7-绑定代理对象" class="headerlink" title="8.5.7 绑定代理对象"></a>8.5.7 绑定代理对象</h5><ul>
+<li>使用<code>this()</code>或<code>target()</code>可以绑定被代理对象的实例。下例表示代理对象为<code>User</code>类的所有方法匹配该切点，且代理对象绑定到<code>user</code>入参中</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Before</span>(<span class="string">"this(user)"</span>)</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">bindProxy</span><span class="params">(User user)</span> </span>&#123;</span><br><span class="line">    <span class="comment">//do something</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="8-5-8-绑定类注解对象"><a href="#8-5-8-绑定类注解对象" class="headerlink" title="8.5.8 绑定类注解对象"></a>8.5.8 绑定类注解对象</h5><ul>
+<li><code>@within()</code>和<code>@target()</code>函数可以将目标类的注解对象绑定到增强方法中</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Before</span>(<span class="string">"@within(a)"</span>)</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">bindAnnotation</span><span class="params">(Authority a)</span> </span>&#123;</span><br><span class="line">    <span class="comment">//do something</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="8-5-9-绑定返回值"><a href="#8-5-9-绑定返回值" class="headerlink" title="8.5.9 绑定返回值"></a>8.5.9 绑定返回值</h5><ul>
+<li>通过<code>returning</code>绑定连接点方法的返回值</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@AfterReturning</span>(value=<span class="string">"target(com.data.Car)"</span>, returning=<span class="string">"rvl"</span>)</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">bindReturningValue</span><span class="params">(<span class="keyword">int</span> rvl)</span> </span>&#123;</span><br><span class="line">    <span class="comment">//do something</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>rvl</code>的类型必须和连接点方法的返回值类型匹配</li>
+</ul>
+<h5 id="8-5-10-绑定抛出的异常"><a href="#8-5-10-绑定抛出的异常" class="headerlink" title="8.5.10 绑定抛出的异常"></a>8.5.10 绑定抛出的异常</h5><ul>
+<li>使用<code>AfterThrowing</code>注解的<code>throwing</code>成员绑定</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@AfterThrowing</span>(value=<span class="string">"target(com.data.Car)"</span>, throwing=<span class="string">"iae"</span>)</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">bindException</span><span class="params">(IllegalArgumentException iae)</span> </span>&#123;</span><br><span class="line">    <span class="comment">//do something</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Spring/" rel="tag"># Spring</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/02/10/Spring IOC/" rel="next" title="Spring IoC">
+                <i class="fa fa-chevron-left"></i> Spring IoC
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/02/16/Gradle实战-1/" rel="prev" title="Gradle实战-1">
+                Gradle实战-1 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="Yongqiang Xiang" />
+          <p class="site-author-name" itemprop="name">Yongqiang Xiang</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">66</span>
+                <span class="site-state-item-name">posts</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">28</span>
+                <span class="site-state-item-name">categories</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">28</span>
+                <span class="site-state-item-name">tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/xiangyq000" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                    
+                      GitHub
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://stackoverflow.com/users/4945225/xiangyq000" target="_blank" title="StackOverflow">
+                  
+                    <i class="fa fa-fw fa-stack-overflow"></i>
+                  
+                    
+                      StackOverflow
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-术语"><span class="nav-number">1.</span> <span class="nav-text">1. 术语</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-动态代理的两种实现：JDK和CGLib"><span class="nav-number">2.</span> <span class="nav-text">2. 动态代理的两种实现：JDK和CGLib</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-ProxyFactory"><span class="nav-number">3.</span> <span class="nav-text">3. ProxyFactory</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-增强类型"><span class="nav-number">4.</span> <span class="nav-text">4. 增强类型</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#4-1-前置增强"><span class="nav-number">4.1.</span> <span class="nav-text">4.1 前置增强</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-2-后置增强"><span class="nav-number">4.2.</span> <span class="nav-text">4.2  后置增强</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-3-环绕增强"><span class="nav-number">4.3.</span> <span class="nav-text">4.3 环绕增强</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-4-异常抛出增强"><span class="nav-number">4.4.</span> <span class="nav-text">4.4 异常抛出增强</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-5-测试"><span class="nav-number">4.5.</span> <span class="nav-text">4.5 测试</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#4-5-1-基于代码的测试"><span class="nav-number">4.5.1.</span> <span class="nav-text">4.5.1 基于代码的测试</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#4-5-2-基于Spring配置的测试"><span class="nav-number">4.5.2.</span> <span class="nav-text">4.5.2 基于Spring配置的测试</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-6-引介增强"><span class="nav-number">4.6.</span> <span class="nav-text">4.6 引介增强</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#4-6-1-基于Spring配置的测试代码"><span class="nav-number">4.6.1.</span> <span class="nav-text">4.6.1 基于Spring配置的测试代码</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#4-6-2-与其他增强在配置上的区别"><span class="nav-number">4.6.2.</span> <span class="nav-text">4.6.2 与其他增强在配置上的区别</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-Spring中的配置"><span class="nav-number">5.</span> <span class="nav-text">5. Spring中的配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-Java注解"><span class="nav-number">6.</span> <span class="nav-text">6. Java注解</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-基于AspectJ的AOP"><span class="nav-number">7.</span> <span class="nav-text">7. 基于AspectJ的AOP</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#7-1-一个例子"><span class="nav-number">7.1.</span> <span class="nav-text">7.1 一个例子</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#7-2-通过配置使用切面"><span class="nav-number">7.2.</span> <span class="nav-text">7.2 通过配置使用切面</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#7-2-1-典型配置"><span class="nav-number">7.2.1.</span> <span class="nav-text">7.2.1 典型配置</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#7-2-2-基于Schema的配置"><span class="nav-number">7.2.2.</span> <span class="nav-text">7.2.2 基于Schema的配置</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-AspectJ语法"><span class="nav-number">8.</span> <span class="nav-text">8. AspectJ语法</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#8-1-切点表达式函数"><span class="nav-number">8.1.</span> <span class="nav-text">8.1 切点表达式函数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#8-2-通配符"><span class="nav-number">8.2.</span> <span class="nav-text">8.2 通配符</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#8-2-1-通配符类型"><span class="nav-number">8.2.1.</span> <span class="nav-text">8.2.1 通配符类型</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#8-2-1-函数按通配符支持分类"><span class="nav-number">8.2.2.</span> <span class="nav-text">8.2.1 函数按通配符支持分类</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#8-3-增强类型"><span class="nav-number">8.3.</span> <span class="nav-text">8.3 增强类型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#8-4-Execution"><span class="nav-number">8.4.</span> <span class="nav-text">8.4 Execution()</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#8-4-1-通过方法签名定义切点"><span class="nav-number">8.4.1.</span> <span class="nav-text">8.4.1 通过方法签名定义切点</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#8-4-2-通过类定义切点"><span class="nav-number">8.4.2.</span> <span class="nav-text">8.4.2 通过类定义切点</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#8-4-3-通过类包定义切点"><span class="nav-number">8.4.3.</span> <span class="nav-text">8.4.3 通过类包定义切点</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#8-4-4-通过方法入参定义切点"><span class="nav-number">8.4.4.</span> <span class="nav-text">8.4.4 通过方法入参定义切点</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#8-5-进阶"><span class="nav-number">8.5.</span> <span class="nav-text">8.5 进阶</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#8-5-1-逻辑运算符"><span class="nav-number">8.5.1.</span> <span class="nav-text">8.5.1 逻辑运算符</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#8-5-2-切点复合运算"><span class="nav-number">8.5.2.</span> <span class="nav-text">8.5.2 切点复合运算</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#8-5-3-命名切点"><span class="nav-number">8.5.3.</span> <span class="nav-text">8.5.3 命名切点</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#8-5-4-增强织入的顺序"><span class="nav-number">8.5.4.</span> <span class="nav-text">8.5.4 增强织入的顺序</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#8-5-5-访问连接点信息"><span class="nav-number">8.5.5.</span> <span class="nav-text">8.5.5 访问连接点信息</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#8-5-6-绑定连接点方法入参"><span class="nav-number">8.5.6.</span> <span class="nav-text">8.5.6 绑定连接点方法入参</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#8-5-7-绑定代理对象"><span class="nav-number">8.5.7.</span> <span class="nav-text">8.5.7 绑定代理对象</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#8-5-8-绑定类注解对象"><span class="nav-number">8.5.8.</span> <span class="nav-text">8.5.8 绑定类注解对象</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#8-5-9-绑定返回值"><span class="nav-number">8.5.9.</span> <span class="nav-text">8.5.9 绑定返回值</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#8-5-10-绑定抛出的异常"><span class="nav-number">8.5.10.</span> <span class="nav-text">8.5.10 绑定抛出的异常</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yongqiang Xiang</span>
+</div>
+
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script><!-- hexo-inject:begin --><!-- Begin: Injected MathJax -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config("");
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+      all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+  });
+</script>
+
+<script type="text/javascript" src="custom_mathjax_source">
+</script>
+<!-- End: Injected MathJax -->
+<!-- hexo-inject:end -->
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-cn">
+<head>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="HTTP," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="1. 缓存的处理步骤现代的商业化代理缓存相当地复杂。这些缓存构建得非常高效，可以支持HTTP和其他一些技术的各种高级特性。但除了一些微妙的细节之外，Web缓存的基本工作原理大多很简单。对一条HTTP GET报文的基本缓存处理过程包括7个步骤：  接收—缓存从网络中读取抵达的请求报文； 解析—缓存对报文进行解析，提取出URL和各种首部； 查询—缓存查看是否有本地副本可用，如果没有，就获取一份副本(并">
+<meta name="keywords" content="HTTP">
+<meta property="og:type" content="article">
+<meta property="og:title" content="《HTTP权威指南》: 缓存">
+<meta property="og:url" content="http://yoursite.com/2016/07/12/《HTTP权威指南》：缓存/index.html">
+<meta property="og:site_name" content="天歌のBlog">
+<meta property="og:description" content="1. 缓存的处理步骤现代的商业化代理缓存相当地复杂。这些缓存构建得非常高效，可以支持HTTP和其他一些技术的各种高级特性。但除了一些微妙的细节之外，Web缓存的基本工作原理大多很简单。对一条HTTP GET报文的基本缓存处理过程包括7个步骤：  接收—缓存从网络中读取抵达的请求报文； 解析—缓存对报文进行解析，提取出URL和各种首部； 查询—缓存查看是否有本地副本可用，如果没有，就获取一份副本(并">
+<meta property="og:locale" content="zh-cn">
+<meta property="og:updated_time" content="2018-01-05T08:19:47.270Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="《HTTP权威指南》: 缓存">
+<meta name="twitter:description" content="1. 缓存的处理步骤现代的商业化代理缓存相当地复杂。这些缓存构建得非常高效，可以支持HTTP和其他一些技术的各种高级特性。但除了一些微妙的细节之外，Web缓存的基本工作原理大多很简单。对一条HTTP GET报文的基本缓存处理过程包括7个步骤：  接收—缓存从网络中读取抵达的请求报文； 解析—缓存对报文进行解析，提取出URL和各种首部； 查询—缓存查看是否有本地副本可用，如果没有，就获取一份副本(并">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2016/07/12/《HTTP权威指南》：缓存/"/>
+
+
+
+
+
+  <title>《HTTP权威指南》: 缓存 | 天歌のBlog</title><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-cn">
+
+  
+  
+    
+  
+
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">天歌のBlog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/07/12/《HTTP权威指南》：缓存/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Yongqiang Xiang">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天歌のBlog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">《HTTP权威指南》: 缓存</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-07-12T15:05:48+08:00">
+                2016-07-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/读书笔记/" itemprop="url" rel="index">
+                    <span itemprop="name">读书笔记</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/读书笔记/Network/" itemprop="url" rel="index">
+                    <span itemprop="name">Network</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="1-缓存的处理步骤"><a href="#1-缓存的处理步骤" class="headerlink" title="1. 缓存的处理步骤"></a>1. 缓存的处理步骤</h3><p>现代的商业化代理缓存相当地复杂。这些缓存构建得非常高效，可以支持HTTP和其他一些技术的各种高级特性。但除了一些微妙的细节之外，Web缓存的基本工作原理大多很简单。对一条HTTP GET报文的基本缓存处理过程包括7个步骤：</p>
+<ul>
+<li>接收—缓存从网络中读取抵达的请求报文；</li>
+<li>解析—缓存对报文进行解析，提取出URL和各种首部；</li>
+<li>查询—缓存查看是否有本地副本可用，如果没有，就获取一份副本(并将其保存在本地)；</li>
+<li>新鲜度检测—缓存查看已缓存副本是否足够新鲜，如果不是，就询问服务器是否有任何更新；</li>
+<li>创建响应—缓存会用新的首部和已缓存的主体来构建一条响应报文；</li>
+<li>发送—缓存通过网络将响应发回给客户端；</li>
+<li>日志—缓存可选地创建一个日志文件条目来描述这个事务。<a id="more"></a>
+</li>
+</ul>
+<h4 id="1-1-接收"><a href="#1-1-接收" class="headerlink" title="1.1 接收"></a>1.1 接收</h4><p>在第一步中，缓存检测到一条网络连接上的活动，读取输入数据。高性能的缓存会同时从多条输入连接上读取数据，在整条报文抵达之前开始对事务进行处理。</p>
+<h4 id="1-2-解析"><a href="#1-2-解析" class="headerlink" title="1.2 解析"></a>1.2 解析</h4><p>接下来，缓存将请求报文解析为片断，将首部的各个部分放入易于操作的数据结构中。这样，缓存软件就更容易处理首部字段并修改它们了。</p>
+<h4 id="1-3-查询"><a href="#1-3-查询" class="headerlink" title="1.3 查询"></a>1.3 查询</h4><p>在第三步中，缓存获取了URL，查找本地副本。本地副本可能存储在内存、本地磁盘，甚至附近的另一台计算机中。专业级的缓存会使用快速算法来确定本地缓存中是否有某个对象。如果本地没有这个文档，它可以根据情形和配置，到原始服务器或父代理中去取，或者返回一条错误信息。已缓存对象中包含了服务器响应主体和原始服务器响应首部，这样就会在缓存命中时返回正确的服务器首部。已缓存对象中还包含了一些元数据（metadata），用来记录对象在缓存中停留了多长时间，以及它被用过多少次等。</p>
+<h4 id="1-4-新鲜度检测"><a href="#1-4-新鲜度检测" class="headerlink" title="1.4 新鲜度检测"></a>1.4 新鲜度检测</h4><p>HTTP通过缓存将服务器文档的副本保留一段时间。在这段时间里，都认为文档是”新鲜的”，缓存可以在不联系服务器的情况下，直接提供该文档。但一旦已缓存副本停留的时间太长，超过了文档的新鲜度限值（freshness limit），就认为对象“过时”了，在提供该文档之前，缓存要再次与服务器进行确认，以查看文档是否发生了变化。客户端发送给缓存的所有请求首部自身都可以强制缓存进行再验证，或者完全避免验证，这使得事情变得更加复杂了。HTTP有一组非常复杂的新鲜度检测规则，缓存产品支持的大量配置选项，以及与非HTTP新鲜度标准进行互通的需要则使问题变得更加严重了。本章其余的大部分篇幅都用于解释新鲜度的计算问题。</p>
+<h4 id="1-5-创建响应"><a href="#1-5-创建响应" class="headerlink" title="1.5 创建响应"></a>1.5 创建响应</h4><p>我们希望缓存的响应看起来就像来自原始服务器的一样，缓存将已缓存的服务器响应首部作为响应首部的起点。然后缓存对这些基础首部进行了修改和扩充。缓存负责对这些首部进行改造，以便与客户端的要求相匹配。比如，服务器返回的可能是一条HTTP/1.0响应（甚至是HTTP/0.9响应），而客户端期待的是一条HTTP/1.1响应，在这种情况下，缓存必须对首部进行相应的转换。缓存还会向其中插入新鲜度信息（Cache-Control、Age以及Expires首部），而且通常会包含一个Via首部来说明请求是由一个代理缓存提供的。注意，缓存不应该调整Date首部。Date首部表示的是原始服务器最初产生这个对象的日期。</p>
+<h4 id="1-6-发送"><a href="#1-6-发送" class="headerlink" title="1.6 发送"></a>1.6 发送</h4><p>一旦响应首部准备好了，缓存就将响应回送给客户端。和所有代理服务器一样，代理缓存要管理与客户端之间的连接。高性能的缓存会尽力高效地发送数据，通常可以避免在本地缓存和网络I/O缓冲区之间进行文档内容的复制。</p>
+<h4 id="1-7-日志"><a href="#1-7-日志" class="headerlink" title="1.7 日志"></a>1.7 日志</h4><p>大多数缓存都会保存日志文件以及与缓存的使用有关的一些统计数据。每个缓存事务结束之后，缓存都会更新缓存命中和未命中数目的统计数据（以及其他相关的度量值），并将条目插入一个用来显示请求类型、URL和所发生事件的日志文件。</p>
+<h3 id="2-保持副本的新鲜"><a href="#2-保持副本的新鲜" class="headerlink" title="2. 保持副本的新鲜"></a>2. 保持副本的新鲜</h3><p>可能不是所有的已缓存副本都与服务器上的文档一致。毕竟，这些文档会随着时间发生变化。报告可能每个月都会变化。在线报纸每天都会发生变化。财经数据可能每过几秒钟就会发生变化。如果缓存提供的总是老的数据，就会变得毫无用处。已缓存数据要与服务器数据保持一致。HTTP有一些简单的机制可以在不要求服务器记住有哪些缓存拥有其文档副本的情况下，保持已缓存数据与服务器数据之间充分一致。HTTP将这些简单的机制称为文档过期（document expiration）和服务器再验证（server revalidation）。</p>
+<h4 id="2-1-文档过期"><a href="#2-1-文档过期" class="headerlink" title="2.1 文档过期"></a>2.1 文档过期</h4><p>通过特殊的HTTP Cache-Control首部和Expires首部，HTTP让原始服务器向每个文档附加了一个“过期日期”。这些首部说明了在多长时间内可以将这些内容视为新鲜的。在缓存文档过期之前，缓存可以以任意频率使用这些副本，而无需与服务器联系——当然，除非客户端请求中包含有阻止提供已缓存或未验证资源的首部。但一旦已缓存文档过期，缓存就必须与服务器进行核对，询问文档是否被修改过，如果被修改过，就要获取一份新鲜（带有新的过期日期）的副本。</p>
+<h4 id="2-2-过期日期和使用期"><a href="#2-2-过期日期和使用期" class="headerlink" title="2.2 过期日期和使用期"></a>2.2 过期日期和使用期</h4><p>服务器用HTTP/1.0+的Expires首部或HTTP/1.1的Cache-Control: max-age响应首部来指定过期日期，同时还会带有响应主体。Expires首部和Cache-Control: max-age首部所做的事情本质上是一样的，但由于Cache-Control首部使用的是相对时间而不是绝对日期，所以我们更倾向于使用比较新的Cache-Control首部。绝对日期依赖于计算机时钟的正确设置。</p>
+<table>
+<thead>
+<tr>
+<th>首部</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cache-Control: max-age</td>
+<td>max-age值定义了文档的最大使用期——从第一次生成文档到文档不再新鲜、无法使用为止，最大的合法生存时间(以秒为单位)</td>
+</tr>
+<tr>
+<td>Expires</td>
+<td>指定一个绝对的过期日期。如果过期日期已经过了，就说明文档不再新鲜了</td>
+</tr>
+</tbody>
+</table>
+<h4 id="2-3-服务器再验证"><a href="#2-3-服务器再验证" class="headerlink" title="2.3 服务器再验证"></a>2.3 服务器再验证</h4><p>仅仅是已缓存文档过期了并不意味着它和原始服务器上目前处于活跃状态的文档有实际的区别；这只是意味着到了要进行核对的时间了。这种情况被称为“服务器再验证”，说明缓存需要询问原始服务器文档是否发生了变化。缓存并不一定要为每条请求验证文档的有效性——只有在文档过期时它才需要与服务器进行再验证。这样不会提供陈旧的内容，还可以节省服务器的流量，并拥有更好的用户响应时间。</p>
+<ul>
+<li>如果再验证显示内容发生了变化，缓存会获取一份新的文档副本，并将其存储在旧文档的位置上，然后将文档发送给客户端。</li>
+<li>如果再验证显示内容没有发生变化，缓存只需要获取新的首部，包括一个新的过期日期，并对缓存中的首部进行更新就行了。</li>
+</ul>
+<p>HTTP协议要求行为正确的缓存返回下列内容之一：</p>
+<ul>
+<li>“足够新鲜”的已缓存副本；</li>
+<li>与服务器进行过再验证，确认其仍然新鲜的已缓存副本；</li>
+<li>如果需要与之进行再验证的原始服务器出故障了，就返回一条错误报文 ；</li>
+<li>附有警告信息说明内容可能不正确的已缓存副本。</li>
+</ul>
+<h4 id="2-4-用条件方法进行再验证"><a href="#2-4-用条件方法进行再验证" class="headerlink" title="2.4 用条件方法进行再验证"></a>2.4 用条件方法进行再验证</h4><p>HTTP的条件方法可以高效地实现再验证。HTTP允许缓存向原始服务器发送一个“条件GET”，请求服务器只有在文档与缓存中现有的副本不同时，才回送对象主体。通过这种方式，将新鲜度检测和对象获取结合成了单个条件GET。向GET请求报文中添加一些特殊的条件首部，就可以发起条件GET。只有条件为真时，Web服务器才会返回对象。HTTP定义了5个条件请求首部。对缓存再验证来说最有用的2个首部是If-Modified-Since和If-None-Match。所有的条件首部都以前缀“If-”开头。</p>
+<table>
+<thead>
+<tr>
+<th>首部</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>If-Modified-Since:<date></date></td>
+<td>如果从指定日期之后文档被修改过了，就执行请求的方法。可以与Last-Modified服务器响应首部配合使用，只有在内容被修改后与已缓存版本有所不同的时候才去获取内容</td>
+</tr>
+<tr>
+<td>If-None-Match:<tags></tags></td>
+<td>服务器可以为文档提供特殊的标签，而不是将其与最近修改日期相匹配，这些标签就像序列号一样。如果已缓存标签与服务器文档中的标签有所不同，If-None-Match首部就会执行所请求的方法</td>
+</tr>
+</tbody>
+</table>
+<h4 id="2-5-If-Modified-Since-Date再验证"><a href="#2-5-If-Modified-Since-Date再验证" class="headerlink" title="2.5 If-Modified-Since:Date再验证"></a>2.5 If-Modified-Since:Date再验证</h4><p>最常见的缓存再验证首部是If-Modified-Since。If-Modified-Since再验证请求通常被称为IMS请求。只有自某个日期之后资源发生了变化的时候，IMS请求才会指示服务器执行请求：</p>
+<ul>
+<li>如果自指定日期后，文档被修改了，If-Modified-Since条件就为真，通常GET就会成功执行。携带新首部的新文档会被返回给缓存，新首部除了其他信息之外，还包含了一个新的过期日期。</li>
+<li>如果自指定日期后，文档没被修改过，条件就为假，会向客户端返回一个小的304 Not Modified响应报文，为了提高有效性，不会返回文档的主体。这 些首部是放在响应中返回的，但只会返回那些需要在源端更新的首部。比如，Content-Type首部通常不会被修改，所以通常不需要发送。一般会发送一个新的过期日期。</li>
+</ul>
+<p>If-Modified-Since首部可以与Last-Modified服务器响应首部配合工作。原始服务器会将最后的修改日期附加到所提供的文档上去。当缓存要对已缓存文档进行再验证时，就会包含一个If-Modified-Since首部，其中携带有最后修改已缓存副本的日期：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">If-Modified-Since: &lt;cached last-modified date&gt;</span><br></pre></td></tr></table></figure>
+<p>如果在此期间内容被修改了，最后的修改日期就会有所不同，原始服务器就会回送新的文档。否则，服务器会注意到缓存的最后修改日期与服务器文档当前的最后修改日期相符，会返回一个304 Not Modified响应。</p>
+<p>注意，有些Web服务器并没有将If-Modified-Since作为真正的日期来进行比对。相反，它们在IMS日期和最后修改日期之间进行了字符串匹配。这样得到的语义就是“如果最后的修改不是在这个确定的日期进行的”，而不是“如果在这个日期之后没有被修改过”。将最后修改日期作为某种序列号使用时，这种替代语义能够很好地识别出缓存是否过期，但这会妨碍客户端将If-Modified-Since首部用于真正基于时间的一些目的。</p>
+<h4 id="2-6-If-None-Match：实体标签再验证"><a href="#2-6-If-None-Match：实体标签再验证" class="headerlink" title="2.6 If-None-Match：实体标签再验证"></a>2.6 If-None-Match：实体标签再验证</h4><p>有些情况下仅使用最后修改日期进行再验证是不够的。</p>
+<ul>
+<li>有些文档可能会被周期性地重写（比如，从一个后台进程中写入），但实际包含的数据常常是一样的。尽管内容没有变化，但修改日期会发生变化。</li>
+<li>有些文档可能被修改了，但所做修改并不重要，不需要让世界范围内的缓存都重装数据(比如对拼写或注释的修改)。</li>
+<li>有些服务器无法准确地判定其页面的最后修改日期。</li>
+<li>有些服务器提供的文档会在亚秒间隙发生变化(比如，实时监视器)，对这些服务器来说，以一秒为粒度的修改日期可能就不够用了。</li>
+</ul>
+<p>为了解决这些问题，HTTP允许用户对被称为实体标签（ETag）的“版本标识符”进行比较。实体标签是附加到文档上的任意标签（引用字符串）。它们可能包含了文档的序列号或版本名，或者是文档内容的校验和及其他指纹信息。</p>
+<p>当发布者对文档进行修改时，可以修改文档的实体标签来说明这个新的版本。这样，如果实体标签被修改了，缓存就可以用If-None-Match条件首部来GET文档的新副本了。</p>
+<h4 id="2-7-强弱验证器"><a href="#2-7-强弱验证器" class="headerlink" title="2.7 强弱验证器"></a>2.7 强弱验证器</h4><p>缓存可以用实体标签来判断，与服务器相比，已缓存版本是不是最新的(与使用最近修改日期的方式很像)。从这个角度来看，实体标签和最近修改日期都是缓存验证器（cache validator）。</p>
+<p>HTTP把验证码分为两类：弱验证码（weak validators）和强验证码（strong validators）。弱验证码不一定能唯一标识资源的一个实例，而强验证码必须如此。弱验证码的一个例子是对象的大小字节数。有可能资源的内容改变了，而大小还保持不变，因此假想的字节计数验证码与改变是弱相关的。而资源内容的加密校验和（比如MD5）就是强验证码，当文档改变时它总是会改变</p>
+<p>最后修改时间被当作弱验证码，因为尽管它说明了资源最后被修改的时间，但它的描述精度最大就是1秒。因为资源在1秒内可以改变很多次，而且服务器每秒可以处理数千个请求，最后修改日期时间并不总能反应变化情况。ETag首部被当作强验证码，因为每当资源内容改变时，服务器都可以在ETag首部放置不同的值。版本号和摘要校验和也是很好的ETag首部候选，但它们不能带有任意的文本。ETag首部很灵活，它可以带上任意的文本值（以标记的形式），这样就可以用来设计出各种各样的客户端和服务器验证策略。</p>
+<p>有时候，客户端和服务器可能需要采用不那么精确的实体标记验证方法。例如，某服务器可能想对一个很大、被广泛缓存的文档进行一些美化修饰，但不想在缓存服务器再验证时产生很大的传输流量。在这种情况下，该服务器可以在标记前面加上“W/”前缀来广播一个“弱”实体标记。对于弱实体标记来说，只有当关联的实体在语义上发生了重大改变时，标记才会变化。而强实体标记则不管关联的实体发生了什么性质的变化，标记都一定会改变。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ETag: W/&quot;v2.6&quot;</span><br><span class="line">If-None-Match: W/&quot;v2.6&quot;</span><br></pre></td></tr></table></figure>
+<p>不管相关的实体值以何种方式发生了变化，强实体标签都要发生变化。而相关实体在语义上发生了比较重要的变化时，弱实体标签也应该发生变化。</p>
+<p>注意，原始服务器一定不能为两个不同的实体重用一个特定的强实体标签值，或者为两个语义不同的实体重用一个特定的弱实体标签值。缓存条目可能会留存任意长的时间，与其过期时间无关，有人可能希望当缓存验证条目时，绝对不会再次使用在过去某一时刻获得的验证器，这种愿望可能不太现实。</p>
+<h4 id="2-8-实体标签和最近修改日期"><a href="#2-8-实体标签和最近修改日期" class="headerlink" title="2.8 实体标签和最近修改日期"></a>2.8 实体标签和最近修改日期</h4><p>如果服务器回送了一个实体标签，HTTP/1.1客户端就必须使用实体标签验证器。如果服务器只回送了一个Last-Modified值，客户端就可以使用If-Modified-Since验证。如果实体标签和最后修改日期都提供了，客户端就应该使用这两种再验证方案，这样HTTP/1.0和HTTP/1.1缓存就都可以正确响应了。</p>
+<p>除非HTTP/1.1原始服务器无法生成实体标签验证器，否则就应该发送一个出去，如果使用弱实体标签有优势的话，发送的可能就是个弱实体标签，而不是强实体标签。而且，最好同时发送一个最近修改值。如果HTTP/1.1缓存或服务器收到的请求既带有If-Modified-Since，又带有实体标签条件首部，那么只有这两个条件都满足时，才能返回304 Not Modified响应。</p>
+<h3 id="3-控制缓存的能力"><a href="#3-控制缓存的能力" class="headerlink" title="3. 控制缓存的能力"></a>3. 控制缓存的能力</h3><p>服务器可以通过HTTP定义的几种方式来指定在文档过期之前可以将其缓存多长时间。按照优先级递减的顺序，服务器可以：</p>
+<ul>
+<li>附加一个”Cache-Control: no-store”首部到响应中去；</li>
+<li>附加一个”Cache-Control: no-cache”首部到响应中去；</li>
+<li>附加一个”Cache-Control: must-revalidate”首部到响应中去；</li>
+<li>附加一个”Cache-Control: max-age”首部到响应中去；</li>
+<li>附加一个”Expires”日期首部到响应中去；</li>
+<li>不附加过期信息，让缓存确定自己的过期日期。</li>
+</ul>
+<h4 id="3-1-no-Store-与-no-Cache-响应首部"><a href="#3-1-no-Store-与-no-Cache-响应首部" class="headerlink" title="3.1 no-Store 与 no-Cache 响应首部"></a>3.1 no-Store 与 no-Cache 响应首部</h4><p>HTTP/1.1提供了几种限制对象缓存，或限制提供已缓存对象的方式，以维持对象的新鲜度。no-store首部和no-cache首部可以防止缓存提供未经证实的已缓存对象：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Pragma: no-cache</span><br><span class="line">Cache-Control: no-store</span><br><span class="line">Cache-Control: no-cache</span><br></pre></td></tr></table></figure>
+<p>标识为no-store的响应会禁止缓存对响应进行复制。缓存通常会像非缓存代理服务器一样，向客户端转发一条no-store响应，然后删除对象。</p>
+<p>标识为no-cache的响应实际上是可以存储在本地缓存区中的。只是在与原始服务器进行新鲜度再验证之前，缓存不能将其提供给客户端使用。这个首部使用do-not-serve-from-cache-without-revalidation这个名字会更恰当一些。</p>
+<p>HTTP/1.1中提供Pragma: no-cache首部是为了兼容于HTTP/1.0+。除了与只理解Pragma: no-cache”的HTTP/1.0应用程序进行交互时，HTTP 1.1应用程序都应该使用Cache-Control: no-cache。</p>
+<h4 id="3-2-max-age响应首部"><a href="#3-2-max-age响应首部" class="headerlink" title="3.2 max-age响应首部"></a>3.2 max-age响应首部</h4><p>Cache-Control: max-age首部表示的是从服务器将文档传来之时起，可以认为此文档处于新鲜状态的秒数（Cache-Control: max-age=3600）。还有一个s-maxage首部（注意maxage的中间没有连字符），其行为与max-age类似，但仅适用于共享（公有）缓存（Cache-Control: s-maxage=3600）。服务器可以请求缓存不要缓存文档，或者将最大使用期设置为零，从而在每次访问的时候都进行刷新（Cache-Control: max-age=0）。</p>
+<h4 id="3-3-Expires响应首部"><a href="#3-3-Expires响应首部" class="headerlink" title="3.3 Expires响应首部"></a>3.3 Expires响应首部</h4><p>不推荐使用Expires首部，它指定的是实际的过期日期而不是秒数。HTTP设计者后来认为，由于很多服务器的时钟都不同步，或者不正确，所以最好还是用剩余秒数，而不是绝对时间来表示过期时间。可以通过计算过期值和日期值之间的秒数差来计算类似的新鲜生存期</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Expires: Fri, 05 Jul 2002, 05:00:00 GMT</span><br></pre></td></tr></table></figure>
+<p>有些服务器还会回送一个Expires:0响应首部，试图将文档置于永远过期的状态，但这种语法是非法的，可能给某些软件带来问题。应该试着支持这种结构的输入，但不应该产生这种结构的输出。</p>
+<h4 id="3-4-must-revalidate-响应首部"><a href="#3-4-must-revalidate-响应首部" class="headerlink" title="3.4 must-revalidate 响应首部"></a>3.4 must-revalidate 响应首部</h4><p>可以配置缓存，使其提供一些陈旧(过期)的对象，以提高性能。如果原始服务器希望缓存严格遵守过期信息，可以在原始响应中附加一个Cache-Control: must-revalidate首部。</p>
+<p>Cache-Control: must-revalidate响应首部告诉缓存，在事先没有跟原始服务器进行再验证的情况下，不能提供这个对象的陈旧副本。缓存仍然可以随意提供新鲜的副本。如果在缓存进行must-revalidate新鲜度检查时，原始服务器不可用，缓存就必须返回一条504 Gateway Timeout错误。</p>
+<h4 id="3-5试探性过期"><a href="#3-5试探性过期" class="headerlink" title="3.5试探性过期"></a>3.5试探性过期</h4><p>如果响应中没有Cache-Control: max-age首部，也没有Expires首部，缓存可以计算出一个试探性最大使用期。可以使用任意算法，但如果得到的最大使用期大于24小时，就应该向响应首部添加一个Heuristic Expiration Warning（试探性过期警告，警告13）首部。</p>
+<h4 id="3-6-客户端的新鲜度限制"><a href="#3-6-客户端的新鲜度限制" class="headerlink" title="3.6 客户端的新鲜度限制"></a>3.6 客户端的新鲜度限制</h4><p>Web 浏览器都有刷新（Refresh）或 重载（Reload）按钮，可以强制对浏览器或代理缓存中可能过期的内容进行刷新。刷新按钮会发布一个附加了Cache-Control请求首部的GET请求，这个请求会强制进行再验证，或者无条件地从服务器获取文档。刷新的确切行为取决于特定的浏览器、文档以及拦截缓存的配置。</p>
+<p>客户端可以用Cache-Control请求首部来强化或放松对过期时间的限制。有些应用程序对文档的新鲜度要求很高（比如人工刷新按钮），对这些应用程序来说，客户端可以用Cache-Control首部使过期时间更严格。另一方面，作为提高性能、可靠性或开支的一种折衷方式，客户端可能会放松新鲜度要求。</p>
+<p>Cache-Control请求指令：</p>
+<table>
+<thead>
+<tr>
+<th>指令</th>
+<th>目的</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cache-Control: max-stale</td>
+<td>缓存可以随意提供过期的文件。如果指定了参数(s)，在这段时间内，文档就不能过期。这条指令放松了缓存的规则</td>
+</tr>
+<tr>
+<td>Cache-Control: min-fresh=(s)</td>
+<td>至少在未来(s)秒内文档要保持新鲜。这就使缓存规则更加严格了</td>
+</tr>
+<tr>
+<td>Cache-Control: max-age = (s)</td>
+<td>缓存无法返回缓存时间长于(s)秒的文档。这条指令会使缓存规则更加严格，除非同时还发送max-stale指令，在这种情况下，使用期可能会超过其过期时间</td>
+</tr>
+<tr>
+<td>Cache-Control: no-cache</td>
+<td>除非资源进行了再验证，否则这个客户端不会接受已缓存的资源</td>
+</tr>
+<tr>
+<td>Cache-Control: no-store</td>
+<td>缓存应该尽快从存储器中删除文档的所有痕迹，因为其中可能会包含敏感信息</td>
+</tr>
+<tr>
+<td>Cache-Control: only-if-cached</td>
+<td>只有当缓存中有副本存在时，客户端才会获取一份副本</td>
+</tr>
+</tbody>
+</table>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/HTTP/" rel="tag"># HTTP</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/07/01/《HTTP 权威指南》：实体和编码/" rel="next" title="《HTTP 权威指南》: 实体和编码">
+                <i class="fa fa-chevron-left"></i> 《HTTP 权威指南》: 实体和编码
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/07/22/《HTTP权威指南》：连接管理/" rel="prev" title="《HTTP权威指南》: 连接管理">
+                《HTTP权威指南》: 连接管理 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="Yongqiang Xiang" />
+          <p class="site-author-name" itemprop="name">Yongqiang Xiang</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">66</span>
+                <span class="site-state-item-name">posts</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">28</span>
+                <span class="site-state-item-name">categories</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">28</span>
+                <span class="site-state-item-name">tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/xiangyq000" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                    
+                      GitHub
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://stackoverflow.com/users/4945225/xiangyq000" target="_blank" title="StackOverflow">
+                  
+                    <i class="fa fa-fw fa-stack-overflow"></i>
+                  
+                    
+                      StackOverflow
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-缓存的处理步骤"><span class="nav-number">1.</span> <span class="nav-text">1. 缓存的处理步骤</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-1-接收"><span class="nav-number">1.1.</span> <span class="nav-text">1.1 接收</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-解析"><span class="nav-number">1.2.</span> <span class="nav-text">1.2 解析</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-3-查询"><span class="nav-number">1.3.</span> <span class="nav-text">1.3 查询</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-4-新鲜度检测"><span class="nav-number">1.4.</span> <span class="nav-text">1.4 新鲜度检测</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-5-创建响应"><span class="nav-number">1.5.</span> <span class="nav-text">1.5 创建响应</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-6-发送"><span class="nav-number">1.6.</span> <span class="nav-text">1.6 发送</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-7-日志"><span class="nav-number">1.7.</span> <span class="nav-text">1.7 日志</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-保持副本的新鲜"><span class="nav-number">2.</span> <span class="nav-text">2. 保持副本的新鲜</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#2-1-文档过期"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 文档过期</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-2-过期日期和使用期"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 过期日期和使用期</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-3-服务器再验证"><span class="nav-number">2.3.</span> <span class="nav-text">2.3 服务器再验证</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-4-用条件方法进行再验证"><span class="nav-number">2.4.</span> <span class="nav-text">2.4 用条件方法进行再验证</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-5-If-Modified-Since-Date再验证"><span class="nav-number">2.5.</span> <span class="nav-text">2.5 If-Modified-Since:Date再验证</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-6-If-None-Match：实体标签再验证"><span class="nav-number">2.6.</span> <span class="nav-text">2.6 If-None-Match：实体标签再验证</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-7-强弱验证器"><span class="nav-number">2.7.</span> <span class="nav-text">2.7 强弱验证器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-8-实体标签和最近修改日期"><span class="nav-number">2.8.</span> <span class="nav-text">2.8 实体标签和最近修改日期</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-控制缓存的能力"><span class="nav-number">3.</span> <span class="nav-text">3. 控制缓存的能力</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#3-1-no-Store-与-no-Cache-响应首部"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 no-Store 与 no-Cache 响应首部</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-max-age响应首部"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 max-age响应首部</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-3-Expires响应首部"><span class="nav-number">3.3.</span> <span class="nav-text">3.3 Expires响应首部</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-4-must-revalidate-响应首部"><span class="nav-number">3.4.</span> <span class="nav-text">3.4 must-revalidate 响应首部</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-5试探性过期"><span class="nav-number">3.5.</span> <span class="nav-text">3.5试探性过期</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-6-客户端的新鲜度限制"><span class="nav-number">3.6.</span> <span class="nav-text">3.6 客户端的新鲜度限制</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yongqiang Xiang</span>
+</div>
+
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script><!-- hexo-inject:begin --><!-- Begin: Injected MathJax -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config("");
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+      all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+  });
+</script>
+
+<script type="text/javascript" src="custom_mathjax_source">
+</script>
+<!-- End: Injected MathJax -->
+<!-- hexo-inject:end -->
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

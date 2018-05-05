@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-cn">
+<head>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="HTTP," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="1. HTTP 事务的时延HTTP位于TCP上层，所以HTTP事务的性能在很大程度上取决于底层TCP通道的性能。TCP时延取决于硬件速度、网络和服务器负载，请求和响应报文的尺寸，以及客户端和服务器之间的距离。HTTP事务的时延有以下几种主要原因：  客户端首先需要根据URI确定Web服务器的IP地址和端口号。如果最近没有对URI中的主机名进行访问，通过DNS解析系统将URI中的主机名转换成一个IP">
+<meta name="keywords" content="HTTP">
+<meta property="og:type" content="article">
+<meta property="og:title" content="《HTTP权威指南》: 连接管理">
+<meta property="og:url" content="http://yoursite.com/2016/07/22/《HTTP权威指南》：连接管理/index.html">
+<meta property="og:site_name" content="天歌のBlog">
+<meta property="og:description" content="1. HTTP 事务的时延HTTP位于TCP上层，所以HTTP事务的性能在很大程度上取决于底层TCP通道的性能。TCP时延取决于硬件速度、网络和服务器负载，请求和响应报文的尺寸，以及客户端和服务器之间的距离。HTTP事务的时延有以下几种主要原因：  客户端首先需要根据URI确定Web服务器的IP地址和端口号。如果最近没有对URI中的主机名进行访问，通过DNS解析系统将URI中的主机名转换成一个IP">
+<meta property="og:locale" content="zh-cn">
+<meta property="og:image" content="https://user-images.githubusercontent.com/12514722/30251878-327641e6-969b-11e7-83fb-89efc920e248.png">
+<meta property="og:updated_time" content="2018-01-05T08:19:57.419Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="《HTTP权威指南》: 连接管理">
+<meta name="twitter:description" content="1. HTTP 事务的时延HTTP位于TCP上层，所以HTTP事务的性能在很大程度上取决于底层TCP通道的性能。TCP时延取决于硬件速度、网络和服务器负载，请求和响应报文的尺寸，以及客户端和服务器之间的距离。HTTP事务的时延有以下几种主要原因：  客户端首先需要根据URI确定Web服务器的IP地址和端口号。如果最近没有对URI中的主机名进行访问，通过DNS解析系统将URI中的主机名转换成一个IP">
+<meta name="twitter:image" content="https://user-images.githubusercontent.com/12514722/30251878-327641e6-969b-11e7-83fb-89efc920e248.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2016/07/22/《HTTP权威指南》：连接管理/"/>
+
+
+
+
+
+  <title>《HTTP权威指南》: 连接管理 | 天歌のBlog</title><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-cn">
+
+  
+  
+    
+  
+
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">天歌のBlog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            About
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/07/22/《HTTP权威指南》：连接管理/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Yongqiang Xiang">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="天歌のBlog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">《HTTP权威指南》: 连接管理</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-07-22T03:44:54+08:00">
+                2016-07-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/读书笔记/" itemprop="url" rel="index">
+                    <span itemprop="name">读书笔记</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/读书笔记/Network/" itemprop="url" rel="index">
+                    <span itemprop="name">Network</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="1-HTTP-事务的时延"><a href="#1-HTTP-事务的时延" class="headerlink" title="1. HTTP 事务的时延"></a>1. HTTP 事务的时延</h3><p>HTTP位于TCP上层，所以HTTP事务的性能在很大程度上取决于底层TCP通道的性能。TCP时延取决于硬件速度、网络和服务器负载，请求和响应报文的尺寸，以及客户端和服务器之间的距离。HTTP事务的时延有以下几种主要原因：</p>
+<ul>
+<li>客户端首先需要根据URI确定Web服务器的IP地址和端口号。如果最近没有对URI中的主机名进行访问，通过DNS解析系统将URI中的主机名转换成一个IP地址需要花费数十秒时间。</li>
+<li>接下来，客户端会向服务器发送一条TCP连接请求，并等待服务器回送一个请求接受应答。每条新的TCP连接都会有连接建立时延。这个值通常最多只有一两秒种，但如果有数百个HTTP事务的话，这个值会快速地叠加上去。</li>
+<li>一旦连接建立起来了，客户端就会通过新建立的TCP管道来发送HTTP请求。数据到达时，Web服务器会从TCP连接中读取请求报文，并对请求进行处理。因特网传输请求报文，以及服务器处理请求报文都需要时间。</li>
+<li>然后，Web服务器会回送HTTP响应，这也需要花费时间。<a id="more"></a>
+</li>
+</ul>
+<h3 id="2-HTTP性能"><a href="#2-HTTP性能" class="headerlink" title="2. HTTP性能"></a>2. HTTP性能</h3><p>TCP相关时延包括：</p>
+<ul>
+<li>TCP连接建立握手</li>
+<li>TCP慢启动拥塞控制</li>
+<li>数据聚集的Nagle算法</li>
+<li>用于捎带确认的TCP延迟确认算法</li>
+<li>TIME_WAIT时延和端口耗尽。</li>
+</ul>
+<h4 id="2-1-TCP连接的握手时延"><a href="#2-1-TCP连接的握手时延" class="headerlink" title="2.1 TCP连接的握手时延"></a>2.1 TCP连接的握手时延</h4><p>TCP连接握手需要经过以下几个步骤：</p>
+<ul>
+<li>请求新的TCP连接时，客户端要向服务器发送一个小的TCP分组（通常是40~60个字节）。这个分组中设置了一个特殊的SYN标记，说明这是一个连接请求。</li>
+<li>如果服务器接受了连接，就会对一些连接参数进行计算，并向客户端回送一个TCP分组，这个分组中SYN和ACK标记都被置位，说明连接请求已被接受。</li>
+<li>最后，客户端向服务器回送一条确认信息，通知它连接已成功建立。现代的TCP栈都允许客户端在这个确认分组中发送数据。</li>
+</ul>
+<h4 id="2-2-延迟确认"><a href="#2-2-延迟确认" class="headerlink" title="2.2 延迟确认"></a>2.2 延迟确认</h4><p>由于因特网自身无法确保可靠分组传输（因特网路由器超负荷的话，可以随意丢弃分组），所以TCP实现了自己的确认机制来确保数据的成功传输。</p>
+<p>每个TCP段都有一个序列号和数据完整性校验和。每个段的接受着收到完好的段时，都会想发送者回答小的确认分组。如果发送者没有在指定的窗口时间内收到确认信息，发送者就认为分组已被破坏或损毁，并重发数据。</p>
+<p>由于确认报文很小，所以TCP允许发往相同方向的输出数据分组中对其进行捎带。TCP将返回的去人信息于输出的数据分组结合在一起，可以更有效地利用网络。为了增加确认报文找到 同向传输数据分组的可能性，很多TCP栈都实现了一种“延迟确认”算法。延迟确认算法会在一个特定的窗口时间（通常是100ms到200ms）内将输出确认存在缓冲区中，以寻找能够捎带它的输出数据分组。如果在哪个时间段内没有输出数据分组，就将确认信息放在单独的分组中传送。</p>
+<p>但是，HTTP具有双峰特征的请求-应答行为降低了捎带信息的可能。当希望有相反方向回传分组的时候,偏偏没有那么多。通常，延迟确认算法会引入相当大的时延。根据所使用操作系统的不同，可以调整或禁止延迟确认算法。</p>
+<h4 id="2-3-TCP慢启动"><a href="#2-3-TCP慢启动" class="headerlink" title="2.3 TCP慢启动"></a>2.3 TCP慢启动</h4><p>TCP数据传输的性能还取决于TCP连接的使用期（age）。TCP连接会随着时间进行自我“调谐”，起初会限制连接的最大速度，如果数据成功传输，会随着时间的推移提高传输的速度。这种调谐被称为TCP慢启动（slow start），用于防止因特网的突然过载和拥塞。</p>
+<p>TCP慢启动限制了一个TCP端点在任意时刻可以传输的分组数。简单来说，每成功接收一个分组，发送端就有了发送另外两个分组的权限。如果某个HTTP事务有大量数据要发送，是不能一次将所有分组都发送出去的。必须发送一个分组，等待确认；然后可以发送两个分组，每个分组都必须被确认，这样就可以发送四个分组了，以此类推。这种方式被称为“打开拥塞窗口”。</p>
+<p>由于存在这种拥塞控制特性，所以新连接的传输速度会比已经交换过一定量数据的、“已调谐”连接慢一些。</p>
+<h4 id="2-4-Nagle算法与TCP-NODELAY"><a href="#2-4-Nagle算法与TCP-NODELAY" class="headerlink" title="2.4 Nagle算法与TCP_NODELAY"></a>2.4 Nagle算法与TCP_NODELAY</h4><p>TCP有一个数据流接口，应用程序可以通过它将任意尺寸的数据放入TCP栈中——即使一次只放一个字节也可以！但是，每个TCP段中都至少装载了40个字节的标记和首部，所以如果TCP发送了大量包含少量数据的分组，网络的性能就会严重下降。 </p>
+<p>Nagle算法（根据其发明者John Nagle命名）试图在发送一个分组之前，将大量TCP数据绑定在一起，以提高网络效率。 </p>
+<p>Nagle算法鼓励发送全尺寸（LAN上最大尺寸的分组大约是1500字节，在因特网上是几百字节）的段。只有当所有其他分组都被确认之后，Nagle算法才允许发送非全尺寸的分组。如果其他分组仍然在传输过程中，就将那部分数据缓存起来。只有当挂起分组被确认，或者缓存中积累了足够发送一个全尺寸分组的数据时，才会将缓存的数据发送出去。</p>
+<p>Nagle算法会引发几种HTTP性能问题。首先，小的HTTP报文可能无法填满一个分组，可能会因为等待那些永远不会到来的额外数据而产生时延。其次，Nagle算法与延迟确认之间的交互存在问题——Nagle算法会阻止数据的发送，直到有确认分组抵达为止，但确认分组自身会被延迟确认算法延迟100~200毫秒。 </p>
+<p>HTTP应用程序常常会在自己的栈中设置参数TCP_NODELAY，禁用Nagle算法，提高性能。如果要这么做的话，一定要确保会向TCP写入大块的数据，这样就不会产生一堆小分组了。</p>
+<h4 id="2-5-TIME-WAIT累积与端口耗尽"><a href="#2-5-TIME-WAIT累积与端口耗尽" class="headerlink" title="2.5 TIME_WAIT累积与端口耗尽"></a>2.5 TIME_WAIT累积与端口耗尽</h4><p>当某个TCP端点关闭TCP连接时，会在内存中维护一个小的控制块，用来记录最近所关闭连接的IP地址和端口号。这类信息只会维持一小段时间，通常是所估计的最大分段试用期的两倍（称为2MSL，通常为2分钟）左右，以确保在这段时间内不会创建具有相同地址和端口号的新连接。实际上，这个算法可以防止在2分钟内创建、关闭并重新创建2个相同IP地址和端口号的连接。</p>
+<p>现在高速路由器的使用，使得重复分组几乎不可能在连接关闭的几分钟之后，出现在服务器上。有些操作系统会将2MSL设置为一个较小的值，但修改此值时要特别小心。分组确实会被复制，如果来自之前连接的复制分组插入具有相同连接值的新TCP流，会破坏TCP数据。</p>
+<p>2MSL的连接关闭延迟通常不是什么问题，但在性能基准环境下就可能会成为一个问题。进行性能基准测试时，通常只有一台或几台用来产生流量的计算机连接到某系统中去，这样就限制了连接到服务器的客户端IP地址数。而且，服务器通常会在HTTP默认端口80上进行监听。用TIME_WAIT防止端口号重用时，这些情况也限制了可用的连接值组合。</p>
+<p>在只有一个客户端和一台Web服务器的异常情况下，构建一条TCP连接的4个值：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;source-IP-address，source-port，destination-IP-address，destination-port&gt;</span><br></pre></td></tr></table></figure>
+<p>其中的3个都是固定的——只有源端口号可以随意改变：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;client-IP, source-port, server-IP,80&gt;</span><br></pre></td></tr></table></figure>
+<p>客户端每次连接到服务器上去时，都会获得一个新的源端口，以实现连接的唯一性。但由于可用源端口的数量有限（比如60000个），而且在2MSL（比如，120s）内连接是无法重用的，连接率就被限制在了60000/120 = 500次/s。如果再不断进行优化，并且服务器的连接率不超过500次/s, 就可以确保不会遇到TIME_WAIT端口耗尽的问题。要修正这个问题，可以增加客户端负载生成器的数量，或者确保客户端和服务器在循环使用几个虚拟IP地址以增加更多的连接组合。</p>
+<h3 id="3-HTTP连接的处理"><a href="#3-HTTP连接的处理" class="headerlink" title="3. HTTP连接的处理"></a>3. HTTP连接的处理</h3><h4 id="3-1-常被误解的Connection首部"><a href="#3-1-常被误解的Connection首部" class="headerlink" title="3.1 常被误解的Connection首部"></a>3.1 常被误解的Connection首部</h4><p>HTTP允许客户端和最终的源服务器之间存在一串HTTP中间实体（代理，高速缓存等）。可以从客户端开始，逐跳地将HTTP报文经过这些中间设备，转发到源端服务器上（或者进行反向传输）。</p>
+<p>某些情况下，两个相邻的HTTP应用会为它们共享的连接应用一组选项。HTTP的Connection首部字段中有一个有逗号分隔的连接标签列表，这些标签为此连接必定了一些不会传播到其它连接中去的选项。</p>
+<p>Connection首部可以承载三种不同类型的标签：</p>
+<ul>
+<li>HTTP首部字段名，列出了只与此连接有关的首部；</li>
+<li>任意标签值，用于描述此连接的非标准选项；</li>
+<li>值close，说明操作完成之后需关闭这条持久连接。</li>
+</ul>
+<p>如果连接标签中包含了一个HTTP首部字段的名称，那么这个首部字段就包含了一些与连接有关的信息，不能将其转发出去。在将报文转发之前，必须删除Connection首部列出的所有首部字段。</p>
+<p>HTTP应用程序收到一条带有Connection首部的报文肘，接收端会解析发送端请求的所有选项，并将其应用。然后会在将此报文转发给下一跳地址之前，删除Connection首部以及Connection中列出的所有首部。而且，可能还会有少量没有作为Connection首部值列出，但一定不能被代理转发的逐跳首部。其中包括Prxoy-Authenticate、Proxy-Connection、Transfer-Encoding和Upgrade.</p>
+<h3 id="4-持久连接"><a href="#4-持久连接" class="headerlink" title="4. 持久连接"></a>4. 持久连接</h3><p>Web客户端经常会打开到同一个站点的连接。这种性质被称为站点局部性（site locality）。</p>
+<p>因此，HTTP/1.1（以及 HTTP/1.0的各种增强版本）允许HTTP设备在事务处理结束之后将TCP连接保持在打开状态，以便为未来的HTTP请求重用现存的连接。在事务处理结束之后仍然保持在打开状态的TCP连接被称为持久连接。非持久连接会在每个事务结束之后关闭。持久连接会在不同事务之间保持打开状态，直到客户端或服务器决定将其关闭为止。 </p>
+<p>重用已对目标服务器打开的空闲持久连接，就可以避开缓慢的连接建立阶段。而且，已经打开的连接还可以避免慢启动的拥塞适应阶段，以便更快速地进行数据的传输。</p>
+<h4 id="4-1-持久以及并行连接"><a href="#4-1-持久以及并行连接" class="headerlink" title="4.1 持久以及并行连接"></a>4.1 持久以及并行连接</h4><p>并行连接的缺点：</p>
+<ul>
+<li>每个事务都会打开/关闭一条新的连接，会耗费时间和带宽。</li>
+<li>由于tcp慢启动特性的存在，每个新连接的性能都会下降。</li>
+<li>可打开的并行连接数量实际上有限。</li>
+</ul>
+<p>持久连接有一些比并行连接更好的地方。持久连接降低了时延和连接建立的开销，将连接保持在已协调状态，而且减少了打开连接的潜在数量。但是，管理持久连接一定要特别小心，不然就会出现积累大量的空闲连接。</p>
+<h4 id="4-2-HTTP-1-0-keep-alive连接"><a href="#4-2-HTTP-1-0-keep-alive连接" class="headerlink" title="4.2 HTTP/1.0+keep-alive连接"></a>4.2 HTTP/1.0+keep-alive连接</h4><p>很多HTTP/1.0的浏览器和服务器都进行了扩展，以支持keep-alive型持久连接。</p>
+<h4 id="4-3-Keep-Alive操作"><a href="#4-3-Keep-Alive操作" class="headerlink" title="4.3 Keep-Alive操作"></a>4.3 Keep-Alive操作</h4><p>实现HTTP/1.0 keep-alive的客户端可以通过包含Connection: Keep-Alive首部请求将一条连接保持在打开状态。</p>
+<p>如果服务器允许，就在响应中包含同样的头部。如果响应中没有Connection: Keep-Alive首部，客户端就认为服务器不支持keep-alive，会在发回响应报文之后关闭连接。</p>
+<h4 id="4-4-Keep-Alive选项"><a href="#4-4-Keep-Alive选项" class="headerlink" title="4.4 Keep-Alive选项"></a>4.4 Keep-Alive选项</h4><p>可以用Keep-Alive通用首部中指定的、由逗号分隔的选项来调节keep-alive的行为。</p>
+<ul>
+<li>参数timeout是在Keep-Alive响应首部发送的。它估计了服务器希望将连接保持在活跃状态的时间。这并不是一个承诺值。</li>
+<li>参数max是在Keep-Alive响应首部发送的，它估计了服务器还希望为多少个事务保持此连接的活跃状态。这并不是一个承诺值。</li>
+<li>Keep-Alive还可支持任意未经处理的属性，这些属性主要用于诊断和调试。语法为name [=value]。</li>
+</ul>
+<p>Keep-Alive首部完全是可选的，但只有在提供Connection: Keep-Alive时才能使用它。这里有个Keep-Alive响应首部的例子，这个例子说明服务器最多还会为另外5个事务保持连接的打开状态，或者将打开状态保持到连接空闲了2分钟之后。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Connection: Keep-AliveKeep-Alive: max=5, timeout=120</span><br></pre></td></tr></table></figure>
+<h4 id="4-5-Keep-Alive连接的限制和规则"><a href="#4-5-Keep-Alive连接的限制和规则" class="headerlink" title="4.5 Keep-Alive连接的限制和规则"></a>4.5 Keep-Alive连接的限制和规则</h4><p>使用keep-alive连接时有一些限制和一些需要澄清的地方。</p>
+<ul>
+<li>在HTTP/1.0中，keep-alive并不是默认使用的。客户端必须发送一个Connection: Keep-Alive请求首部来激活keep-alive连接。</li>
+<li>Connection: Keep-Alive首部必须随所有希望保持持久连接的报文一起发送。如果客户端没有发送Connection: Keep-Alive首部，服务器就会在那条请求之后关闭连接。</li>
+<li>通过检测响应中是否包含Connection: Keep-Alive响应首部，客户端可以判断服务器是否会在发出响应之后关闭连接。</li>
+<li>只有在无需检测到连接的关闭即可确定报文实体主体部分长度的情况下，才能将连接保持在打开状态——也就是说实体的主体部分必须有正确的Content-Length，有多部件媒体类型，或者用分块传输编码的方式进行了编码。在一条keep-alive信道中回送错误的Content-Length是很糟糕的事，这样的话，事务处理的另一端就无法精确地检测出一条报文的结束和另一条报文的开始了。</li>
+<li>代理和网关必须执行Connection首部的规则。代理或网关必须在将报文转发出去或将其高速缓存之前，删除在Connection首部中命名的所有首部字段以及Connection首部自身。</li>
+<li>严格来说，不应该与无法确认是否支持Connection首部的代理服务器建立keep-alive连接，以防出现哑代理问题。在实际中不是总能做到这一点。</li>
+<li>从技术上来讲，应该忽略所有来自HTTP/1.0设备的Connection首部字段(包括Connection: Keep-Alive)，因为它们可能是由比较老的代理服务器误转发的。但实际上，尽管可能会有在老代理上挂起的危险，有些客户端和服务器还是会违反这条规则。</li>
+<li>除非重复发送请求会发生其他一些副作用，否则如果在客户端收到完整的响应之前连接就关闭了，客户端就一定要做好重试请求的准备。</li>
+</ul>
+<h4 id="4-6-Keep-Alive和哑代理"><a href="#4-6-Keep-Alive和哑代理" class="headerlink" title="4.6 Keep-Alive和哑代理"></a>4.6 Keep-Alive和哑代理</h4><p>Web客户端的Connection: Keep-Alive首部应该只会对这条离开客户端的TCP链路产生影响，这就是将其称作“连接”首部的原因。如果客户端正在与一台Web服务器对话，客户端可以发送一个Connection: Keep-Alive首部来告知服务器它希望保持连接的活跃状态。如果服务器支持keep-alive，就回送一个Connection: Keep-Alive首部，否则就不回送。</p>
+<p>问题出在代理上——尤其是那些不理解Connection首部，而且不知道在沿着转发链路将其发送出去之前，应该将该首部删除的代理。很多老的或简单的代理都是盲中继(blind relay)，它们只是将字节从一个连接转发到另一个连接中去，不对Connection首部进行特殊的处理。</p>
+<p>假设有一个Web客户端正通过一个作为盲中继使用的哑代理与Web服务器进行对话，下图显示的就是这种情形。</p>
+<p><img src="https://user-images.githubusercontent.com/12514722/30251878-327641e6-969b-11e7-83fb-89efc920e248.png" alt="Markdown"></p>
+<ol>
+<li>Web客户端向代理发送了一条报文，其中包含了Connection: Keep-Alive首部，如果可能的话请求建立一条keep-alive连接。客户端等待响应，以确定对方是否认可它对keep-alive信道的请求。</li>
+<li>哑代理收到了这条HTTP请求，但它并不理解connection首部（只是将其作为一个扩展首部对待）。代理不知道keep-alive是什么意思，因此只是沿着转发链路将报文一字不漏地发送给服务器。但Connection首部是个逐跳首部，只适用于单条传输链路，不应该沿着传输链路向下传输。接下来，就要发生一些很糟糕的事情了。</li>
+<li>经过中继的HTTP请求抵达了Web服务器。当Web服务器收到经过代理转发的Connection: Keep-Alive首部时，会误以为代理（对服务器来说，这个代理看起来就和所有其他客户端一样）希望进行keep-alive对话。Web服务器同意进行keep-alive对话，并回送了一个Connection: Keep-Alive响应首部。所以，此时Web服务器认为它在与代理进行keep-alive对话，会遵循keep-alive的规则。但代理却对keep-alive一无所知。</li>
+<li>哑代理将Web服务器的响应报文回送给客户端，并将来自Web服务器的Connection: Keep-Alive首部一起传送过去。客户端看到这个首部，就会认为代理同意进行keep-alive对话。所以，此时客户端和服务器都认为它们在进行keep-alive对话，但与它们进行对话的代理却对keep-alive一无所知。</li>
+<li>由于代理对keep-alive一无所知，所以会将收到的所有数据都回送给客户端，然后等待源端服务器关闭连接。但源端服务器会认为代理已经显式地请求它将连接保持在打开状态了，所以不会去关闭连接。这样，代理就会挂在那里等待连接的关闭。</li>
+<li>客户端收到了回送的响应报文时，会立即转向下一条请求，在keep-alive连接上向代理发送另一条请求。而代理并不认为同一条连接上会有其他请求到来，请求被忽略，浏览器就在这里转圈，不会有任何进展了。</li>
+<li>这种错误的通信方式会使浏览器一直处于挂起状态，直到客户端或服务器将连接超时，并将其关闭为止。</li>
+</ol>
+<p>为避免此类代理通信问题的发生，现代的代理都绝不能转发Connection首部和所有名字出现在Connection值中的首部。因此,如果一个代理收到了一个Connection: Keep-Alive首部，是不应该转发Connection首部，或所有名为Keep-Alive的首部的。 </p>
+<h4 id="4-7-插入Proxy-Connection"><a href="#4-7-插入Proxy-Connection" class="headerlink" title="4.7 插入Proxy-Connection"></a>4.7 插入Proxy-Connection</h4><p>在网景的变通做法是，浏览器会向代理发送非标准的Proxy-Connection扩展首部，而不是官方支持的著名的Connection首部。如果代理是盲中继，它会将无意义的Proxy-Connection首部转发给Web服务器，服务器会忽略此首部，不会带来任何问题。但如果代理是个聪明的代理（能够理解持久连接的握手动作），就用一个Connection首部取代无意义的Proxy-Connection首部，然后将其发送给服务器，以收到预期的效果。 </p>
+<p>在客户端和服务器之间只有一个代理时可以用这种方案来解决问题。但如果在哑代理的任意一侧还有一个聪明的代理，这个问题就会再次露头了。</p>
+<h4 id="4-8-HTTP-1-1持久连接"><a href="#4-8-HTTP-1-1持久连接" class="headerlink" title="4.8 HTTP/1.1持久连接"></a>4.8 HTTP/1.1持久连接</h4><p>HTTP/1.1逐渐停止了对keep-alive连接的支持，用一种名为持久连接（persistent connection）的改进型设计取代了它。持久连接的目的与keep-alive连接的目的相同，但工作机制更优一些。</p>
+<p>与HTTP/1.0+的keep-alive连接不同，HTTP/1.1持久连接在默认情况下是激活的。除非特别指明，否则HTTP/1.1假定所有连接都是持久的。要在事务处理结束之后将连接关闭，HTTP/1.1应用程序必须向报文中显式地添加一个Connection: close首部。这是与以前的HTTP协议版本很重要的区别，在以前的版本中，keep-alive连接要么是可选的，要么根本就不支持。</p>
+<p>HTTP/1.1客户端假定在收到响应后，除非响应中包含了Connection: close首部，不然HTTP/1.1连接就仍维持在打开状态。但是，客户端和服务器仍然可以随时关闭空闲的连接。不发送Connection: close并不意味着服务器承诺永远将连接保持在打开状态。 </p>
+<p>只有当连接上所有的报文都有正确的、自定义报文长度时——也就是说,实体主体部分的长度都和相应的Content-Length一致,或者是用分块传输编码方式编码的——连接才能持久保持。 (因为是持久连接，无法通过连接的关闭来判断报文发送结束)</p>
+<h4 id="4-9-持久连接的限制和规则"><a href="#4-9-持久连接的限制和规则" class="headerlink" title="4.9 持久连接的限制和规则"></a>4.9 持久连接的限制和规则</h4><p>在持久连接的使用中有以下限制和需要澄清的问题：</p>
+<ul>
+<li>发送了Connection: close请求首部之后，客户端就无法在那条连接上发送更多的请求了。</li>
+<li>如果客户端不想在连接上发送其他请求了，就应该在最后一条请求中发送一个Connection: close请求首部。</li>
+<li>只有当连接上所有的报文都有正确的、自定义报文长度时——也就是说，实体主体部分的长度都和相应的Content—Length一致，或者是用分块传输编码方式编码的——连接才能持久保持。</li>
+<li>HTTP/1.1的代理必须能够分别管理与客户端和服务器的持久连接——每个持久连接都只适用于一跳传输。</li>
+<li>由于较老的代理会转发Connection首部，所以HTTP/1.1的代理服务器不应该与HTTP/1.0客户端建立持久连接，除非它们了解客户端的处理能力。实际上，这一点是很难做到的，很多厂商都违背了这一原则。</li>
+<li>尽管服务器不应该试图在传输报文的过程中关闭连接，而且在关闭连接之前至少应该响应一条请求，但不管Connection首部取了什么值，HTTP/1.1设备都可以在任意时刻关闭连接。</li>
+<li>HTTP/1.1应用程序必须能够从异步的关闭中恢复出来。只要不存在可能会累积起来的副作用，客户端都应该重试这条请求。</li>
+<li>除非重复发起请求会产生副作用，否则如果在客户端收到整条响应之前连接关闭了，客户端就必须要重新发起请求。</li>
+<li>一个用户客户端对任何服务器或代理最多只能维护两条持久连接，以防服务器过载。代理可能需要更多到服务器的连接来支持并发用户的通信，所以，如果有N个用户试图访问服务器的话，代理最多要维持2N条到任意服务器或父代理的连接。</li>
+</ul>
+<h3 id="5-管道化连接"><a href="#5-管道化连接" class="headerlink" title="5. 管道化连接"></a>5. 管道化连接</h3><p>HTTP/1.1允许在持久连接上可选地使用请求管道。这是在keep-alive连接上的进一步性能优化。在响应到达之前，可以将多条请求放入队列。当第一条请求通过网络流向服务器时，第二条和第三条请求也可以开始发送了。在髙时延网络条件下，这样做可以降低网络的环回时间，提高性能。</p>
+<p>对管道化连接有如下几条限制：</p>
+<ul>
+<li>如果HTTP客户端无法确认连接是持久的，就不应该使用管道。</li>
+<li>必须按照与请求相同的顺序回送HTTP响应。HTTP报文中没有序列号标签，因此如果收到的响应失序了，就没办法将其与请求匹配起来了。</li>
+<li>HTTP客户端必须做好连接会在任意时刻关闭的准备，还要准备好重发所有未完成的管道化清求。如果客户端打开了一条持久连接，并立即发出了10条请求，服务器可能在只处理了5条请求之后关闭连接。剩下的5条请求会失败，客户端必须能够应对这些过早关闭连接的情况，重新发出这些请求。</li>
+<li>HTTP客户端不应该用管道化的方式发送会产生副作用的请求（比如POST）。总之，出错的时候，管道化方式会阻碍客户端了解服务器执行的是一系列管道化请求中的哪一些。由于无法安全地重试POST这样的非幂等请求（幂等是指多个请求返回相同的结果），所以出错时，就存在某些方法永远不会被执行的风险。</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/HTTP/" rel="tag"># HTTP</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/07/12/《HTTP权威指南》：缓存/" rel="next" title="《HTTP权威指南》: 缓存">
+                <i class="fa fa-chevron-left"></i> 《HTTP权威指南》: 缓存
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/07/28/《HTTP权威指南》：HTTPS/" rel="prev" title="《HTTP权威指南》: HTTPS">
+                《HTTP权威指南》: HTTPS <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="Yongqiang Xiang" />
+          <p class="site-author-name" itemprop="name">Yongqiang Xiang</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">66</span>
+                <span class="site-state-item-name">posts</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">28</span>
+                <span class="site-state-item-name">categories</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">28</span>
+                <span class="site-state-item-name">tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/xiangyq000" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                    
+                      GitHub
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://stackoverflow.com/users/4945225/xiangyq000" target="_blank" title="StackOverflow">
+                  
+                    <i class="fa fa-fw fa-stack-overflow"></i>
+                  
+                    
+                      StackOverflow
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-HTTP-事务的时延"><span class="nav-number">1.</span> <span class="nav-text">1. HTTP 事务的时延</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-HTTP性能"><span class="nav-number">2.</span> <span class="nav-text">2. HTTP性能</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#2-1-TCP连接的握手时延"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 TCP连接的握手时延</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-2-延迟确认"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 延迟确认</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-3-TCP慢启动"><span class="nav-number">2.3.</span> <span class="nav-text">2.3 TCP慢启动</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-4-Nagle算法与TCP-NODELAY"><span class="nav-number">2.4.</span> <span class="nav-text">2.4 Nagle算法与TCP_NODELAY</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-5-TIME-WAIT累积与端口耗尽"><span class="nav-number">2.5.</span> <span class="nav-text">2.5 TIME_WAIT累积与端口耗尽</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-HTTP连接的处理"><span class="nav-number">3.</span> <span class="nav-text">3. HTTP连接的处理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#3-1-常被误解的Connection首部"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 常被误解的Connection首部</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-持久连接"><span class="nav-number">4.</span> <span class="nav-text">4. 持久连接</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#4-1-持久以及并行连接"><span class="nav-number">4.1.</span> <span class="nav-text">4.1 持久以及并行连接</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-2-HTTP-1-0-keep-alive连接"><span class="nav-number">4.2.</span> <span class="nav-text">4.2 HTTP/1.0+keep-alive连接</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-3-Keep-Alive操作"><span class="nav-number">4.3.</span> <span class="nav-text">4.3 Keep-Alive操作</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-4-Keep-Alive选项"><span class="nav-number">4.4.</span> <span class="nav-text">4.4 Keep-Alive选项</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-5-Keep-Alive连接的限制和规则"><span class="nav-number">4.5.</span> <span class="nav-text">4.5 Keep-Alive连接的限制和规则</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-6-Keep-Alive和哑代理"><span class="nav-number">4.6.</span> <span class="nav-text">4.6 Keep-Alive和哑代理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-7-插入Proxy-Connection"><span class="nav-number">4.7.</span> <span class="nav-text">4.7 插入Proxy-Connection</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-8-HTTP-1-1持久连接"><span class="nav-number">4.8.</span> <span class="nav-text">4.8 HTTP/1.1持久连接</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-9-持久连接的限制和规则"><span class="nav-number">4.9.</span> <span class="nav-text">4.9 持久连接的限制和规则</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-管道化连接"><span class="nav-number">5.</span> <span class="nav-text">5. 管道化连接</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Yongqiang Xiang</span>
+</div>
+
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="https://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script><!-- hexo-inject:begin --><!-- Begin: Injected MathJax -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config("");
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+      all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+  });
+</script>
+
+<script type="text/javascript" src="custom_mathjax_source">
+</script>
+<!-- End: Injected MathJax -->
+<!-- hexo-inject:end -->
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
